@@ -143,7 +143,7 @@ void asus_gesture_report(struct fts_ts_data *ts_data, int gesture_id)
         break;
     case GESTURE_DOUBLECLICK:
         if (ts_data->dclick_mode == 1) {
-	    gesture = KEY_POWER;
+	    gesture = KEY_WAKEUP;
 	    FTS_INFO("key double click");
 	}
         break;
@@ -530,7 +530,7 @@ int asus_gesture_init(struct fts_ts_data *ts_data)
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_FORWARD);
 
 //Zenmotion
-    input_set_capability(input_dev, EV_KEY, KEY_POWER);
+    input_set_capability(input_dev, EV_KEY, KEY_WAKEUP);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_UP);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_E);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_M);
