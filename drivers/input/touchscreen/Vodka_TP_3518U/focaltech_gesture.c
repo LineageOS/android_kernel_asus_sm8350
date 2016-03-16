@@ -441,7 +441,7 @@ static void fts_gesture_report(struct input_dev *input_dev, int gesture_id)
 	break;
     case GESTURE_DOUBLECLICK:
         if (ts_data->dclick_mode == 1) {
-	gesture = KEY_POWER;
+	gesture = KEY_WAKEUP;
 	FTS_INFO("key double click");
 	}
 	break;
@@ -949,7 +949,7 @@ int fts_gesture_init(struct fts_ts_data *ts_data)
     __set_bit(KEY_GESTURE_U, input_dev->keybit);
     __set_bit(KEY_GESTURE_L, input_dev->keybit);
 // Zenmotion
-    input_set_capability(input_dev, EV_KEY, KEY_POWER);
+    input_set_capability(input_dev, EV_KEY, KEY_WAKEUP);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_UP);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_E);
     input_set_capability(input_dev, EV_KEY, KEY_GESTURE_M);
