@@ -157,7 +157,3 @@ arch/*/configs/vendor/*_defconfig
 
 # Ignore the generated defconfig report.
 generate_defconfig.txt
-
-# vendor device tree directories
-arch/arm64/boot/dts/vendor
-arch/arm/boot/dts/vendor
