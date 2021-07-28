@@ -72,10 +72,10 @@ static DEFINE_SPINLOCK(time_sync_lock);
 #define FORCE_WAKE_DELAY_TIMEOUT_US		60000
 #define CNSS_MHI_MISSION_MODE_TIMEOUT		60000
 
-#define POWER_ON_RETRY_MAX_TIMES		3
-#define POWER_ON_RETRY_DELAY_MS			200
+#define POWER_ON_RETRY_MAX_TIMES		10
+#define POWER_ON_RETRY_DELAY_MS			600
 
-#define LINK_TRAINING_RETRY_MAX_TIMES		3
+#define LINK_TRAINING_RETRY_MAX_TIMES		30
 
 #define HANG_DATA_LENGTH		384
 #define HST_HANG_DATA_OFFSET		((3 * 1024 * 1024) - HANG_DATA_LENGTH)
@@ -393,15 +393,25 @@ int cnss_pci_check_link_status(struct cnss_pci_data *pci_priv)
 static void cnss_pci_select_window(struct cnss_pci_data *pci_priv, u32 offset)
 {
 	u32 window = (offset >> WINDOW_SHIFT) & WINDOW_VALUE_MASK;
+	u32 window_enable = WINDOW_ENABLE_BIT | window;
+	u32 val;
 
-	writel_relaxed(WINDOW_ENABLE_BIT | window,
-		       QCA6390_PCIE_REMAP_BAR_CTRL_OFFSET +
-		       pci_priv->bar);
+	writel_relaxed(window_enable, pci_priv->bar +
+		       QCA6390_PCIE_REMAP_BAR_CTRL_OFFSET);
 
 	if (window != pci_priv->remap_window) {
 		pci_priv->remap_window = window;
 		cnss_pr_dbg("Config PCIe remap window register to 0x%x\n",
-			    WINDOW_ENABLE_BIT | window);
+			    window_enable);
+	}
+
+	/* Read it back to make sure the write has taken effect */
+	val = readl_relaxed(pci_priv->bar + QCA6390_PCIE_REMAP_BAR_CTRL_OFFSET);
+	if (val != window_enable) {
+		cnss_pr_err("Failed to config window register to 0x%x, current value: 0x%x\n",
+			    window_enable, val);
+		if (!cnss_pci_check_link_status(pci_priv))
+			CNSS_ASSERT(0);
 	}
 }
 
@@ -1685,7 +1695,9 @@ static void cnss_pci_time_sync_work_hdlr(struct work_struct *work)
 	if (cnss_pci_pm_runtime_get_sync(pci_priv, RTPM_ID_CNSS) < 0)
 		goto runtime_pm_put;
 
+	mutex_lock(&pci_priv->bus_lock);
 	cnss_pci_update_timestamp(pci_priv);
+	mutex_unlock(&pci_priv->bus_lock);
 	schedule_delayed_work(&pci_priv->time_sync_work,
 			      msecs_to_jiffies(time_sync_period_ms));
 
@@ -2117,7 +2129,7 @@ retry:
 		if (ret == -EAGAIN && retry++ < POWER_ON_RETRY_MAX_TIMES) {
 			cnss_power_off_device(plat_priv);
 			cnss_pr_dbg("Retry to resume PCI link #%d\n", retry);
-			msleep(POWER_ON_RETRY_DELAY_MS * retry);
+			msleep(POWER_ON_RETRY_DELAY_MS);
 			goto retry;
 		}
 		/* Assert when it reaches maximum retries */
@@ -2791,7 +2803,9 @@ static int cnss_pci_suspend(struct device *dev)
 		goto clear_flag;
 
 	if (!pci_priv->disable_pc) {
+		mutex_lock(&pci_priv->bus_lock);
 		ret = cnss_pci_suspend_bus(pci_priv);
+		mutex_unlock(&pci_priv->bus_lock);
 		if (ret)
 			goto resume_driver;
 	}
@@ -4744,21 +4758,35 @@ static int cnss_mhi_bw_scale(struct mhi_controller *mhi_ctrl,
 			     struct mhi_link_info *link_info)
 {
 	struct cnss_pci_data *pci_priv = mhi_ctrl->priv_data;
+	struct cnss_plat_data *plat_priv = pci_priv->plat_priv;
 	int ret = 0;
+
+	cnss_pr_dbg("Setting link speed:0x%x, width:0x%x\n",
+		    link_info->target_link_speed,
+		    link_info->target_link_width);
+
+	/* It has to set target link speed here before setting link bandwidth
+	 * when device requests link speed change. This can avoid setting link
+	 * bandwidth getting rejected if requested link speed is higher than
+	 * current one.
+	 */
+	ret = msm_pcie_set_target_link_speed(plat_priv->rc_num,
+					     link_info->target_link_speed);
+	if (ret)
+		cnss_pr_err("Failed to set target link speed to 0x%x, err = %d\n",
+			    link_info->target_link_speed, ret);
 
 	ret = msm_pcie_set_link_bandwidth(pci_priv->pci_dev,
 					  link_info->target_link_speed,
 					  link_info->target_link_width);
 
-	if (ret)
+	if (ret) {
+		cnss_pr_err("Failed to set link bandwidth, err = %d\n", ret);
 		return ret;
+	}
 
 	pci_priv->def_link_speed = link_info->target_link_speed;
 	pci_priv->def_link_width = link_info->target_link_width;
-
-	cnss_pr_dbg("Setting link speed:0x%x, width:0x%x\n",
-		    link_info->target_link_speed,
-		    link_info->target_link_width);
 
 	return 0;
 }
@@ -5110,6 +5138,21 @@ int cnss_pci_init(struct cnss_plat_data *plat_priv)
 	if (ret) {
 		cnss_pr_err("Failed to find PCIe RC number, err = %d\n", ret);
 		goto out;
+	}
+
+	plat_priv->rc_num = rc_num;
+
+	/* Always set initial target PCIe link speed to Gen2 for QCA6490 device
+	 * since there may be link issues if it boots up with Gen3 link speed.
+	 * Device is able to change it later at any time. It will be rejected
+	 * if requested speed is higher than the one specified in PCIe DT.
+	 */
+	if (plat_priv->device_id == QCA6490_DEVICE_ID) {
+		ret = msm_pcie_set_target_link_speed(rc_num,
+						     PCI_EXP_LNKSTA_CLS_5_0GB);
+		if (ret)
+			cnss_pr_err("Failed to set target PCIe link speed to Gen2, err = %d\n",
+				    ret);
 	}
 
 retry:

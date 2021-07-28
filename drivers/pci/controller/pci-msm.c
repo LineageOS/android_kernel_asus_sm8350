@@ -45,7 +45,13 @@
 #define PCIE_GEN3_SPCIE_CAP (0x0154)
 #define PCIE_GEN3_GEN2_CTRL (0x080c)
 #define PCIE_GEN3_RELATED (0x0890)
+#define PCIE_GEN3_RELATED_RATE_SHADOW_SEL_MASK (BIT(25) | BIT(24))
+/* 0 - Gen3, 1 - Gen4 */
+#define PCIE_GEN3_RELATED_RATE_SHADOW_SEL(x) ((x) - PCI_EXP_LNKCAP_SLS_8_0GB)
+
 #define PCIE_GEN3_EQ_CONTROL (0x08a8)
+#define PCIE_GEN3_EQ_PSET_REQ_VEC_MASK (GENMASK(23, 8))
+
 #define PCIE_GEN3_EQ_FB_MODE_DIR_CHANGE (0x08ac)
 #define PCIE_GEN3_MISC_CONTROL (0x08bc)
 
@@ -682,6 +688,7 @@ struct msm_pcie_dev_t {
 	uint32_t smmu_sid_base;
 	uint32_t link_check_max_count;
 	uint32_t target_link_speed;
+	uint32_t dt_target_link_speed;
 	uint32_t n_fts;
 	uint32_t ep_latency;
 	uint32_t switch_latency;
@@ -690,6 +697,7 @@ struct msm_pcie_dev_t {
 	uint32_t phy_status_offset;
 	uint32_t phy_status_bit;
 	uint32_t phy_power_down_offset;
+	uint32_t eq_pset_req_vec;
 	uint32_t core_preset;
 	uint32_t cpl_timeout;
 	uint32_t current_bdf;
@@ -1284,6 +1292,8 @@ static void msm_pcie_show_status(struct msm_pcie_dev_t *dev)
 		dev->phy_status_bit);
 	PCIE_DBG_FS(dev, "phy_power_down_offset: 0x%x\n",
 		dev->phy_power_down_offset);
+	PCIE_DBG_FS(dev, "eq_pset_req_vec: 0x%x\n",
+		dev->eq_pset_req_vec);
 	PCIE_DBG_FS(dev, "core_preset: 0x%x\n",
 		dev->core_preset);
 	PCIE_DBG_FS(dev, "cpl_timeout: 0x%x\n",
@@ -3208,6 +3218,31 @@ static void msm_pcie_iatu_config_all_ep(struct msm_pcie_dev_t *dev)
 	}
 }
 
+/* Controller settings related to PCIe PHY */
+static void msm_pcie_config_controller_phy(struct msm_pcie_dev_t *pcie_dev)
+{
+	int i;
+	u32 supported_link_speed =
+		readl_relaxed(pcie_dev->dm_core + PCIE20_CAP + PCI_EXP_LNKCAP) &
+		PCI_EXP_LNKCAP_SLS;
+
+	/* settings apply to GEN3 and above */
+	for (i = PCI_EXP_LNKCAP_SLS_8_0GB; i <= supported_link_speed; i++) {
+		/* select which GEN speed to configure settings for */
+		msm_pcie_write_reg_field(pcie_dev->dm_core, PCIE_GEN3_RELATED,
+					PCIE_GEN3_RELATED_RATE_SHADOW_SEL_MASK,
+					PCIE_GEN3_RELATED_RATE_SHADOW_SEL(i));
+
+		msm_pcie_write_reg_field(pcie_dev->dm_core, PCIE_GEN3_EQ_CONTROL,
+					PCIE_GEN3_EQ_PSET_REQ_VEC_MASK,
+					pcie_dev->eq_pset_req_vec);
+
+		/* GEN3_ZRXDC_NONCOMPL */
+		msm_pcie_write_mask(pcie_dev->dm_core +
+					PCIE_GEN3_RELATED, BIT(0), 0);
+	}
+}
+
 static void msm_pcie_config_controller(struct msm_pcie_dev_t *dev)
 {
 	PCIE_DBG(dev, "RC%d\n", dev->rc_idx);
@@ -3771,11 +3806,8 @@ static int msm_pcie_link_train(struct msm_pcie_dev_t *dev)
 	msm_pcie_write_reg_field(dev->dm_core,
 		PCIE_GEN3_GEN2_CTRL, 0x1f00, 1);
 
-	msm_pcie_write_mask(dev->dm_core,
-		PCIE_GEN3_EQ_CONTROL, 0x20);
-
-	msm_pcie_write_mask(dev->dm_core +
-		PCIE_GEN3_RELATED, BIT(0), 0);
+	/* Controller settings related to PCIe PHY */
+	msm_pcie_config_controller_phy(dev);
 
 	/* configure PCIe preset */
 	msm_pcie_write_reg_field(dev->dm_core,
@@ -5532,9 +5564,11 @@ static int msm_pcie_probe(struct platform_device *pdev)
 		pcie_dev->rc_idx, pcie_dev->link_check_max_count);
 
 	of_property_read_u32(of_node, "qcom,target-link-speed",
-				&pcie_dev->target_link_speed);
+				&pcie_dev->dt_target_link_speed);
 	PCIE_DBG(pcie_dev, "PCIe: RC%d: target-link-speed: 0x%x.\n",
-		pcie_dev->rc_idx, pcie_dev->target_link_speed);
+		pcie_dev->rc_idx, pcie_dev->dt_target_link_speed);
+
+	pcie_dev->target_link_speed = pcie_dev->dt_target_link_speed;
 
 	of_property_read_u32(of_node, "qcom,n-fts", &pcie_dev->n_fts);
 	PCIE_DBG(pcie_dev, "n-fts: 0x%x.\n", pcie_dev->n_fts);
@@ -5579,6 +5613,12 @@ static int msm_pcie_probe(struct platform_device *pdev)
 				&pcie_dev->phy_power_down_offset);
 	PCIE_DBG(pcie_dev, "RC%d: phy-power-down-offset: 0x%x.\n",
 		pcie_dev->rc_idx, pcie_dev->phy_power_down_offset);
+
+	of_property_read_u32(pdev->dev.of_node,
+				"qcom,eq-pset-req-vec",
+				&pcie_dev->eq_pset_req_vec);
+	PCIE_DBG(pcie_dev, "RC%d: eq-pset-req-vec: 0x%x.\n",
+		pcie_dev->rc_idx, pcie_dev->eq_pset_req_vec);
 
 	pcie_dev->core_preset = PCIE_GEN3_PRESET_DEFAULT;
 	of_property_read_u32(pdev->dev.of_node,
@@ -5944,6 +5984,55 @@ static void msm_pcie_poll_for_l0_from_l0s(struct msm_pcie_dev_t *dev)
 	while (!msm_pcie_check_ltssm_state(dev, MSM_PCIE_LTSSM_L0))
 		pci_walk_bus(dev->dev->bus, msm_pcie_read_devid_all, dev);
 }
+
+int msm_pcie_set_target_link_speed(u32 rc_idx, u32 target_link_speed)
+{
+	struct msm_pcie_dev_t *pcie_dev;
+
+	if (rc_idx >=  MAX_RC_NUM) {
+		pr_err("PCIe: invalid rc index %u\n", rc_idx);
+		return -EINVAL;
+	}
+
+	pcie_dev = &msm_pcie_dev[rc_idx];
+
+	if (!pcie_dev->drv_ready) {
+		PCIE_DBG(pcie_dev,
+			"PCIe: RC%d: has not been successfully probed yet\n",
+			pcie_dev->rc_idx);
+		return -EPROBE_DEFER;
+	}
+
+	/*
+	 * Reject the request if it exceeds what PCIe RC is capable or if
+	 * it's greater than what was specified in DT (if present)
+	 */
+	if (target_link_speed > pcie_dev->bw_gen_max ||
+		(pcie_dev->dt_target_link_speed &&
+		target_link_speed > pcie_dev->dt_target_link_speed)) {
+		PCIE_DBG(pcie_dev,
+			"PCIe: RC%d: invalid target link speed: %d\n",
+			pcie_dev->rc_idx, target_link_speed);
+		return -EINVAL;
+	}
+
+	pcie_dev->target_link_speed = target_link_speed;
+
+	/*
+	 * The request 0 will reset maximum GEN speed to default. Default will
+	 * be devicetree specified GEN speed if present else it will be whatever
+	 * the PCIe root complex is capable of.
+	 */
+	if (!target_link_speed)
+		pcie_dev->target_link_speed = pcie_dev->dt_target_link_speed ?
+			pcie_dev->dt_target_link_speed : pcie_dev->bw_gen_max;
+
+	PCIE_DBG(pcie_dev, "PCIe: RC%d: target_link_speed is now: 0x%x.\n",
+		pcie_dev->rc_idx, pcie_dev->target_link_speed);
+
+	return 0;
+}
+EXPORT_SYMBOL(msm_pcie_set_target_link_speed);
 
 int msm_pcie_set_link_bandwidth(struct pci_dev *pci_dev, u16 target_link_speed,
 				u16 target_link_width)
@@ -6741,8 +6830,13 @@ static int msm_pcie_drv_send_rpmsg(struct msm_pcie_dev_t *pcie_dev,
 
 	mutex_lock(&pcie_drv.rpmsg_lock);
 	if (!pcie_drv.rpdev) {
+#ifdef CONFIG_MACH_ASUS
+		ret = -EIO;
+		goto out;
+#else
 		mutex_unlock(&pcie_drv.rpmsg_lock);
 		return -EIO;
+#endif
 	}
 
 	reinit_completion(&drv_info->completion);
@@ -6760,10 +6854,17 @@ static int msm_pcie_drv_send_rpmsg(struct msm_pcie_dev_t *pcie_dev,
 	if (ret) {
 		PCIE_ERR(pcie_dev, "PCIe: RC%d: DRV: failed to send rpmsg\n",
 			pcie_dev->rc_idx);
+#ifdef CONFIG_MACH_ASUS
+		goto out;
+#else
 		mutex_unlock(&pcie_drv.rpmsg_lock);
 		return ret;
+#endif
 	}
+#ifdef CONFIG_MACH_ASUS
+#else
 	mutex_unlock(&pcie_drv.rpmsg_lock);
+#endif
 
 	ret = wait_for_completion_timeout(&drv_info->completion,
 					msecs_to_jiffies(drv_info->timeout_ms));
@@ -6771,13 +6872,26 @@ static int msm_pcie_drv_send_rpmsg(struct msm_pcie_dev_t *pcie_dev,
 		PCIE_ERR(pcie_dev,
 			"PCIe: RC%d: DRV: completion timeout for rpmsg\n",
 			pcie_dev->rc_idx);
+#ifdef CONFIG_MACH_ASUS
+		ret = -ETIMEDOUT;
+		goto out;
+#else
 		return -ETIMEDOUT;
+#endif
 	}
-
+#ifdef CONFIG_MACH_ASUS
+	ret = 0;
+#endif
 	PCIE_DBG(pcie_dev, "PCIe: RC%d: DRV: rpmsg successfully sent\n",
 		pcie_dev->rc_idx);
+#ifdef CONFIG_MACH_ASUS
+out:
+	mutex_unlock(&pcie_drv.rpmsg_lock);
 
+	return ret;
+#else
 	return 0;
+#endif
 }
 
 static int msm_pcie_drv_resume(struct msm_pcie_dev_t *pcie_dev)
