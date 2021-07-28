@@ -23,8 +23,10 @@
 struct cam_csid_soc_private {
 	uint32_t cpas_handle;
 	bool     is_ife_csid_lite;
+	#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT	
 	bool     max_width_enabled;
 	uint32_t max_width;
+	#endif
 };
 
 /**

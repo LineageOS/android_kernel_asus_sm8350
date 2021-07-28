@@ -11,7 +11,7 @@
 #include <camera/media/cam_defs.h>
 
 #define CAM_SENSOR_PROBE_CMD   (CAM_COMMON_OPCODE_MAX + 1)
-#define CAM_FLASH_MAX_LED_TRIGGERS 2
+#define CAM_FLASH_MAX_LED_TRIGGERS 4
 #define MAX_OIS_NAME_SIZE 32
 #define CAM_CSIPHY_SECURE_MODE_ENABLED 1
 /**

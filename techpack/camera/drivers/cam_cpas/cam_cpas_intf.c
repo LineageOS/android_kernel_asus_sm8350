@@ -135,6 +135,7 @@ const char *cam_cpas_axi_util_trans_type_to_string(
 }
 EXPORT_SYMBOL(cam_cpas_axi_util_trans_type_to_string);
 
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 bool cam_cpas_is_feature_supported(uint32_t flag, uint32_t hw_map,
 	uint32_t *fuse_val)
 {
@@ -187,6 +188,32 @@ end:
 	return supported;
 }
 EXPORT_SYMBOL(cam_cpas_is_feature_supported);
+#else
+int cam_cpas_is_feature_supported(uint32_t flag)
+{
+	struct cam_hw_info *cpas_hw = NULL;
+	struct cam_cpas_private_soc *soc_private = NULL;
+	uint32_t feature_mask;
+
+	if (!CAM_CPAS_INTF_INITIALIZED()) {
+		CAM_ERR(CAM_CPAS, "cpas intf not initialized");
+		return -ENODEV;
+	}
+
+	cpas_hw = (struct cam_hw_info *) g_cpas_intf->hw_intf->hw_priv;
+	soc_private =
+		(struct cam_cpas_private_soc *)cpas_hw->soc_info.soc_private;
+	feature_mask = soc_private->feature_mask;
+
+	if (flag >= CAM_CPAS_FUSE_FEATURE_MAX) {
+		CAM_ERR(CAM_CPAS, "Unknown feature flag %x", flag);
+		return -EINVAL;
+	}
+
+	return feature_mask & flag ? 1 : 0;
+}
+EXPORT_SYMBOL(cam_cpas_is_feature_supported);
+#endif
 
 int cam_cpas_get_cpas_hw_version(uint32_t *hw_version)
 {
