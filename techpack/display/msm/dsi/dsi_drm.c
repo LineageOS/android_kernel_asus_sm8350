@@ -197,6 +197,8 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 		return;
 	}
 
+	/* ASUS BSP Display +++ */
+	DSI_LOG("display on +++\n");
 	SDE_ATRACE_BEGIN("dsi_display_prepare");
 	rc = dsi_display_prepare(c_bridge->display);
 	if (rc) {
@@ -220,6 +222,9 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
 	if (rc)
 		DSI_ERR("Continuous splash pipeline cleanup failed, rc=%d\n",
 									rc);
+
+	/* ASUS BSP Display +++ */
+	DSI_LOG("display on ---\n");
 }
 
 static void dsi_bridge_enable(struct drm_bridge *bridge)
@@ -293,6 +298,8 @@ static void dsi_bridge_post_disable(struct drm_bridge *bridge)
 		return;
 	}
 
+	/* ASUS BSP Display +++ */
+	DSI_LOG("display off +++\n");
 	SDE_ATRACE_BEGIN("dsi_bridge_post_disable");
 	SDE_ATRACE_BEGIN("dsi_display_disable");
 	rc = dsi_display_disable(c_bridge->display);
@@ -312,6 +319,9 @@ static void dsi_bridge_post_disable(struct drm_bridge *bridge)
 		return;
 	}
 	SDE_ATRACE_END("dsi_bridge_post_disable");
+
+	/* ASUS BSP Display +++ */
+	DSI_LOG("display off ---\n");
 }
 
 static void dsi_bridge_mode_set(struct drm_bridge *bridge,

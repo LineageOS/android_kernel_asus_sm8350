@@ -49,6 +49,9 @@
 #include "msm_mmu.h"
 #include "sde_wb.h"
 #include "sde_dbg.h"
+#if defined(CONFIG_PXLW_IRIS) || defined(PXLW_IRIS)
+#include "dsi/iris/dsi_iris6_api.h"
+#endif
 
 /*
  * MSM driver version:
@@ -1627,7 +1630,29 @@ int msm_ioctl_power_ctrl(struct drm_device *dev, void *data,
 	mutex_unlock(&ctx->power_lock);
 	return rc;
 }
+#if defined(CONFIG_PXLW_IRIS)
+static int msm_ioctl_iris_operate_conf(struct drm_device *dev, void *data,
+				    struct drm_file *file)
+{
+	int ret = -EINVAL;
+	struct msm_drm_private *priv = dev->dev_private;
+	struct msm_kms *kms = priv->kms;
 
+	ret = kms->funcs->iris_operate(kms, DRM_MSM_IRIS_OPERATE_CONF, data);
+	return ret;
+}
+
+static int msm_ioctl_iris_operate_tool(struct drm_device *dev, void *data,
+				    struct drm_file *file)
+{
+	int ret = -EINVAL;
+	struct msm_drm_private *priv = dev->dev_private;
+	struct msm_kms *kms = priv->kms;
+
+	ret = kms->funcs->iris_operate(kms, DRM_MSM_IRIS_OPERATE_TOOL, data);
+	return ret;
+}
+#endif // CONFIG_PXLW_IRIS
 /**
  * msm_ioctl_display_early_wakeup - early wakeup display.
  * @dev: drm device for the ioctl
@@ -1694,6 +1719,10 @@ static const struct drm_ioctl_desc msm_ioctls[] = {
 			DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(MSM_DISPLAY_HINT, msm_ioctl_display_hint_ops,
 			DRM_UNLOCKED),
+#if defined(CONFIG_PXLW_IRIS)
+	DRM_IOCTL_DEF_DRV(MSM_IRIS_OPERATE_CONF, msm_ioctl_iris_operate_conf, DRM_UNLOCKED|DRM_RENDER_ALLOW),
+	DRM_IOCTL_DEF_DRV(MSM_IRIS_OPERATE_TOOL, msm_ioctl_iris_operate_tool, DRM_UNLOCKED|DRM_RENDER_ALLOW),
+#endif
 };
 
 static const struct vm_operations_struct vm_ops = {

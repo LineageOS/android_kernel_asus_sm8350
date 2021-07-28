@@ -16,6 +16,11 @@
 #include "dp_debug.h"
 #include "sde_dbg.h"
 
+/* ASUS BSP Display +++ */
+bool g_hpd = false;
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT
+extern struct completion usb_host_complete1; // to sync usb host
+#endif
 
 #define ALTMODE_CONFIGURE_MASK (0x3f)
 #define ALTMODE_HPD_STATE_MASK (0x40)
@@ -129,18 +134,21 @@ static int dp_altmode_notify(void *priv, void *data, size_t len)
 	altmode->dp_altmode.base.multi_func = force_multi_func ? true :
 		!(pin == DPAM_HPD_C || pin == DPAM_HPD_E);
 
-	DP_DEBUG("payload=0x%x\n", dp_data);
-	DP_DEBUG("port_index=%d, orientation=%d, pin=%d, hpd_state=%d\n",
+	DP_LOG("payload=0x%x\n", dp_data);
+	DP_LOG("port_index=%d, orientation=%d, pin=%d, hpd_state=%d\n",
 			port_index, orientation, pin, hpd_state);
-	DP_DEBUG("multi_func=%d, hpd_high=%d, hpd_irq=%d\n",
+	DP_LOG("multi_func=%d, hpd_high=%d, hpd_irq=%d\n",
 			altmode->dp_altmode.base.multi_func,
 			altmode->dp_altmode.base.hpd_high,
 			altmode->dp_altmode.base.hpd_irq);
-	DP_DEBUG("connected=%d\n", altmode->connected);
+	DP_LOG("connected=%d\n", altmode->connected);
 	SDE_EVT32_EXTERNAL(dp_data, port_index, orientation, pin, hpd_state,
 			altmode->dp_altmode.base.multi_func,
 			altmode->dp_altmode.base.hpd_high,
 			altmode->dp_altmode.base.hpd_irq, altmode->connected);
+
+	/* ASUS BSP Display +++ */
+	g_hpd = altmode->dp_altmode.base.hpd_high;
 
 	if (!pin) {
 		/* Cable detach */
@@ -156,6 +164,15 @@ static int dp_altmode_notify(void *priv, void *data, size_t len)
 
 	/* Configure */
 	if (!altmode->connected) {
+/* ASUS BSP Display +++ */
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT
+		if (!wait_for_completion_timeout(&usb_host_complete1, HZ * 3)) {
+			DP_LOG("usb host turn on timeout\n");
+			goto ack;
+		}
+#endif
+/* ASUS BSP Display --- */
+
 		altmode->connected = true;
 		altmode->dp_altmode.base.alt_mode_cfg_done = true;
 		altmode->forced_disconnect = false;

@@ -230,6 +230,11 @@ struct dp_parser {
 	struct dp_io_data *(*get_io)(struct dp_parser *parser, char *name);
 	void (*get_io_buf)(struct dp_parser *parser, char *name);
 	void (*clear_io_buf)(struct dp_parser *parser);
+
+	/* ASUS BSP Display, pcie mux switch from SR stage */
+	unsigned int pcie_mux_en_gpio;
+	// audio debug gpio for uart/dp switch
+	unsigned int audio_debug_gpio;
 };
 
 enum dp_phy_lane_num {
