@@ -335,6 +335,9 @@ int nfc_i2c_dev_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	nfc_dev->gpio.irq = nfc_gpio.irq;
 	nfc_dev->gpio.dwl_req = nfc_gpio.dwl_req;
 	nfc_dev->gpio.clkreq = nfc_gpio.clkreq;
+#ifdef ASUS_SAKE_PROJECT
+	nfc_dev->gpio.ese_gpio = nfc_gpio.ese_gpio;
+#endif //ASUS_SAKE_PROJECT
 
 	/* init mutex and queues */
 	init_waitqueue_head(&nfc_dev->read_wq);
@@ -366,11 +369,15 @@ int nfc_i2c_dev_probe(struct i2c_client *client, const struct i2c_device_id *id)
 		goto err_ldo_config_failed;
 	}
 
+#ifdef ASUS_PICASSO_PROJECT
 	ret = nfcc_hw_check(nfc_dev);
 	if (ret) {
 		pr_err("nfc hw check failed ret %d\n", ret);
 		goto err_nfcc_hw_check;
 	}
+#else
+	pr_info("%s: - Skip nfcc_hw_check i2c for FW recovery.\n", __func__);
+#endif //ASUS_PICASSO_PROJECT
 
 	device_init_wakeup(&client->dev, true);
 	i2c_dev->irq_wake_up = false;
@@ -378,8 +385,9 @@ int nfc_i2c_dev_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	pr_info("%s success\n", __func__);
 	return 0;
-
+#ifdef ASUS_PICASSO_PROJECT
 err_nfcc_hw_check:
+#endif //ASUS_PICASSO_PROJECT
 	if (nfc_dev->reg) {
 		nfc_ldo_unvote(nfc_dev);
 		regulator_put(nfc_dev->reg);

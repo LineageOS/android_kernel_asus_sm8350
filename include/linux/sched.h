@@ -527,6 +527,10 @@ struct sched_entity {
 	ANDROID_KABI_RESERVE(2);
 	ANDROID_KABI_RESERVE(3);
 	ANDROID_KABI_RESERVE(4);
+#ifdef CONFIG_MACH_ASUS
+	int binder_sender_pid;
+	int binder_sender_tid;
+#endif
 };
 
 struct cpu_cycle_counter_cb {
@@ -561,6 +565,9 @@ extern void walt_update_cluster_topology(void);
 
 #define RAVG_HIST_SIZE_MAX  5
 #define NUM_BUSY_BUCKETS 10
+
+#define WALT_LOW_LATENCY_PROCFS	BIT(0)
+#define WALT_LOW_LATENCY_BINDER	BIT(1)
 
 struct walt_task_struct {
 	/*
@@ -611,7 +618,7 @@ struct walt_task_struct {
 	bool				wake_up_idle;
 	bool				misfit;
 	bool				rtg_high_prio;
-	bool				low_latency;
+	u8				low_latency;
 	u64				boost_period;
 	u64				boost_expires;
 	u64				last_sleep_ts;
