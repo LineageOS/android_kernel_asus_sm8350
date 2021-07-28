@@ -155,6 +155,9 @@ arch/*/configs/vendor/*_defconfig
 !arch/*/configs/vendor/VODKA*
 !arch/*/configs/vendor/VODKA*
 
+# Ignore the generated defconfig report.
+generate_defconfig.txt
+
 # vendor device tree directories
 arch/arm64/boot/dts/vendor
 arch/arm/boot/dts/vendor
