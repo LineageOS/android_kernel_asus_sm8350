@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
  */
+#define DEBUG
 
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -25,6 +26,13 @@
 #include "wcd938x.h"
 #include "internal.h"
 #include "asoc/bolero-slave-internal.h"
+//ASUS_BSP modify for headset status +++
+#ifdef ASUS_FTM_BUILD
+#if defined ASUS_SAKE_PROJECT
+#include <linux/proc_fs.h>
+#endif
+#endif
+//ASUS_BSP modify for headset status ---
 
 #define NUM_SWRS_DT_PARAMS 5
 #define WCD938X_VARIANT_ENTRY_SIZE 32
@@ -58,6 +66,14 @@
 #define WCD938X_FORMATS (SNDRV_PCM_FMTBIT_S16_LE |\
 		SNDRV_PCM_FMTBIT_S24_LE |\
 		SNDRV_PCM_FMTBIT_S24_3LE | SNDRV_PCM_FMTBIT_S32_LE)
+		
+//ASUS_BSP modify for headset status +++
+#ifdef ASUS_FTM_BUILD
+#if defined ASUS_SAKE_PROJECT
+struct wcd938x_priv *g_wcd938x;
+#endif
+#endif
+//ASUS_BSP modify for headset status ---
 
 enum {
 	CODEC_TX = 0,
@@ -2869,7 +2885,7 @@ static int wcd938x_tx_master_ch_put(struct snd_kcontrol *kcontrol,
 	struct snd_soc_component *component =
 				snd_soc_kcontrol_component(kcontrol);
 	struct wcd938x_priv *wcd938x = NULL;
-	int slave_ch_idx = -EINVAL;
+	int slave_ch_idx = -EINVAL, idx = 0;
 
 	if (component == NULL)
 		return -EINVAL;
@@ -2887,8 +2903,11 @@ static int wcd938x_tx_master_ch_put(struct snd_kcontrol *kcontrol,
 	dev_dbg(component->dev, "%s: ucontrol->value.enumerated.item[0] = %ld\n",
 			__func__, ucontrol->value.enumerated.item[0]);
 
-	wcd938x->tx_master_ch_map[slave_ch_idx] = wcd938x_slave_get_master_ch(
-				ucontrol->value.enumerated.item[0]);
+	idx = ucontrol->value.enumerated.item[0];
+	if (idx < 0 || idx >= ARRAY_SIZE(swr_master_ch_map))
+		return -EINVAL;
+
+	wcd938x->tx_master_ch_map[slave_ch_idx] = wcd938x_slave_get_master_ch(idx);
 	return 0;
 }
 
@@ -3735,6 +3754,61 @@ done:
 	return rc;
 }
 
+//modify for headset status +++
+#ifdef ASUS_FTM_BUILD
+#if defined ASUS_SAKE_PROJECT
+#define HEADSET_STATUS_PROC_FILE "driver/headset_status"
+ 
+static struct proc_dir_entry *headset_status_proc_file;
+
+static ssize_t headset_status_proc_read(struct file *filp, char __user *buff, size_t len, loff_t *off)
+{
+       char messages[256];
+       struct wcd938x_priv *wcd938x = g_wcd938x;
+
+       if (*off)
+			return 0;
+
+       memset(messages, 0, sizeof(messages));
+       if (len > 256)
+			len = 256;
+
+	   switch (wcd938x->mbhc->wcd_mbhc.current_plug) {
+	   case MBHC_PLUG_TYPE_HEADSET:
+			   sprintf(messages, "1\n");
+			   break;
+	   case MBHC_PLUG_TYPE_HEADPHONE:
+			   sprintf(messages, "2\n");
+			   break;
+	   default:
+			   sprintf(messages, "0\n");
+			   break;
+	   }
+
+       if (copy_to_user(buff, messages, len))
+               return -EFAULT;
+
+       (*off)++;
+       return len;
+}
+
+static struct file_operations headset_status_proc_ops = {
+      .read = headset_status_proc_read,
+};
+
+static void create_headset_status_proc_file(void)
+{
+	printk("create_headset_status_proc_file\n");
+	headset_status_proc_file = proc_create(HEADSET_STATUS_PROC_FILE, 0666, NULL, &headset_status_proc_ops);
+
+	if (headset_status_proc_file == NULL)
+		printk("create_headset_status_proc_file failed\n");
+
+}
+#endif
+#endif
+//modify for headset status ---
+
 static int wcd938x_soc_codec_probe(struct snd_soc_component *component)
 {
 	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
@@ -3780,6 +3854,13 @@ static int wcd938x_soc_codec_probe(struct snd_soc_component *component)
 		goto err_hwdep;
 	}
 
+//ASUS_BSP modify for headset status +++
+#ifdef ASUS_FTM_BUILD
+#if defined ASUS_SAKE_PROJECT
+	g_wcd938x = wcd938x;
+#endif
+#endif
+//ASUS_BSP modify for headset status ---
 	snd_soc_dapm_ignore_suspend(dapm, "WCD938X_AIF Playback");
 	snd_soc_dapm_ignore_suspend(dapm, "WCD938X_AIF Capture");
 	snd_soc_dapm_ignore_suspend(dapm, "AMIC1");
@@ -3838,6 +3919,15 @@ static int wcd938x_soc_codec_probe(struct snd_soc_component *component)
 			return ret;
 		}
 	}
+	
+//modify for headset status +++
+#ifdef ASUS_FTM_BUILD
+#if defined ASUS_SAKE_PROJECT
+	create_headset_status_proc_file();
+#endif
+#endif
+//modify for headset status ---
+	
 	return ret;
 
 err_hwdep:
