@@ -153,6 +153,9 @@ struct dsi_panel_reset_config {
 	int disp_en_gpio;
 	int lcd_mode_sel_gpio;
 	u32 mode_sel_state;
+
+	/* ASUS BSP Display +++ */
+	int px_reset_gpio;
 };
 
 enum esd_check_status_mode {
@@ -254,6 +257,23 @@ struct dsi_panel {
 	enum dsi_panel_physical_type panel_type;
 
 	struct dsi_panel_ops panel_ops;
+
+	/* ASUS Anakin BSP Display +++ */
+	const char *panel_vendor_id;
+	int panel_hbm_mode;
+	int panel_fod_hbm_mode;
+	int allow_panel_fod_hbm;
+	bool allow_fod_hbm_process;
+	//bool allow_dimming_smooth;
+	bool panel_is_on;
+	u32 panel_last_backlight;
+	bool aod_state;
+	bool aod_first_time;
+	bool has_enter_aod_before;
+	bool fod_in_doze;
+	int panel_bl_count; // count for enable dimming
+	int  aod_mode;//0: not aod mode 1: AOD low mode 2: AOD high mode
+	bool dc_fps_change;
 };
 
 static inline bool dsi_panel_ulps_feature_enabled(struct dsi_panel *panel)
@@ -278,7 +298,11 @@ static inline void dsi_panel_release_panel_lock(struct dsi_panel *panel)
 
 static inline bool dsi_panel_is_type_oled(struct dsi_panel *panel)
 {
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	return false;
+#else
 	return (panel->panel_type == DSI_DISPLAY_PANEL_TYPE_OLED);
+#endif
 }
 
 struct dsi_panel *dsi_panel_get(struct device *parent,

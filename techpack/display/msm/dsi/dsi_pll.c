@@ -165,6 +165,11 @@ int dsi_pll_init(struct platform_device *pdev, struct dsi_pll_resource **pll)
 	pll_res->ssc_en = of_property_read_bool(pdev->dev.of_node,
 						"qcom,dsi-pll-ssc-en");
 
+#if defined ASUS_SAKE_PROJECT 
+	//force disbale pll ssc enable for sake because rf team request
+	pll_res->ssc_en = false;
+#endif
+
 	if (pll_res->ssc_en) {
 		DSI_PLL_INFO(pll_res, "PLL SSC enabled\n");
 

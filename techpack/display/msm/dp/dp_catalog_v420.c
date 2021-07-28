@@ -69,6 +69,24 @@ static u8 const dp_swing_hbr_rbr[MAX_VOLTAGE_LEVELS][MAX_PRE_EMP_LEVELS] = {
 	{0x1F, 0xFF, 0xFF, 0xFF}  /* sw1, 1.2v */
 };
 
+/* ASUS BSP Display +++ */
+u8 dp_asus_pre_emp[MAX_VOLTAGE_LEVELS][MAX_PRE_EMP_LEVELS] = {
+	{0x00, 0x0E, 0x15, 0x1B}, /* pe0, 0 db */
+	{0x00, 0x0E, 0x15, 0xFF}, /* pe1, 3.5 db */
+	{0x00, 0x0E, 0xFF, 0xFF}, /* pe2, 6.0 db */
+	{0x04, 0xFF, 0xFF, 0xFF}  /* pe3, 9.5 db */
+};
+
+u8 dp_asus_swing[MAX_VOLTAGE_LEVELS][MAX_PRE_EMP_LEVELS] = {
+	{0x08, 0x0F, 0x16, 0x1F}, /* sw0, 0.4v */
+	{0x11, 0x1E, 0x1F, 0xFF}, /* sw1, 0.6v */
+	{0x16, 0x1F, 0xFF, 0xFF}, /* sw1, 0.8v */
+	{0x1F, 0xFF, 0xFF, 0xFF}  /* sw1, 1.2v */
+};
+
+extern struct dp_debug *asus_debug;
+/* ASUS BSP Display --- */
+
 struct dp_catalog_private_v420 {
 	struct device *dev;
 	struct dp_catalog_sub sub;
@@ -263,6 +281,16 @@ static void dp_catalog_ctrl_update_vx_px_v420(struct dp_catalog_ctrl *ctrl,
 		value0 = vm_voltage_swing[v_level][p_level];
 		value1 = vm_pre_emphasis[v_level][p_level];
 	}
+
+	/* ASUS BSP Display +++ */
+	if (asus_debug->swing_dbg_en == 1) {
+		value0 = dp_asus_swing[v_level][p_level];
+	}
+
+	if (asus_debug->pre_emp_dbg_en == 1) {
+		value1 = dp_asus_pre_emp[v_level][p_level];
+	}
+	/* ASUS BSP Display --- */
 
 	/* program default setting first */
 	io_data = catalog->io->dp_ln_tx0;
