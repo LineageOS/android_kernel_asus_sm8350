@@ -17,5 +17,12 @@ int cam_flash_flush_request(struct cam_req_mgr_flush_request *flush);
 int cam_flash_led_prepare(struct led_trigger *trigger, int options,
 	int *max_current, bool is_wled);
 
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+//ASUS_BSP +++ Shianliang add low battery checking
+struct cam_flash_ctrl;
+int cam_flash_battery_low(int enable);
+void cam_flash_copy_fctrl(struct cam_flash_ctrl *fctrl);
+//ASUS_BSP --- Shianliang add low battery checking
+#endif
 
 #endif /*_CAM_FLASH_CORE_H_*/

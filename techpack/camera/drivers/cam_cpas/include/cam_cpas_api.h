@@ -37,6 +37,7 @@ enum cam_cpas_reg_base {
 	CAM_CPAS_REG_MAX
 };
 
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 /**
  * enum cam_cpas_hw_index  - Enum for identify HW index
  */
@@ -52,6 +53,7 @@ enum cam_cpas_hw_index {
 	CAM_CPAS_HW_IDX_7 = 1<<7,
 	CAM_CPAS_HW_IDX_MAX = 1<<8
 };
+#endif
 
 /**
  * enum cam_cpas_camera_version Enum for Titan Camera Versions
@@ -649,9 +651,13 @@ int cam_cpas_get_cpas_hw_version(
  * @return 1 if feature is supported
  *
  */
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 bool cam_cpas_is_feature_supported(uint32_t flag, uint32_t hw_map,
 	uint32_t *fuse_val);
-
+#else
+int cam_cpas_is_feature_supported(
+	uint32_t flag);
+#endif
 /**
  * cam_cpas_axi_util_path_type_to_string()
  *

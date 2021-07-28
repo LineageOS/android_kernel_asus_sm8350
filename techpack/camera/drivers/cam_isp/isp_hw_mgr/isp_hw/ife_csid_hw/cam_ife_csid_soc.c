@@ -21,6 +21,7 @@ static int cam_ife_csid_get_dt_properties(struct cam_hw_soc_info *soc_info)
 
 	soc_private = (struct cam_csid_soc_private *)soc_info->soc_private;
 
+	#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	rc = of_property_read_u32(of_node, "max-width",
 		&soc_private->max_width);
 	if (rc) {
@@ -30,7 +31,8 @@ static int cam_ife_csid_get_dt_properties(struct cam_hw_soc_info *soc_info)
 	} else {
 		soc_private->max_width_enabled = true;
 	}
-
+	#endif
+	
 	soc_private->is_ife_csid_lite = false;
 	if (strnstr(soc_info->compatible, "lite",
 		strlen(soc_info->compatible)) != NULL) {
