@@ -14,6 +14,16 @@
 #include "cam_packet_util.h"
 
 #define MAX_READ_SIZE  0x7FFFF
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+#define MAX_LEGAL_EEPROM_NUMBER  8
+
+extern void eeprom_dump_create(struct cam_eeprom_ctrl_t * e_ctrl,uint8_t eeprom_module_group_index); //ASUS_BSP Zhengwei "porting eeprom"
+extern uint16_t get_camera_sensor_id(uint32_t camera_id);
+extern int get_camera_id_for_submodule(enum sensor_sub_module sub_module, uint32_t index, uint32_t* camera_id);
+extern bool check_eeprom_module_in_table(struct cam_eeprom_ctrl_t * e_ctrl,uint8_t *eeprom_module_group_index);
+extern void set_eeprom_module_loaded(struct cam_eeprom_ctrl_t * e_ctrl,bool value);
+extern void cam_eeprom_read_from_otp(struct cam_eeprom_ctrl_t * e_ctrl, int camera_id);
+#endif
 
 /**
  * cam_eeprom_read_memory() - read map data into buffer
@@ -33,6 +43,9 @@ static int cam_eeprom_read_memory(struct cam_eeprom_ctrl_t *e_ctrl,
 	struct cam_eeprom_memory_map_t    *emap = block->map;
 	struct cam_eeprom_soc_private     *eb_info = NULL;
 	uint8_t                           *memptr = block->mapdata;
+	#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	uint32_t                           i;
+	#endif
 
 	if (!e_ctrl) {
 		CAM_ERR(CAM_EEPROM, "e_ctrl is NULL");
@@ -116,6 +129,13 @@ static int cam_eeprom_read_memory(struct cam_eeprom_ctrl_t *e_ctrl,
 			memptr += emap[j].mem.valid_size;
 		}
 
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+        for(i = 0x00 ; i < e_ctrl->cal_data.num_data; i++)
+        {
+           if( i < 0x1F || (i >= 0x1BFD && i<= 0x1C0A ))
+	           CAM_DBG(CAM_EEPROM,"[eeprom_debug] eeprom soc index  %d  EEPROM DATA i= %04x data = %02x  ", e_ctrl->soc_info.index, i, e_ctrl->cal_data.mapdata[i]);
+		}
+#endif
 		if (emap[j].pageen.valid_size) {
 			i2c_reg_settings.addr_type = emap[j].pageen.addr_type;
 			i2c_reg_settings.data_type = emap[j].pageen.data_type;
@@ -1201,6 +1221,10 @@ static int32_t cam_eeprom_pkt_parse(struct cam_eeprom_ctrl_t *e_ctrl, void *arg)
 	struct cam_eeprom_soc_private  *soc_private =
 		(struct cam_eeprom_soc_private *)e_ctrl->soc_info.soc_private;
 	struct cam_sensor_power_ctrl_t *power_info = &soc_private->power_info;
+	#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	uint32_t camera_id;
+	uint8_t eeprom_module_group_index;
+	#endif
 
 	ioctl_ctrl = (struct cam_control *)arg;
 
@@ -1280,6 +1304,75 @@ static int32_t cam_eeprom_pkt_parse(struct cam_eeprom_ctrl_t *e_ctrl, void *arg)
 			}
 		}
 
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+		if(get_camera_id_for_submodule(SUB_MODULE_EEPROM, e_ctrl->soc_info.index, &camera_id) != 0)
+		{
+			pr_err("can not find related camera id for eeprom index %d, use its index as camera id",e_ctrl->soc_info.index);
+			camera_id = e_ctrl->soc_info.index;
+		}
+
+		CAM_DBG(CAM_EEPROM, "[eeprom_debug] eeprom soc index  %d   camera_id %d", e_ctrl->soc_info.index, camera_id);
+
+		if (e_ctrl->soc_info.index < MAX_LEGAL_EEPROM_NUMBER) //normal read eeprom
+		{
+
+			pr_err("[eeprom_debug] cam_eeprom_power_up :E");
+			rc = cam_eeprom_power_up(e_ctrl,
+				&soc_private->power_info);
+			if (rc) {
+				CAM_ERR(CAM_EEPROM, "failed rc %d", rc);
+				goto memdata_free;
+			}
+
+			CAM_DBG(CAM_EEPROM, "[eeprom_debug] cam_eeprom_power_up success");
+
+			e_ctrl->cam_eeprom_state = CAM_EEPROM_CONFIG;
+
+			pr_err("[eeprom_debug] cam_eeprom_read_memory :E");
+
+			rc = cam_eeprom_read_memory(e_ctrl, &e_ctrl->cal_data);
+			if (rc) {
+				CAM_ERR(CAM_EEPROM,
+					"read_eeprom_memory failed");
+				goto power_down;
+			}
+			CAM_DBG(CAM_EEPROM,"[eeprom_debug] EEPROM INIT done");
+
+			if(check_eeprom_module_in_table(e_ctrl, &eeprom_module_group_index))
+			{
+				eeprom_dump_create(e_ctrl, eeprom_module_group_index);//ASUS_BSP Zhengwei "porting eeprom"
+			}
+
+			rc = cam_eeprom_get_cal_data(e_ctrl, csl_packet);
+			rc = cam_eeprom_power_down(e_ctrl);
+
+		}else //it is use fake eeprom and read otp data to eeprom data.
+		{
+			/*******************************************
+			* NO EEPROM module, Skip eeprom power up/down
+			* Read OTP and pretend to be EEPROM
+			* EX:OV8856
+			*********************************************/
+
+			CAM_ERR(CAM_EEPROM, "[eeprom_debug] OTP only, Skip eeprom power up/down and read eeprom");
+
+			e_ctrl->cam_eeprom_state = CAM_EEPROM_CONFIG;
+
+
+			cam_eeprom_read_from_otp(e_ctrl, camera_id);
+
+
+			CAM_ERR(CAM_EEPROM,"[eeprom_debug] EEPROM INIT done");
+
+			if(check_eeprom_module_in_table(e_ctrl, &eeprom_module_group_index))
+			{
+				eeprom_dump_create(e_ctrl, eeprom_module_group_index);//ASUS_BSP Zhengwei "porting eeprom"
+			}
+
+			rc = cam_eeprom_get_cal_data(e_ctrl, csl_packet);
+
+		}
+#else
 		rc = cam_eeprom_power_up(e_ctrl,
 			&soc_private->power_info);
 		if (rc) {
@@ -1297,6 +1390,7 @@ static int32_t cam_eeprom_pkt_parse(struct cam_eeprom_ctrl_t *e_ctrl, void *arg)
 
 		rc = cam_eeprom_get_cal_data(e_ctrl, csl_packet);
 		rc = cam_eeprom_power_down(e_ctrl);
+#endif
 		e_ctrl->cam_eeprom_state = CAM_EEPROM_ACQUIRE;
 		vfree(e_ctrl->cal_data.mapdata);
 		vfree(e_ctrl->cal_data.map);
@@ -1503,7 +1597,15 @@ int32_t cam_eeprom_driver_cmd(struct cam_eeprom_ctrl_t *e_ctrl, void *arg)
 		rc = cam_eeprom_pkt_parse(e_ctrl, arg);
 		if (rc) {
 			CAM_ERR(CAM_EEPROM, "Failed in eeprom pkt Parsing");
-			goto release_mutex;
+			rc = cam_eeprom_pkt_parse(e_ctrl, arg);
+			if (rc) {
+				CAM_ERR(CAM_EEPROM, "Failed in eeprom pkt Parsing second");
+				rc = cam_eeprom_pkt_parse(e_ctrl, arg);				
+				if (rc) {
+					CAM_ERR(CAM_EEPROM, "Failed in eeprom pkt Parsing third");
+					goto release_mutex;
+				}
+			}
 		}
 		break;
 	default:
