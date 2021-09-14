@@ -110,6 +110,3 @@ cs35l45_spi_dlkm-y := $(CS35L45_SPI_OBJS)
 
 obj-$(CONFIG_SND_SOC_CS35L45_I2C) += cs35l45_i2c_dlkm.o
 cs35l45_i2c_dlkm-y := $(CS35L45_I2C_OBJS)
-
-# inject some build related information
-DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"
