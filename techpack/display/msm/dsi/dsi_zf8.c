@@ -339,8 +339,13 @@ static void display_exit_idle_mode()
 	DSI_LOG("power_mode/aod_state are (%d, %d)\n",
 			g_display->panel->power_mode, g_display->panel->aod_state);
 	
-	if ((g_display->panel->power_mode != 1 && g_display->panel->power_mode != 2) && !g_display->panel->aod_state && !g_display->panel->has_enter_aod_before ) {
+	if ((g_display->panel->power_mode != 1 && g_display->panel->power_mode != 2) && !g_display->panel->aod_state) {
 		DSI_LOG("return display_exit_idle_mode!\n");
+		return;
+	}
+
+	if (!g_display->panel->has_enter_aod_before) {
+		DSI_LOG("has_enter_aod_before return display_exit_idle_mode!\n");
 		return;
 	}
 	
