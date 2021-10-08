@@ -126,9 +126,6 @@ lim_process_probe_rsp_frame(struct mac_context *mac_ctx, uint8_t *rx_Packet_info
 
 	header = WMA_GET_RX_MAC_HEADER(rx_Packet_info);
 
-	mac_ctx->lim.bss_rssi = (int8_t)
-				WMA_GET_RX_RSSI_NORMALIZED(rx_Packet_info);
-
 	/* Validate IE information before processing Probe Response Frame */
 	if (lim_validate_ie_information_in_probe_rsp_frame(mac_ctx,
 				rx_Packet_info) !=
@@ -142,7 +139,8 @@ lim_process_probe_rsp_frame(struct mac_context *mac_ctx, uint8_t *rx_Packet_info
 	pe_debug("Probe Resp(len %d): " QDF_MAC_ADDR_FMT " RSSI %d",
 		 WMA_GET_RX_MPDU_LEN(rx_Packet_info),
 		 QDF_MAC_ADDR_REF(header->bssId),
-		 (uint)abs(mac_ctx->lim.bss_rssi));
+		 (uint)abs((int8_t)
+		 WMA_GET_RX_RSSI_NORMALIZED(rx_Packet_info)));
 	/* Get pointer to Probe Response frame body */
 	body = WMA_GET_RX_MPDU_DATA(rx_Packet_info);
 		/* Enforce Mandatory IEs */
@@ -200,7 +198,7 @@ lim_process_probe_rsp_frame(struct mac_context *mac_ctx, uint8_t *rx_Packet_info
 			return;
 		}
 		if (!LIM_IS_CONNECTION_ACTIVE(session_entry)) {
-			pe_warn("Recved Probe Resp from AP,AP-alive");
+			pe_warn("[wlan] Recved Probe Resp from AP,AP-alive");
 			if (probe_rsp->HTInfo.present) {
 				chan_freq =
 				    wlan_reg_legacy_chan_to_freq(mac_ctx->pdev,

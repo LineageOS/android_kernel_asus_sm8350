@@ -852,8 +852,6 @@ pmo_core_enable_wow_in_fw(struct wlan_objmgr_psoc *psoc,
 		goto out;
 	}
 
-	pmo_tgt_update_target_suspend_acked_flag(psoc, true);
-
 	host_credits = pmo_tgt_psoc_get_host_credits(psoc);
 	wmi_pending_cmds = pmo_tgt_psoc_get_pending_cmnds(psoc);
 
@@ -861,7 +859,7 @@ pmo_core_enable_wow_in_fw(struct wlan_objmgr_psoc *psoc,
 		pmo_err("No Credits after HTC ACK:%d, pending_cmds:%d,"
 			 "cannot resume back", host_credits, wmi_pending_cmds);
 		htc_dump_counter_info(pmo_core_psoc_get_htc_handle(psoc));
-		qdf_trigger_self_recovery(psoc, QDF_SUSPEND_NO_CREDIT);
+		qdf_trigger_self_recovery(psoc, QDF_SUSPEND_TIMEOUT);
 	}
 	pmo_debug("WOW enabled successfully in fw: credits:%d pending_cmds: %d",
 		host_credits, wmi_pending_cmds);
@@ -902,8 +900,6 @@ QDF_STATUS pmo_core_psoc_suspend_target(struct wlan_objmgr_psoc *psoc,
 		pmo_tgt_update_target_suspend_flag(psoc, false);
 		if (!psoc_ctx->wow.target_suspend.force_set)
 			qdf_trigger_self_recovery(psoc, QDF_SUSPEND_TIMEOUT);
-	} else {
-		pmo_tgt_update_target_suspend_acked_flag(psoc, true);
 	}
 
 out:
@@ -1015,7 +1011,7 @@ QDF_STATUS pmo_core_psoc_bus_runtime_suspend(struct wlan_objmgr_psoc *psoc,
 	ret = hif_pre_runtime_suspend(hif_ctx);
 	if (ret) {
 		status = qdf_status_from_os_return(ret);
-		goto pre_runtime_failure;
+		goto runtime_failure;
 	}
 
 	status = cdp_runtime_suspend(dp_soc, pdev_id);
@@ -1085,20 +1081,13 @@ pmo_resume_configure:
 resume_htc:
 	PMO_CORE_PSOC_RUNTIME_PM_QDF_BUG(QDF_STATUS_SUCCESS !=
 		pmo_tgt_psoc_set_runtime_pm_inprogress(psoc, false));
+	PMO_CORE_PSOC_RUNTIME_PM_QDF_BUG(htc_runtime_resume(htc_ctx));
 
 cdp_runtime_resume:
 	PMO_CORE_PSOC_RUNTIME_PM_QDF_BUG(QDF_STATUS_SUCCESS !=
 		cdp_runtime_resume(dp_soc, pdev_id));
 
-/*
- * A race condition was observed where htc_try_send was called before
- * runtime pm state was set to active and it was not called again.
- * Schedule HTC queue kicker here to send the pending commands.
- */
 runtime_failure:
-	PMO_CORE_PSOC_RUNTIME_PM_QDF_BUG(htc_runtime_resume(htc_ctx));
-
-pre_runtime_failure:
 	hif_process_runtime_suspend_failure(hif_ctx);
 
 dec_psoc_ref:
@@ -1241,9 +1230,10 @@ QDF_STATUS pmo_core_psoc_send_host_wakeup_ind_to_fw(
 			qdf_trigger_self_recovery(psoc, QDF_RESUME_TIMEOUT);
 	} else {
 		pmo_debug("Host wakeup received");
-		pmo_tgt_update_target_suspend_flag(psoc, false);
-		pmo_tgt_update_target_suspend_acked_flag(psoc, false);
 	}
+
+	if (status == QDF_STATUS_SUCCESS)
+		pmo_tgt_update_target_suspend_flag(psoc, false);
 out:
 	pmo_exit();
 
@@ -1313,9 +1303,10 @@ QDF_STATUS pmo_core_psoc_resume_target(struct wlan_objmgr_psoc *psoc,
 			qdf_trigger_self_recovery(psoc, QDF_RESUME_TIMEOUT);
 	} else {
 		pmo_debug("Host wakeup received");
-		pmo_tgt_update_target_suspend_flag(psoc, false);
-		pmo_tgt_update_target_suspend_acked_flag(psoc, false);
 	}
+
+	if (status == QDF_STATUS_SUCCESS)
+		pmo_tgt_update_target_suspend_flag(psoc, false);
 out:
 	pmo_exit();
 
@@ -1352,7 +1343,6 @@ QDF_STATUS pmo_core_psoc_bus_resume_req(struct wlan_objmgr_psoc *psoc,
 	/* If target was not suspended, bail out */
 	if (qdf_is_fw_down() || !pmo_tgt_is_target_suspended(psoc)) {
 		pmo_psoc_put_ref(psoc);
-		status = QDF_STATUS_E_AGAIN;
 		goto out;
 	}
 

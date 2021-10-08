@@ -570,14 +570,15 @@ QDF_STATUS policy_mgr_pdev_get_pcl(struct wlan_objmgr_psoc *psoc,
 void pm_dbs_opportunistic_timer_handler(void *data);
 enum policy_mgr_con_mode policy_mgr_get_mode(uint8_t type,
 		uint8_t subtype);
+enum hw_mode_bandwidth policy_mgr_get_bw(enum phy_ch_width chan_width);
 
 /**
- * policy_mgr_get_bw() - Convert phy_ch_width to hw_mode_bandwidth.
- * @chan_width: phy_ch_width
+ * policy_mgr_get_bw() - Convert hw_mode_bandwidth to phy_ch_width
+ * @bw: Hardware mode band width used by WMI
  *
- * Return: hw_mode_bandwidth
+ * Return: phy_ch_width
  */
-enum hw_mode_bandwidth policy_mgr_get_bw(enum phy_ch_width chan_width);
+enum phy_ch_width policy_mgr_get_ch_width(enum hw_mode_bandwidth bw);
 
 QDF_STATUS policy_mgr_get_channel_list(struct wlan_objmgr_psoc *psoc,
 			enum policy_mgr_pcl_type pcl,

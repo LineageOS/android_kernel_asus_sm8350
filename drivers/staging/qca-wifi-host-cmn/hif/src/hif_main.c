@@ -466,7 +466,7 @@ void hif_get_cfg_from_psoc(struct hif_softc *scn,
 }
 #endif /* WLAN_CE_INTERRUPT_THRESHOLD_CONFIG */
 
-#if defined(HIF_CE_LOG_INFO) || defined(HIF_BUS_LOG_INFO)
+#ifdef HIF_CE_LOG_INFO
 /**
  * hif_recovery_notifier_cb - Recovery notifier callback to log
  *  hang event data
@@ -493,8 +493,6 @@ int hif_recovery_notifier_cb(struct notifier_block *block, unsigned long state,
 	if (!hif_handle)
 		return -EINVAL;
 
-	hif_log_bus_info(hif_handle, notif_data->hang_data,
-			 &notif_data->offset);
 	hif_log_ce_info(hif_handle, notif_data->hang_data,
 			&notif_data->offset);
 
@@ -725,7 +723,6 @@ void hif_close(struct hif_opaque_softc *hif_ctx)
 	}
 
 	hif_uninit_rri_on_ddr(scn);
-	hif_cleanup_static_buf_to_target(scn);
 	hif_cpuhp_unregister(scn);
 
 	hif_bus_close(scn);

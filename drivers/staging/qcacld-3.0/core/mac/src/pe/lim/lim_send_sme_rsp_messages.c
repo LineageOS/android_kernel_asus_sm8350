@@ -1748,9 +1748,8 @@ void lim_handle_csa_offload_msg(struct mac_context *mac_ctx,
 
 			ch_params.ch_width =
 				chnl_switch_info->newChanWidth;
-			wlan_reg_set_channel_params_for_freq(
-				mac_ctx->pdev, csa_params->csa_chan_freq, 0,
-				&ch_params);
+			wlan_reg_set_channel_params(mac_ctx->pdev,
+					csa_params->channel, 0, &ch_params);
 			chnl_switch_info->newCenterChanFreq0 =
 				ch_params.center_freq_seg0;
 			/*
@@ -2146,7 +2145,6 @@ lim_process_beacon_tx_success_ind(struct mac_context *mac_ctx, uint16_t msgType,
 				  void *event)
 {
 	struct pe_session *session;
-	bool csa_tx_offload;
 	tpSirFirstBeaconTxCompleteInd bcn_ind =
 		(tSirFirstBeaconTxCompleteInd *) event;
 
@@ -2164,12 +2162,10 @@ lim_process_beacon_tx_success_ind(struct mac_context *mac_ctx, uint16_t msgType,
 
 	if (!LIM_IS_AP_ROLE(session))
 		return;
-	csa_tx_offload = wlan_psoc_nif_fw_ext_cap_get(mac_ctx->psoc,
-						WLAN_SOC_CEXT_CSA_TX_OFFLOAD);
+
 	if (session->dfsIncludeChanSwIe &&
 	    (session->gLimChannelSwitch.switchCount ==
-	    mac_ctx->sap.SapDfsInfo.sap_ch_switch_beacon_cnt) &&
-	    !csa_tx_offload)
+	    mac_ctx->sap.SapDfsInfo.sap_ch_switch_beacon_cnt))
 		lim_process_ap_ecsa_timeout(session);
 
 

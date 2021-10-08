@@ -45,7 +45,7 @@ first_connection_pcl_table[PM_MAX_NUM_OF_MODE]
 	[PM_STA_MODE] = {PM_NONE, PM_NONE, PM_NONE},
 	[PM_SAP_MODE] = {PM_5G,   PM_5G,   PM_5G  },
 	[PM_P2P_CLIENT_MODE] = {PM_5G,   PM_5G,   PM_5G  },
-	[PM_P2P_GO_MODE] = {PM_5G,   PM_5G,   PM_5G  },
+	[PM_P2P_GO_MODE] = {PM_NONE,   PM_NONE,   PM_NONE  },
 	[PM_NAN_DISC_MODE] = {PM_5G, PM_5G, PM_5G},
 };
 
@@ -2631,26 +2631,4 @@ free:
 	qdf_mem_free(chan_buff);
 
 	return true;
-}
-
-QDF_STATUS policy_mgr_filter_passive_ch(struct wlan_objmgr_pdev *pdev,
-					uint32_t *ch_freq_list,
-					uint32_t *ch_cnt)
-{
-	size_t ch_index;
-	size_t target_ch_cnt = 0;
-
-	if (!pdev || !ch_freq_list || !ch_cnt) {
-		policy_mgr_err("NULL parameters");
-		return QDF_STATUS_E_FAULT;
-	}
-
-	for (ch_index = 0; ch_index < *ch_cnt; ch_index++) {
-		if (!wlan_reg_is_passive_for_freq(pdev, ch_freq_list[ch_index]))
-			ch_freq_list[target_ch_cnt++] = ch_freq_list[ch_index];
-	}
-
-	*ch_cnt = target_ch_cnt;
-
-	return QDF_STATUS_SUCCESS;
 }

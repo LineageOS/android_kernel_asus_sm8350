@@ -889,7 +889,6 @@ QDF_STATUS
 ucfg_mlme_set_pmkid_modes(struct wlan_objmgr_psoc *psoc,
 			  uint32_t val);
 
-#ifdef WLAN_SUPPORT_TWT
 /**
  * ucfg_mlme_get_twt_requestor() - Get twt requestor
  * @psoc: pointer to psoc object
@@ -1000,154 +999,6 @@ QDF_STATUS
 ucfg_mlme_set_enable_twt(struct wlan_objmgr_psoc *psoc,
 			 bool val);
 
-/**
- * ucfg_mlme_get_twt_bcast_requestor() - Get twt requestor enabled
- * @psoc: pointer to psoc object
- * @val:  Pointer to the value which will be filled for the caller
- *
- * Return: QDF Status
- */
-QDF_STATUS
-ucfg_mlme_get_twt_bcast_requestor(struct wlan_objmgr_psoc *psoc,
-				  bool *val);
-
-/**
- * ucfg_mlme_set_twt_bcast_requestor() - Set Global twt bcast requestor support
- * @psoc: pointer to psoc object
- * @val:  Value to be set to config
- *
- * Return: QDF Status
- */
-QDF_STATUS
-ucfg_mlme_set_twt_bcast_requestor(struct wlan_objmgr_psoc *psoc,
-				  bool val);
-/**
- * ucfg_mlme_get_twt_bcast_responder() - Get twt responder enabled
- * @psoc: pointer to psoc object
- * @val:  Pointer to the value which will be filled for the caller
- *
- * Return: QDF Status
- */
-QDF_STATUS
-ucfg_mlme_get_twt_bcast_responder(struct wlan_objmgr_psoc *psoc,
-				  bool *val);
-
-/**
- * ucfg_mlme_set_twt_bcast_responder() - Set Global twt bcast responder support
- * @psoc: pointer to psoc object
- * @val:  Value to be set to config
- *
- * Return: QDF Status
- */
-QDF_STATUS
-ucfg_mlme_set_twt_bcast_responder(struct wlan_objmgr_psoc *psoc,
-				  bool val);
-#else
-static inline QDF_STATUS
-ucfg_mlme_get_twt_requestor(struct wlan_objmgr_psoc *psoc,
-			    bool *val)
-{
-	*val = false;
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_set_twt_requestor(struct wlan_objmgr_psoc *psoc,
-			    bool val)
-{
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_get_twt_responder(struct wlan_objmgr_psoc *psoc,
-			    bool *val)
-{
-	*val = false;
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_set_twt_responder(struct wlan_objmgr_psoc *psoc,
-			    bool val)
-{
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_get_bcast_twt(struct wlan_objmgr_psoc *psoc,
-			bool *val)
-{
-	*val = false;
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_set_bcast_twt(struct wlan_objmgr_psoc *psoc,
-			bool val)
-{
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_get_twt_congestion_timeout(struct wlan_objmgr_psoc *psoc,
-				     uint32_t *val)
-{
-	*val = 0;
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_set_twt_congestion_timeout(struct wlan_objmgr_psoc *psoc,
-				     uint32_t val)
-{
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_get_enable_twt(struct wlan_objmgr_psoc *psoc,
-			 bool *val)
-{
-	*val = false;
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_set_enable_twt(struct wlan_objmgr_psoc *psoc,
-			 bool val)
-{
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_get_twt_bcast_requestor(struct wlan_objmgr_psoc *psoc,
-				  bool *val)
-{
-	*val = false;
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_set_twt_bcast_requestor(struct wlan_objmgr_psoc *psoc,
-				  bool val)
-{
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_get_twt_bcast_responder(struct wlan_objmgr_psoc *psoc,
-				  bool *val)
-{
-	*val = false;
-	return QDF_STATUS_E_NOSUPPORT;
-}
-
-static inline QDF_STATUS
-ucfg_mlme_set_twt_bcast_responder(struct wlan_objmgr_psoc *psoc,
-				  bool val)
-{
-	return QDF_STATUS_E_NOSUPPORT;
-}
-#endif
 /**
  * ucfg_mlme_get_dot11p_mode() - Get the setting about 802.11p mode
  * @psoc: pointer to psoc object
@@ -4343,18 +4194,4 @@ ucfg_mlme_set_roam_reason_vsie_status(struct wlan_objmgr_psoc *psoc,
 }
 
 #endif
-
-/**
- * ucfg_mlme_is_sta_mon_conc_supported() - Check if STA + Monitor mode
- * concurrency is supported
- * @psoc: pointer to psoc object
- *
- * Return: True if supported, else false.
- */
-static inline bool
-ucfg_mlme_is_sta_mon_conc_supported(struct wlan_objmgr_psoc *psoc)
-{
-	return wlan_mlme_is_sta_mon_conc_supported(psoc);
-}
-
 #endif /* _WLAN_MLME_UCFG_API_H_ */

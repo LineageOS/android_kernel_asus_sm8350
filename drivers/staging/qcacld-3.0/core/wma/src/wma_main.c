@@ -906,7 +906,7 @@ static void wma_process_cli_set_cmd(tp_wma_handle wma,
 		pdev_param.param_value = privcmd->param_value;
 		ret = wmi_unified_pdev_param_send(wma->wmi_handle,
 						 &pdev_param,
-						 privcmd->param_sec_value);
+						 WMA_WILDCARD_PDEV_ID);
 		if (QDF_IS_STATUS_ERROR(ret)) {
 			wma_err("wma_vdev_set_param failed ret %d", ret);
 			return;
@@ -1016,13 +1016,6 @@ static void wma_process_cli_set_cmd(tp_wma_handle wma,
 						       privcmd->param_value);
 			if (ret)
 				wma_err("dbglog_module_log_enable failed ret %d",
-					ret);
-			break;
-		case WMI_DBGLOG_MOD_WOW_LOG_LEVEL:
-			ret = dbglog_set_mod_wow_log_lvl(wma->wmi_handle,
-							 privcmd->param_value);
-			if (ret)
-				wma_err("WMI_DBGLOG_MOD_WOW_LOG_LEVEL failed ret %d",
 					ret);
 			break;
 		case WMI_DBGLOG_TYPE:
@@ -1813,7 +1806,6 @@ static void wma_state_info_dump(char **buf_ptr, uint16_t *size)
 			"\tipv6_mcast_ns %u\n"
 			"\tipv6_mcast_na %u\n"
 			"\toem_response %u\n"
-			"\tuc_drop %u\n"
 			"dtimPeriod %d\n"
 			"chan_width %d\n"
 			"vdev_active %d\n"
@@ -1839,7 +1831,6 @@ static void wma_state_info_dump(char **buf_ptr, uint16_t *size)
 			stats.ipv6_mcast_ns_stats,
 			stats.ipv6_mcast_na_stats,
 			stats.oem_response_wake_up_count,
-			stats.uc_drop_wake_up_count,
 			iface->dtimPeriod,
 			iface->chan_width,
 			iface->vdev_active,
@@ -2758,18 +2749,6 @@ void wma_get_fw_phy_mode_for_freq_cb(uint32_t freq, uint32_t chan_width,
 	}
 
 	dot11_mode = mac->mlme_cfg->dot11_mode.dot11_mode;
-
-	/* Update invalid dot11 modes to valid dot11 modes */
-	if (WLAN_REG_IS_24GHZ_CH_FREQ(freq) &&
-	    dot11_mode == MLME_DOT11_MODE_11A)
-		dot11_mode = MLME_DOT11_MODE_11G;
-
-	if (WLAN_REG_IS_5GHZ_CH_FREQ(freq) &&
-	    (dot11_mode == MLME_DOT11_MODE_11B ||
-	     dot11_mode == MLME_DOT11_MODE_11G ||
-	     dot11_mode == MLME_DOT11_MODE_11G_ONLY))
-		dot11_mode = MLME_DOT11_MODE_11A;
-
 	host_phy_mode = wma_chan_phy_mode(freq, chan_width, dot11_mode);
 	*phy_mode = wma_host_to_fw_phymode(host_phy_mode);
 }
@@ -3326,10 +3305,6 @@ QDF_STATUS wma_open(struct wlan_objmgr_psoc *psoc,
 					   wma_peer_assoc_conf_handler,
 					   WMA_RX_SERIALIZER_CTX);
 	wmi_unified_register_event_handler(wma_handle->wmi_handle,
-					   wmi_peer_create_conf_event_id,
-					   wma_peer_create_confirm_handler,
-					   WMA_RX_SERIALIZER_CTX);
-	wmi_unified_register_event_handler(wma_handle->wmi_handle,
 					   wmi_peer_delete_response_event_id,
 					   wma_peer_delete_handler,
 					   WMA_RX_SERIALIZER_CTX);
@@ -3415,7 +3390,9 @@ QDF_STATUS wma_open(struct wlan_objmgr_psoc *psoc,
 			wma_vdev_bss_color_collision_info_handler,
 			WMA_RX_WORK_CTX);
 
+#ifdef WLAN_SUPPORT_TWT
 	wma_register_twt_events(wma_handle);
+#endif
 
 	wma_register_apf_events(wma_handle);
 	wma_register_md_events(wma_handle);
@@ -5208,6 +5185,25 @@ static void wma_update_obss_detection_support(tp_wma_handle wh,
 }
 
 /**
+ * wma_update_bcast_twt_support() - update bcost twt support
+ * @wh: wma handle
+ * @tgt_cfg: target configuration to be updated
+ *
+ * Update braodcast twt support based on service bit.
+ *
+ * Return: None
+ */
+static void wma_update_bcast_twt_support(tp_wma_handle wh,
+					 struct wma_tgt_cfg *tgt_cfg)
+{
+	if (wmi_service_enabled(wh->wmi_handle,
+				wmi_service_bcast_twt_support))
+		tgt_cfg->bcast_twt_support = true;
+	else
+		tgt_cfg->bcast_twt_support = false;
+}
+
+/**
  * wma_update_obss_color_collision_support() - update obss color collision
  *   offload support
  * @wh: wma handle
@@ -5366,6 +5362,9 @@ static void wma_update_mlme_related_tgt_caps(struct wlan_objmgr_psoc *psoc,
 	mlme_tgt_cfg.stop_all_host_scan_support =
 		wmi_service_enabled(wmi_handle,
 				    wmi_service_host_scan_stop_vdev_all);
+	mlme_tgt_cfg.peer_create_conf_support =
+		wmi_service_enabled(wmi_handle,
+				    wmi_service_peer_create_conf);
 	mlme_tgt_cfg.dual_sta_roam_fw_support =
 		wmi_service_enabled(wmi_handle,
 				    wmi_service_dual_sta_roam_support);
@@ -5457,11 +5456,6 @@ static int wma_update_hdd_cfg(tp_wma_handle wma_handle)
 	}
 
 	wma_update_mlme_related_tgt_caps(wma_handle->psoc, wmi_handle);
-
-	if (wmi_service_enabled(wmi_handle, wmi_service_peer_create_conf))
-		wlan_psoc_nif_fw_ext_cap_set(wma_handle->psoc,
-					     WLAN_SOC_F_PEER_CREATE_RESP);
-
 	qdf_mem_zero(&tgt_cfg, sizeof(struct wma_tgt_cfg));
 
 	tgt_cfg.sub_20_support = wma_handle->sub_20_support;
@@ -6682,7 +6676,6 @@ int wma_rx_service_ready_ext_event(void *handle, uint8_t *event,
 	struct wmi_unified *wmi_handle;
 	void *soc = cds_get_context(QDF_MODULE_ID_SOC);
 	target_resource_config *wlan_res_cfg;
-	uint8_t sta_sap_scc_on_dfs_chnl;
 
 	wma_debug("Enter");
 
@@ -6745,18 +6738,6 @@ int wma_rx_service_ready_ext_event(void *handle, uint8_t *event,
 	}
 	wma_init_scan_fw_mode_config(wma_handle->psoc, conc_scan_config_bits,
 				     fw_config_bits);
-
-	policy_mgr_get_sta_sap_scc_on_dfs_chnl(wma_handle->psoc,
-					       &sta_sap_scc_on_dfs_chnl);
-
-	/*
-	 * For non-dbs HW, disallow sta+sap on DFS channel as if SAP comes
-	 * on DFS master mode enable (sta_sap_scc_on_dfs_chnl = 2), scan will
-	 * be disabled and STA cannot connect to any other channel
-	 */
-	if (!policy_mgr_is_hw_dbs_capable(wma_handle->psoc) &&
-	    sta_sap_scc_on_dfs_chnl == 2)
-		policy_mgr_set_sta_sap_scc_on_dfs_chnl(wma_handle->psoc, 1);
 
 	target_psoc_set_num_radios(tgt_hdl, 1);
 
@@ -6827,8 +6808,7 @@ int wma_rx_service_ready_ext_event(void *handle, uint8_t *event,
 		wma_update_num_peers_tids(wma_handle, wlan_res_cfg);
 	}
 
-	if ((ucfg_pkt_capture_get_mode(wma_handle->psoc) !=
-						PACKET_CAPTURE_MODE_DISABLE) &&
+	if (ucfg_pkt_capture_get_mode(wma_handle->psoc) &&
 	    wmi_service_enabled(wmi_handle,
 				wmi_service_packet_capture_support))
 		wlan_res_cfg->pktcapture_support = true;
@@ -8488,6 +8468,9 @@ static QDF_STATUS wma_mc_process_msg(struct scheduler_msg *msg)
 	case WMA_SET_MAX_TX_POWER_REQ:
 		wma_set_max_tx_power(wma_handle,
 				     (tpMaxTxPowerParams) msg->bodyptr);
+		break;
+	case WMA_SEND_MAX_TX_POWER:
+		wma_send_max_tx_pwrlmt(wma_handle, msg->bodyval);
 		break;
 	case WMA_SET_KEEP_ALIVE:
 		wma_set_keepalive_req(wma_handle, msg->bodyptr);

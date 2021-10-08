@@ -1324,7 +1324,6 @@ struct tx_send_params {
  * @use_6mbps: specify whether management frame to transmit should
  * @tx_flags: additional configuration flags for mgmt frames
  *  use 6 Mbps rather than 1 Mbps min rate(for 5GHz band or P2P)
- * @peer_rssi: peer RSSI value
  */
 struct wmi_mgmt_params {
 	void *tx_frame;
@@ -1340,7 +1339,6 @@ struct wmi_mgmt_params {
 	bool tx_params_valid;
 	uint8_t use_6mbps;
 	uint32_t tx_flags;
-	int8_t peer_rssi;
 };
 
 /**
@@ -5369,10 +5367,6 @@ typedef enum {
 #ifdef FEATURE_CLUB_LL_STATS_AND_GET_STATION
 	wmi_service_get_station_in_ll_stats_req,
 #endif
-	wmi_service_scan_conf_per_ch_support,
-	wmi_service_csa_beacon_template,
-	wmi_service_twt_bcast_req_support,
-	wmi_service_twt_bcast_resp_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
@@ -5387,7 +5381,6 @@ typedef enum {
  * @WMI_DBGLOG_MOD_LOG_LEVEL: Enable MODULE level debug
  * @WMI_DBGLOG_TYPE: set type of the debug output
  * @WMI_DBGLOG_REPORT_ENABLE: Enable Disable debug
- * @WMI_DBGLOG_MOD_WOW_LOG_LEVEL: set the WOW MODULE debug loglevel
  */
 typedef enum {
 	WMI_DBGLOG_LOG_LEVEL = 0x1,
@@ -5397,8 +5390,7 @@ typedef enum {
 	WMI_DBGLOG_MODULE_DISABLE,
 	WMI_DBGLOG_MOD_LOG_LEVEL,
 	WMI_DBGLOG_TYPE,
-	WMI_DBGLOG_REPORT_ENABLE,
-	WMI_DBGLOG_MOD_WOW_LOG_LEVEL
+	WMI_DBGLOG_REPORT_ENABLE
 } WMI_DBG_PARAM;
 
 /**
@@ -7979,14 +7971,13 @@ struct wmi_roam_scan_data {
  * struct wmi_roam_result - Roam result related info.
  * @present:            Flag to check if the roam result tlv is present
  * @timestamp:          Host timestamp in millisecs
- * @status:             0 - Roaming is success ; 1 - Roaming failed ;
- * 2 - No roam
+ * @status:             0 - Roaming is success ; 1 - Roaming failed
  * @fail_reason:        One of WMI_ROAM_FAIL_REASON_ID
  */
 struct wmi_roam_result {
 	bool present;
 	uint32_t timestamp;
-	uint32_t status;
+	bool status;
 	uint32_t fail_reason;
 };
 

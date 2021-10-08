@@ -3669,8 +3669,7 @@ static void reg_set_2g_channel_params_for_freq(struct wlan_objmgr_pdev *pdev,
 		reg_get_2g_bonded_channel_state_for_freq(pdev, oper_freq,
 							 sec_ch_2g_freq,
 							 ch_params->ch_width);
-		if ((chan_state == CHANNEL_STATE_ENABLE) ||
-		    (chan_state == CHANNEL_STATE_DFS)) {
+		if (chan_state == CHANNEL_STATE_ENABLE) {
 			if (ch_params->ch_width == CH_WIDTH_40MHZ) {
 				if (oper_freq < sec_ch_2g_freq)
 					ch_params->sec_ch_offset =
@@ -3936,15 +3935,6 @@ bool reg_is_disable_for_freq(struct wlan_objmgr_pdev *pdev, qdf_freq_t freq)
 	ch_state = reg_get_channel_state_for_freq(pdev, freq);
 
 	return ch_state == CHANNEL_STATE_DISABLE;
-}
-
-bool reg_is_passive_for_freq(struct wlan_objmgr_pdev *pdev, qdf_freq_t freq)
-{
-	uint32_t chan_flags;
-
-	chan_flags = reg_get_channel_flags_for_freq(pdev, freq);
-
-	return chan_flags & REGULATORY_CHAN_NO_IR;
 }
 #endif /* CONFIG_CHAN_FREQ_API */
 

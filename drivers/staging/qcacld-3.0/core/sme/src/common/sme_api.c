@@ -3303,6 +3303,26 @@ QDF_STATUS sme_roam_get_wpa_rsn_req_ie(mac_handle_t mac_handle,
 	return status;
 }
 
+QDF_STATUS sme_roam_get_wpa_rsn_rsp_ie(mac_handle_t mac_handle,
+				       uint8_t session_id,
+				       uint32_t *len, uint8_t *buf)
+{
+	QDF_STATUS status;
+	struct mac_context *mac = MAC_CONTEXT(mac_handle);
+
+	status = sme_acquire_global_lock(&mac->sme);
+	if (QDF_IS_STATUS_SUCCESS(status)) {
+		if (CSR_IS_SESSION_VALID(mac, session_id))
+			status = csr_roam_get_wpa_rsn_rsp_ie(mac, session_id,
+							     len, buf);
+		else
+			status = QDF_STATUS_E_INVAL;
+		sme_release_global_lock(&mac->sme);
+	}
+
+	return status;
+}
+
 /*
  * sme_get_config_param() -
  * A wrapper function that HDD calls to get the global settings
@@ -11467,7 +11487,6 @@ void sme_update_he_cap_nss(mac_handle_t mac_handle, uint8_t session_id,
 
 	if (!nss || (nss > 2)) {
 		sme_err("invalid Nss value %d", nss);
-		return;
 	}
 	csr_session = CSR_GET_SESSION(mac_ctx, session_id);
 	if (!csr_session) {
@@ -12416,10 +12435,10 @@ QDF_STATUS sme_soc_set_dual_mac_config(struct policy_mgr_dual_mac_config msg)
 	sme_debug("set_dual_mac_config scan_config: %x fw_mode_config: %x",
 		cmd->u.set_dual_mac_cmd.scan_config,
 		cmd->u.set_dual_mac_cmd.fw_mode_config);
-	status = csr_queue_sme_command(mac, cmd, false);
+	csr_queue_sme_command(mac, cmd, false);
 
 	sme_release_global_lock(&mac->sme);
-	return status;
+	return QDF_STATUS_SUCCESS;
 }
 
 #ifdef FEATURE_LFR_SUBNET_DETECTION
@@ -13136,21 +13155,6 @@ QDF_STATUS sme_delete_mon_session(mac_handle_t mac_handle, uint8_t vdev_id)
 	return status;
 }
 
-void
-sme_set_del_peers_ind_callback(mac_handle_t mac_handle,
-			       void (*callback)(struct wlan_objmgr_psoc *psoc,
-						uint8_t vdev_id))
-{
-	struct mac_context *mac;
-
-	if (!mac_handle) {
-		QDF_ASSERT(0);
-		return;
-	}
-	mac = MAC_CONTEXT(mac_handle);
-	mac->del_peers_ind_cb = callback;
-}
-
 void sme_set_chan_info_callback(mac_handle_t mac_handle,
 			void (*callback)(struct scan_chan_info *chan_info))
 {
@@ -13246,17 +13250,6 @@ void sme_set_pdev_ht_vht_ies(mac_handle_t mac_handle, bool enable2x2)
 
 		sme_release_global_lock(&mac_ctx->sme);
 	}
-}
-
-void sme_get_sap_vdev_type_nss(mac_handle_t mac_handle, uint8_t *vdev_nss,
-			       enum band_info band)
-{
-	struct mac_context *mac_ctx = MAC_CONTEXT(mac_handle);
-
-	if (band == BAND_5G)
-		*vdev_nss = mac_ctx->vdev_type_nss_5g.sap;
-	else
-		*vdev_nss = mac_ctx->vdev_type_nss_2g.sap;
 }
 
 void sme_update_vdev_type_nss(mac_handle_t mac_handle, uint8_t max_supp_nss,
@@ -15570,12 +15563,12 @@ void sme_reset_he_caps(mac_handle_t mac_handle, uint8_t vdev_id)
 #endif
 
 uint8_t sme_get_mcs_idx(uint16_t raw_rate, enum tx_rate_info rate_flags,
-			bool is_he_mcs_12_13_supported,
+			uint16_t he_mcs_12_13_map,
 			uint8_t *nss, uint8_t *dcm,
 			enum txrate_gi *guard_interval,
 			enum tx_rate_info *mcs_rate_flags)
 {
-	return wma_get_mcs_idx(raw_rate, rate_flags, is_he_mcs_12_13_supported,
+	return wma_get_mcs_idx(raw_rate, rate_flags, he_mcs_12_13_map,
 			       nss, dcm, guard_interval, mcs_rate_flags);
 }
 
@@ -15710,14 +15703,21 @@ void sme_update_score_config(mac_handle_t mac_handle, eCsrPhyMode phy_mode,
 	wlan_psoc_set_phy_config(mac_ctx->psoc, &config);
 }
 
-static void
-__sme_enable_fw_module_log_level(uint8_t *enable_fw_module_log_level,
-				 uint8_t enable_fw_module_log_level_num,
-				 int vdev_id, int param_id)
+void sme_enable_fw_module_log_level(mac_handle_t mac_handle, int vdev_id)
 {
+	QDF_STATUS status;
+	struct mac_context *mac_ctx = MAC_CONTEXT(mac_handle);
+	uint8_t *enable_fw_module_log_level;
+	uint8_t enable_fw_module_log_level_num;
 	uint8_t count = 0;
 	uint32_t value = 0;
 	int ret;
+
+	status = ucfg_fwol_get_enable_fw_module_log_level(
+			mac_ctx->psoc, &enable_fw_module_log_level,
+			&enable_fw_module_log_level_num);
+	if (QDF_IS_STATUS_ERROR(status))
+		return;
 
 	while (count < enable_fw_module_log_level_num) {
 		/*
@@ -15749,42 +15749,15 @@ __sme_enable_fw_module_log_level(uint8_t *enable_fw_module_log_level,
 
 		value = enable_fw_module_log_level[count] << 16;
 		value |= enable_fw_module_log_level[count + 1];
-		ret = sme_cli_set_command(vdev_id, param_id, value, DBG_CMD);
+		ret = sme_cli_set_command(vdev_id,
+					  WMI_DBGLOG_MOD_LOG_LEVEL,
+					  value, DBG_CMD);
 		if (ret != 0)
 			sme_err("Failed to enable FW module log level %d ret %d",
 				value, ret);
 
 		count += 2;
 	}
-}
-
-void sme_enable_fw_module_log_level(mac_handle_t mac_handle, int vdev_id)
-{
-	QDF_STATUS status;
-	struct mac_context *mac_ctx = MAC_CONTEXT(mac_handle);
-	uint8_t *enable_fw_module_log_level;
-	uint8_t enable_fw_module_log_level_num;
-
-	status = ucfg_fwol_get_enable_fw_module_log_level(
-			mac_ctx->psoc, &enable_fw_module_log_level,
-			&enable_fw_module_log_level_num);
-	if (QDF_IS_STATUS_ERROR(status))
-		return;
-	__sme_enable_fw_module_log_level(enable_fw_module_log_level,
-					 enable_fw_module_log_level_num,
-					 vdev_id,
-					 WMI_DBGLOG_MOD_LOG_LEVEL);
-
-	enable_fw_module_log_level_num = 0;
-	status = ucfg_fwol_wow_get_enable_fw_module_log_level(
-			mac_ctx->psoc, &enable_fw_module_log_level,
-			&enable_fw_module_log_level_num);
-	if (QDF_IS_STATUS_ERROR(status))
-		return;
-	__sme_enable_fw_module_log_level(enable_fw_module_log_level,
-					 enable_fw_module_log_level_num,
-					 vdev_id,
-					 WMI_DBGLOG_MOD_WOW_LOG_LEVEL);
 }
 
 #ifdef WLAN_FEATURE_MOTION_DETECTION

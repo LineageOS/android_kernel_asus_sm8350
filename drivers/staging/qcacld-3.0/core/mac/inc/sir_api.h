@@ -81,11 +81,9 @@ typedef uint8_t tSirVersionString[SIR_VERSION_STRING_LEN];
 
 #ifdef FEATURE_RUNTIME_PM
 /* Add extra PMO_RESUME_TIMEOUT for runtime PM resume timeout */
-#define SIR_PEER_CREATE_RESPONSE_TIMEOUT (4000 + PMO_RESUME_TIMEOUT)
 #define SIR_DELETE_STA_TIMEOUT           (4000 + PMO_RESUME_TIMEOUT)
 #define SIR_VDEV_PLCY_MGR_TIMEOUT        (2000 + PMO_RESUME_TIMEOUT)
 #else
-#define SIR_PEER_CREATE_RESPONSE_TIMEOUT (4000)
 #define SIR_DELETE_STA_TIMEOUT           (4000) /* 4 seconds */
 #define SIR_VDEV_PLCY_MGR_TIMEOUT        (2000)
 #endif
@@ -141,9 +139,6 @@ typedef uint8_t tSirVersionString[SIR_VERSION_STRING_LEN];
 #define SIR_UAPSD_GET(ac, mask)      (((mask) & (SIR_UAPSD_FLAG_ ## ac)) >> SIR_UAPSD_BITOFFSET_ ## ac)
 
 #endif
-
-/* Maximum management packet data unit length */
-#define MAX_MGMT_MPDU_LEN 2304
 
 struct scheduler_msg;
 
@@ -5335,7 +5330,6 @@ struct ppet_hdr {
 #define HE_CH_WIDTH_COMBINE(b0, b1, b2, b3, b4, b5, b6)             \
 	((uint8_t)(b0) | ((b1) << 1) | ((b2) << 2) |  ((b3) << 3) | \
 	((b4) << 4) | ((b5) << 5) | ((b6) << 6))
-#define HE_CH_WIDTH_CLR_BIT(ch_wd, bit)      (((ch_wd) >> (bit)) & ~1)
 
 /*
  * MCS values are interpreted as in IEEE 11ax-D1.4 spec onwards

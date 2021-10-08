@@ -2104,31 +2104,22 @@ int tdls_process_set_responder(struct tdls_set_responder_req *set_req)
  */
 int tdls_set_responder(struct tdls_set_responder_req *set_req)
 {
-	int status;
+	QDF_STATUS status;
 
-	if (!set_req) {
-		tdls_err("Invalid input params");
-		return  -EINVAL;
-	}
-
-	if (!set_req->vdev) {
+	if (!set_req || !set_req->vdev) {
 		tdls_err("Invalid input params %pK", set_req);
-		status = -EINVAL;
-		goto free_req;
+		return -EINVAL;
 	}
 
 	status = wlan_objmgr_vdev_try_get_ref(set_req->vdev, WLAN_TDLS_NB_ID);
 	if (QDF_STATUS_SUCCESS != status) {
 		tdls_err("vdev object is deleted");
-		status = -EINVAL;
-		goto error;
+		return -EINVAL;
 	}
 
 	status = tdls_process_set_responder(set_req);
 
-error:
 	wlan_objmgr_vdev_release_ref(set_req->vdev, WLAN_TDLS_NB_ID);
-free_req:
 	qdf_mem_free(set_req);
 	return status;
 }

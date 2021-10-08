@@ -1500,7 +1500,6 @@ static void hdd_send_association_event(struct net_device *dev,
 	struct hdd_adapter *adapter = WLAN_HDD_GET_PRIV_PTR(dev);
 	struct hdd_context *hdd_ctx = WLAN_HDD_GET_CTX(adapter);
 	struct hdd_station_ctx *sta_ctx = WLAN_HDD_GET_STATION_CTX_PTR(adapter);
-	ol_txrx_soc_handle soc = cds_get_context(QDF_MODULE_ID_SOC);
 	union iwreq_data wrqu;
 	int we_event;
 	char *msg;
@@ -1537,7 +1536,7 @@ static void hdd_send_association_event(struct net_device *dev,
 
 		ucfg_p2p_status_connect(adapter->vdev);
 
-		hdd_nofl_info("%s(vdevid-%d): " QDF_MAC_ADDR_FMT
+		hdd_nofl_info("[%s](vdevid-%d): " QDF_MAC_ADDR_FMT
 			      " connected to "
 			      QDF_MAC_ADDR_FMT, dev->name, adapter->vdev_id,
 			      QDF_MAC_ADDR_REF(adapter->mac_addr.bytes),
@@ -1613,7 +1612,7 @@ static void hdd_send_association_event(struct net_device *dev,
 		if (ucfg_pkt_capture_get_pktcap_mode(hdd_ctx->psoc))
 			ucfg_pkt_capture_record_channel(adapter->vdev);
 	} else {                /* Not Associated */
-		hdd_nofl_info("%s(vdevid-%d): disconnected", dev->name,
+		hdd_nofl_info("[%s](vdevid-%d): disconnected", dev->name,
 			      adapter->vdev_id);
 		memset(wrqu.ap_addr.sa_data, '\0', ETH_ALEN);
 		policy_mgr_decr_session_set_pcl(hdd_ctx->psoc,
@@ -1652,7 +1651,6 @@ static void hdd_send_association_event(struct net_device *dev,
 		/* stop timer in sta/p2p_cli */
 		hdd_bus_bw_compute_reset_prev_txrx_stats(adapter);
 		hdd_bus_bw_compute_timer_try_stop(hdd_ctx);
-		cdp_display_txrx_hw_info(soc);
 	}
 	hdd_ipa_set_tx_flow_info();
 
@@ -1832,7 +1830,7 @@ static QDF_STATUS hdd_dis_connect_handler(struct hdd_adapter *adapter,
 	struct net_device *dev = adapter->dev;
 	struct hdd_context *hdd_ctx = WLAN_HDD_GET_CTX(adapter);
 	struct hdd_station_ctx *sta_ctx = WLAN_HDD_GET_STATION_CTX_PTR(adapter);
-	bool send_discon_ind = true;
+	bool sendDisconInd = true;
 	mac_handle_t mac_handle;
 	struct wlan_ies disconnect_ies = {0};
 	bool from_ap = false;
@@ -1880,13 +1878,8 @@ static QDF_STATUS hdd_dis_connect_handler(struct hdd_adapter *adapter,
 	    sta_ctx->conn_info.conn_state) ||
 	    (eConnectionState_Connecting ==
 	    sta_ctx->conn_info.conn_state)) {
-		if (hdd_ctx->disconnect_for_sta_mon_conc) {
-			hdd_debug("Disconnect triggered by HDD to add monitor intf notify kernel");
-			hdd_ctx->disconnect_for_sta_mon_conc = false;
-		} else {
-			hdd_debug("HDD has initiated a disconnect, don't send disconnect indication to kernel");
-			send_discon_ind = false;
-		}
+		hdd_debug("HDD has initiated a disconnect, no need to send disconnect indication to kernel");
+		sendDisconInd = false;
 	} else {
 		INIT_COMPLETION(adapter->disconnect_comp_var);
 		hdd_conn_set_connection_state(adapter,
@@ -1924,7 +1917,7 @@ static QDF_STATUS hdd_dis_connect_handler(struct hdd_adapter *adapter,
 	 * Only send indication to kernel if not initiated
 	 * by kernel
 	 */
-	if (send_discon_ind) {
+	if (sendDisconInd) {
 		int reason = WLAN_REASON_UNSPECIFIED;
 
 		if (roam_info && roam_info->disconnect_ies) {
@@ -1976,7 +1969,6 @@ static QDF_STATUS hdd_dis_connect_handler(struct hdd_adapter *adapter,
 		vdev = hdd_objmgr_get_vdev(adapter);
 		if (vdev) {
 			wlan_crypto_free_vdev_key(vdev);
-			wlan_crypto_reset_vdev_params(vdev);
 			hdd_objmgr_put_vdev(vdev);
 		}
 	}
@@ -2038,28 +2030,6 @@ static QDF_STATUS hdd_dis_connect_handler(struct hdd_adapter *adapter,
 	 */
 	sta_ctx->hdd_reassoc_scenario = false;
 
-	/*
-	* Following code will be cleaned once the interface manager
-	* module is enabled.
-	*/
-#ifdef WLAN_FEATURE_INTERFACE_MGR
-	vdev = hdd_objmgr_get_vdev(adapter);
-	if (vdev) {
-		ucfg_if_mgr_deliver_event(vdev,
-					  WLAN_IF_MGR_EV_DISCONNECT_COMPLETE,
-					  NULL);
-		hdd_objmgr_put_vdev(vdev);
-	}
-#else
-	if (policy_mgr_is_sta_active_connection_exists(hdd_ctx->psoc) &&
-	    QDF_STA_MODE == adapter->device_mode) {
-		sme_enable_roaming_on_connected_sta(mac_handle,
-						    adapter->vdev_id);
-		policy_mgr_set_pcl_for_connected_vdev(hdd_ctx->psoc,
-						      adapter->vdev_id, true);
-	}
-#endif
-
 	/* Unblock anyone waiting for disconnect to complete */
 	complete(&adapter->disconnect_comp_var);
 
@@ -2070,6 +2040,23 @@ static QDF_STATUS hdd_dis_connect_handler(struct hdd_adapter *adapter,
 	hdd_reset_limit_off_chan(adapter);
 
 	hdd_print_bss_info(sta_ctx);
+
+	/*
+	 * Following code will be cleaned once the interface manager
+	 * module is enabled.
+	 */
+#ifdef WLAN_FEATURE_INTERFACE_MGR
+	ucfg_if_mgr_deliver_event(adapter->vdev,
+				  WLAN_IF_MGR_EV_DISCONNECT_COMPLETE, NULL);
+#else
+	if (policy_mgr_is_sta_active_connection_exists(hdd_ctx->psoc) &&
+	    QDF_STA_MODE == adapter->device_mode) {
+		sme_enable_roaming_on_connected_sta(mac_handle,
+						    adapter->vdev_id);
+		policy_mgr_set_pcl_for_connected_vdev(hdd_ctx->psoc,
+						      adapter->vdev_id, true);
+	}
+#endif
 
 	return status;
 }
@@ -3098,6 +3085,15 @@ hdd_association_completion_handler(struct hdd_adapter *adapter,
 			u8 *assoc_req = NULL;
 			unsigned int assoc_req_len = 0;
 			struct ieee80211_channel *chan;
+			uint32_t rsp_rsn_lemgth = DOT11F_IE_RSN_MAX_LEN;
+			uint8_t *rsp_rsn_ie =
+				qdf_mem_malloc(sizeof(uint8_t) *
+					       DOT11F_IE_RSN_MAX_LEN);
+			if (!rsp_rsn_ie) {
+				qdf_mem_free(reqRsnIe);
+				return QDF_STATUS_E_NOMEM;
+			}
+
 
 			/* add bss_id to cfg80211 data base */
 			bss =
@@ -3126,6 +3122,7 @@ hdd_association_completion_handler(struct hdd_adapter *adapter,
 					REASON_UNSPEC_FAILURE);
 				}
 				qdf_mem_free(reqRsnIe);
+				qdf_mem_free(rsp_rsn_ie);
 				return QDF_STATUS_E_FAILURE;
 			}
 
@@ -3279,6 +3276,10 @@ hdd_association_completion_handler(struct hdd_adapter *adapter,
 							    &reqRsnLength,
 							    reqRsnIe);
 
+				sme_roam_get_wpa_rsn_rsp_ie(mac_handle,
+							    adapter->vdev_id,
+							    &rsp_rsn_lemgth,
+							    rsp_rsn_ie);
 				if (!hddDisconInProgress) {
 					if (ft_carrier_on)
 						hdd_send_re_assoc_event(dev,
@@ -3330,6 +3331,7 @@ hdd_association_completion_handler(struct hdd_adapter *adapter,
 				hdd_debug("Enabling queues");
 				hdd_netif_queue_enable(adapter);
 			}
+			qdf_mem_free(rsp_rsn_ie);
 		} else {
 			/*
 			 * wpa supplicant expecting WPA/RSN IE in connect result

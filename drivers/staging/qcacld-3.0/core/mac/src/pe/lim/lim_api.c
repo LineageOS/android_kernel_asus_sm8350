@@ -759,7 +759,6 @@ static int pe_hang_event_notifier_call(struct notifier_block *block,
 	uint8_t *pe_data;
 	uint8_t i;
 	struct pe_hang_event_fixed_param *cmd;
-	size_t size;
 
 	if (!data)
 		return NOTIFY_STOP_MASK;
@@ -768,13 +767,13 @@ static int pe_hang_event_notifier_call(struct notifier_block *block,
 	if (!mac)
 		return NOTIFY_STOP_MASK;
 
-	size = sizeof(*cmd);
+	if (pe_hang_data->offset >= QDF_WLAN_MAX_HOST_OFFSET)
+		return NOTIFY_STOP_MASK;
+
 	for (i = 0; i < mac->lim.maxBssId; i++) {
 		session = &mac->lim.gpSession[i];
 		if (!session->valid)
 			continue;
-		if (pe_hang_data->offset + size > QDF_WLAN_HANG_FW_OFFSET)
-			return NOTIFY_STOP_MASK;
 
 		pe_data = (pe_hang_data->hang_data + pe_hang_data->offset);
 		cmd = (struct pe_hang_event_fixed_param *)pe_data;
@@ -785,7 +784,7 @@ static int pe_hang_event_notifier_call(struct notifier_block *block,
 		cmd->limprevmlmstate = session->limPrevMlmState;
 		cmd->limsmestate = session->limSmeState;
 		cmd->limprevsmestate = session->limPrevSmeState;
-		pe_hang_data->offset += size;
+		pe_hang_data->offset += sizeof(*cmd);
 	}
 
 	return NOTIFY_OK;
@@ -1210,7 +1209,7 @@ static QDF_STATUS pe_handle_mgmt_frame(struct wlan_objmgr_psoc *psoc,
 	int ret;
 
 	/* skip offload packets */
-	if ((ucfg_pkt_capture_get_mode(psoc) != PACKET_CAPTURE_MODE_DISABLE) &&
+	if (ucfg_pkt_capture_get_mode(psoc) &&
 	    mgmt_rx_params->status & WMI_RX_OFFLOAD_MON_MODE) {
 		qdf_nbuf_free(buf);
 		return QDF_STATUS_SUCCESS;
@@ -2554,7 +2553,7 @@ pe_roam_synch_callback(struct mac_context *mac_ctx,
 		return status;
 	}
 	session_ptr->limSmeState = eLIM_SME_IDLE_STATE;
-	lim_cleanup_rx_path(mac_ctx, curr_sta_ds, session_ptr, false);
+	lim_cleanup_rx_path(mac_ctx, curr_sta_ds, session_ptr);
 	lim_delete_dph_hash_entry(mac_ctx, curr_sta_ds->staAddr, aid,
 				  session_ptr);
 	pe_delete_session(mac_ctx, session_ptr);
@@ -2866,7 +2865,7 @@ void lim_mon_deinit_session(struct mac_context *mac_ptr,
 {
 	struct pe_session *session;
 
-	session = pe_find_session_by_vdev_id(mac_ptr, msg->vdev_id);
+	session = pe_find_session_by_session_id(mac_ptr, msg->vdev_id);
 
 	if (session && session->bssType == eSIR_MONITOR_MODE)
 		pe_delete_session(mac_ptr, session);
