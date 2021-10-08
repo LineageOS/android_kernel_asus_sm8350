@@ -73,15 +73,7 @@ static inline void dp_rx_napi_gro_flush(struct napi_struct *napi,
 	}
 }
 #else
-static inline void dp_rx_napi_gro_flush(struct napi_struct *napi,
-					enum dp_rx_gro_flush_code flush_code)
-{
-	if (napi->poll) {
-		/* Skipping GRO flush in low TPUT */
-		if (flush_code != DP_RX_GRO_LOW_TPUT_FLUSH)
-			napi_gro_flush(napi, false);
-	}
-}
+#define dp_rx_napi_gro_flush(_napi, flush_code) napi_gro_flush((_napi), false)
 #endif
 
 #ifdef FEATURE_WLAN_DP_RX_THREADS
@@ -475,31 +467,6 @@ QDF_STATUS dp_prealloc_init(void);
  * Return: None
  */
 void dp_prealloc_deinit(void);
-
-/**
- * dp_prealloc_get_context_memory() - gets pre-alloc DP context memory from
- *				      global pool
- * @ctxt_type: type of DP context
- *
- * This is done only as part of init happening in a single context. Hence
- * no lock is used for protection
- *
- * Return: Address of context
- */
-void *dp_prealloc_get_context_memory(uint32_t ctxt_type);
-
-/**
- * dp_prealloc_put_context_memory() - puts back pre-alloc DP context memory to
- *				      global pool
- * @ctxt_type: type of DP context
- * @vaddr: address of DP context
- *
- * This is done only as part of de-init happening in a single context. Hence
- * no lock is used for protection
- *
- * Return: Failure if address not found
- */
-QDF_STATUS dp_prealloc_put_context_memory(uint32_t ctxt_type, void *vaddr);
 
 /**
  * dp_prealloc_get_coherent() - gets pre-alloc DP memory

@@ -654,8 +654,7 @@ static QDF_STATUS lim_send_tdls_dis_req_frame(struct mac_context *mac,
 					lim_mgmt_tdls_tx_complete,
 					HAL_USE_BD_RATE2_FOR_MANAGEMENT_FRAME |
 					HAL_USE_PEER_STA_REQUESTED_MASK,
-					smeSessionId, false, 0,
-					RATEID_DEFAULT, 0);
+					smeSessionId, false, 0, RATEID_DEFAULT);
 	if (!QDF_IS_STATUS_SUCCESS(qdf_status)) {
 		mac->lim.tdls_frm_session_id = NO_SESSION;
 		pe_err("could not send TDLS Discovery Request frame");
@@ -967,7 +966,7 @@ static QDF_STATUS lim_send_tdls_dis_rsp_frame(struct mac_context *mac,
 					      lim_mgmt_tdls_tx_complete,
 					      HAL_USE_SELF_STA_REQUESTED_MASK,
 					      smeSessionId, false, 0,
-					      RATEID_DEFAULT, 0);
+					      RATEID_DEFAULT);
 	if (!QDF_IS_STATUS_SUCCESS(qdf_status)) {
 		mac->lim.tdls_frm_session_id = NO_SESSION;
 		pe_err("could not send TDLS Discovery Response frame!");
@@ -1052,7 +1051,7 @@ wma_tx_frame_with_tx_complete_send(struct mac_context *mac, void *pPacket,
 					  HAL_USE_BD_RATE2_FOR_MANAGEMENT_FRAME
 					  | HAL_USE_PEER_STA_REQUESTED_MASK,
 					  smeSessionId, flag, 0,
-					  RATEID_DEFAULT, 0);
+					  RATEID_DEFAULT);
 }
 #else
 
@@ -1073,7 +1072,7 @@ wma_tx_frame_with_tx_complete_send(struct mac_context *mac, void *pPacket,
 					  HAL_USE_BD_RATE2_FOR_MANAGEMENT_FRAME
 					  | HAL_USE_PEER_STA_REQUESTED_MASK,
 					  smeSessionId, false, 0,
-					  RATEID_DEFAULT, 0);
+					  RATEID_DEFAULT);
 }
 #endif
 

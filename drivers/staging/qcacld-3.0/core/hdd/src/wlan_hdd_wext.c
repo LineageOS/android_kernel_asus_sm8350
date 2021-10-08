@@ -3918,7 +3918,7 @@ static int hdd_we_set_nss(struct hdd_adapter *adapter, int nss)
 		return -EINVAL;
 	}
 
-	status = hdd_update_nss(adapter, nss, nss);
+	status = hdd_update_nss(adapter, nss);
 	if (QDF_IS_STATUS_ERROR(status))
 		hdd_err("cfg set failed, value %d status %d", nss, status);
 
@@ -7105,22 +7105,16 @@ static int __iw_set_var_ints_getnone(struct net_device *dev,
 		conn_info = policy_mgr_get_conn_info(&len);
 		pr_info("+--------------------------+\n");
 		for (i = 0; i < len; i++) {
-			if (!conn_info->in_use)
-				continue;
-
 			pr_info("|table_index[%d]\t\t\n", i);
 			pr_info("|\t|vdev_id - %-10d|\n", conn_info->vdev_id);
 			pr_info("|\t|freq    - %-10d|\n", conn_info->freq);
 			pr_info("|\t|bw      - %-10d|\n", conn_info->bw);
 			pr_info("|\t|mode    - %-10d|\n", conn_info->mode);
-			pr_info("|\t|mac_id  - %-10d|\n", conn_info->mac);
+			pr_info("|\t|mac     - %-10d|\n", conn_info->mac);
 			pr_info("|\t|in_use  - %-10d|\n", conn_info->in_use);
 			pr_info("+--------------------------+\n");
 			conn_info++;
 		}
-
-		pr_info("|\t|current state dbs - %-10d|\n",
-			policy_mgr_is_current_hwmode_dbs(hdd_ctx->psoc));
 	}
 	break;
 

@@ -25,11 +25,8 @@
 
 static void dp_rx_fisa_flush_flow_wrap(struct dp_fisa_rx_sw_ft *sw_ft);
 
-/*
- * Used by FW to route RX packets to host REO2SW1 ring if IPA hit
- * RX back pressure.
- */
-#define REO_DEST_IND_IPA_REROUTE 2
+/** REO will push frame into REO2FW RING */
+#define REO_DESTINATION_FW 6
 
 #if defined(FISA_DEBUG_ENABLE)
 /**
@@ -510,7 +507,6 @@ dp_rx_fisa_add_ft_entry(struct dp_rx_fst *fisa_hdl,
 	 * reflect the flow update
 	 */
 	if (is_fst_updated &&
-	    fisa_hdl->fse_cache_flush_allow &&
 	    (qdf_atomic_inc_return(&fisa_hdl->fse_cache_flush_posted) == 1)) {
 		/* return 1 after increment implies FSE cache flush message
 		 * already posted. so start restart the timer
@@ -932,8 +928,7 @@ dp_rx_get_fisa_flow(struct dp_rx_fst *fisa_hdl, struct dp_vdev *vdev,
 {
 	uint8_t *rx_tlv_hdr;
 	uint32_t flow_idx;
-	uint32_t tlv_reo_dest_ind;
-	uint8_t  ring_reo_dest_ind;
+	uint32_t reo_destination_indication;
 	bool flow_invalid, flow_timeout, flow_idx_valid;
 	struct dp_fisa_rx_sw_ft *sw_ft_entry = NULL;
 	hal_soc_handle_t hal_soc_hdl = fisa_hdl->soc_hdl->hal_soc;
@@ -943,16 +938,14 @@ dp_rx_get_fisa_flow(struct dp_rx_fst *fisa_hdl, struct dp_vdev *vdev,
 
 	rx_tlv_hdr = qdf_nbuf_data(nbuf);
 	hal_rx_msdu_get_reo_destination_indication(hal_soc_hdl, rx_tlv_hdr,
-						   &tlv_reo_dest_ind);
-	ring_reo_dest_ind = qdf_nbuf_get_rx_reo_dest_ind(nbuf);
+						   &reo_destination_indication);
 	/*
 	 * Compare reo_destination_indication between reo ring descriptor
 	 * and rx_pkt_tlvs, if they are different, then likely these kind
 	 * of frames re-injected by FW or touched by other module already,
 	 * skip FISA to avoid REO2SW ring mismatch issue for same flow.
 	 */
-	if (tlv_reo_dest_ind != ring_reo_dest_ind ||
-	    REO_DEST_IND_IPA_REROUTE == ring_reo_dest_ind)
+	if (reo_destination_indication != qdf_nbuf_get_rx_reo_dest_ind(nbuf))
 		return sw_ft_entry;
 
 	hal_rx_msdu_get_flow_params(hal_soc_hdl, rx_tlv_hdr, &flow_invalid,
@@ -975,7 +968,7 @@ dp_rx_get_fisa_flow(struct dp_rx_fst *fisa_hdl, struct dp_vdev *vdev,
 
 	sw_ft_entry = dp_rx_fisa_add_ft_entry(fisa_hdl, flow_idx, nbuf, vdev,
 					      rx_tlv_hdr,
-					      tlv_reo_dest_ind);
+					      reo_destination_indication);
 
 	return sw_ft_entry;
 }
@@ -1310,7 +1303,6 @@ dp_rx_fisa_flush_udp_flow(struct dp_vdev *vdev,
 	}
 
 	qdf_nbuf_set_next(fisa_flow->head_skb, NULL);
-	QDF_NBUF_CB_RX_NUM_ELEMENTS_IN_LIST(fisa_flow->head_skb) = 1;
 	if (fisa_flow->last_skb)
 		qdf_nbuf_set_next(fisa_flow->last_skb, NULL);
 
@@ -1781,7 +1773,6 @@ pull_nbuf:
 				     head_nbuf);
 
 deliver_nbuf: /* Deliver without FISA */
-		QDF_NBUF_CB_RX_NUM_ELEMENTS_IN_LIST(head_nbuf) = 1;
 		qdf_nbuf_set_next(head_nbuf, NULL);
 		hex_dump_skb_data(head_nbuf, false);
 		if (!vdev->osif_rx || QDF_STATUS_SUCCESS !=
@@ -1913,31 +1904,4 @@ void dp_set_fisa_disallowed_for_vdev(struct cdp_soc_t *cdp_soc, uint8_t vdev_id,
 
 	vdev->fisa_disallowed[rx_ctx_id] = val;
 	dp_vdev_unref_delete(soc, vdev, DP_MOD_ID_RX);
-}
-
-void dp_suspend_fse_cache_flush(struct dp_soc *soc)
-{
-	struct dp_rx_fst *dp_fst;
-
-	dp_fst = soc->rx_fst;
-	if (dp_fst) {
-		if (qdf_atomic_read(&dp_fst->fse_cache_flush_posted))
-			qdf_timer_sync_cancel(&dp_fst->fse_cache_flush_timer);
-		dp_fst->fse_cache_flush_allow = false;
-	}
-
-	dp_info("fse cache flush suspended");
-}
-
-void dp_resume_fse_cache_flush(struct dp_soc *soc)
-{
-	struct dp_rx_fst *dp_fst;
-
-	dp_fst = soc->rx_fst;
-	if (dp_fst) {
-		qdf_atomic_set(&dp_fst->fse_cache_flush_posted, 0);
-		dp_fst->fse_cache_flush_allow = true;
-	}
-
-	dp_info("fse cache flush resumed");
 }

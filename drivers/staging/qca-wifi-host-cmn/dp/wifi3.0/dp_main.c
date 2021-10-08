@@ -248,9 +248,6 @@ static uint8_t dp_soc_ring_if_nss_offloaded(struct dp_soc *soc,
 					    int ring_num);
 #define DP_INTR_POLL_TIMER_MS	5
 
-#define MON_VDEV_TIMER_INIT 0x1
-#define MON_VDEV_TIMER_RUNNING 0x2
-
 /* Generic AST entry aging timer value */
 #define DP_AST_AGING_TIMER_DEFAULT_MS	1000
 #define DP_MCS_LENGTH (6*MAX_MCS)
@@ -1445,49 +1442,6 @@ dp_srng_configure_interrupt_thresholds(struct dp_soc *soc,
 #endif
 
 #ifdef DP_MEM_PRE_ALLOC
-
-void *dp_context_alloc_mem(struct dp_soc *soc, enum dp_ctxt_type ctxt_type,
-			   size_t ctxt_size)
-{
-	void *ctxt_mem;
-
-	if (!soc->cdp_soc.ol_ops->dp_prealloc_get_context) {
-		dp_warn("dp_prealloc_get_context null!");
-		goto dynamic_alloc;
-	}
-
-	ctxt_mem = soc->cdp_soc.ol_ops->dp_prealloc_get_context(ctxt_type);
-
-	if (ctxt_mem)
-		goto end;
-
-dynamic_alloc:
-	dp_info("Pre-alloc of ctxt failed. Dynamic allocation");
-	ctxt_mem = qdf_mem_malloc(ctxt_size);
-end:
-	return ctxt_mem;
-}
-
-void dp_context_free_mem(struct dp_soc *soc, enum dp_ctxt_type ctxt_type,
-			 void *vaddr)
-{
-	QDF_STATUS status;
-
-	if (soc->cdp_soc.ol_ops->dp_prealloc_put_context) {
-		status = soc->cdp_soc.ol_ops->dp_prealloc_put_context(
-								DP_PDEV_TYPE,
-								vaddr);
-	} else {
-		dp_warn("dp_prealloc_get_context null!");
-		status = QDF_STATUS_E_NOSUPPORT;
-	}
-
-	if (QDF_IS_STATUS_ERROR(status)) {
-		dp_info("Context not pre-allocated");
-		qdf_mem_free(vaddr);
-	}
-}
-
 static inline
 void *dp_srng_aligned_mem_alloc_consistent(struct dp_soc *soc,
 					   struct dp_srng *srng,
@@ -2076,14 +2030,12 @@ static uint32_t dp_service_srngs(void *dp_ctx, uint32_t dp_budget)
 			int_ctx->intr_stats.num_reo_status_ring_masks++;
 	}
 
-	if (qdf_unlikely(!(soc->mon_vdev_timer_state & MON_VDEV_TIMER_RUNNING))) {
-		work_done = dp_process_lmac_rings(int_ctx, remaining_quota);
-		if (work_done) {
-			budget -=  work_done;
-			if (budget <= 0)
-				goto budget_done;
-			remaining_quota = budget;
-		}
+	work_done = dp_process_lmac_rings(int_ctx, remaining_quota);
+	if (work_done) {
+		budget -=  work_done;
+		if (budget <= 0)
+			goto budget_done;
+		remaining_quota = budget;
 	}
 
 	qdf_lro_flush(int_ctx->lro_ctx);
@@ -2091,70 +2043,6 @@ static uint32_t dp_service_srngs(void *dp_ctx, uint32_t dp_budget)
 
 budget_done:
 	return dp_budget - budget;
-}
-
-/* dp_mon_vdev_timer()- timer poll for interrupts
- *
- * @arg: SoC Handle
- *
- * Return:
- *
- */
-static void dp_mon_vdev_timer(void *arg)
-{
-	struct dp_soc *soc = (struct dp_soc *)arg;
-	struct dp_pdev *pdev = soc->pdev_list[0];
-	enum timer_yield_status yield = DP_TIMER_NO_YIELD;
-	uint32_t work_done  = 0, total_work_done = 0;
-	int budget = 0xffff;
-	uint32_t remaining_quota = budget;
-	uint64_t start_time;
-	uint32_t lmac_id = DP_MON_INVALID_LMAC_ID;
-	uint32_t lmac_iter;
-	int max_mac_rings = wlan_cfg_get_num_mac_rings(pdev->wlan_cfg_ctx);
-
-	if (!qdf_atomic_read(&soc->cmn_init_done))
-		return;
-
-	if (pdev->mon_chan_band != REG_BAND_UNKNOWN)
-		lmac_id = pdev->ch_band_lmac_id_mapping[pdev->mon_chan_band];
-
-	start_time = qdf_get_log_timestamp();
-	dp_is_hw_dbs_enable(soc, &max_mac_rings);
-
-	while (yield == DP_TIMER_NO_YIELD) {
-		for (lmac_iter = 0; lmac_iter < max_mac_rings; lmac_iter++) {
-			if (lmac_iter == lmac_id)
-				work_done = dp_mon_process(
-						    soc, NULL,
-						    lmac_iter, remaining_quota);
-			else
-				work_done =
-					dp_mon_drop_packets_for_mac(pdev,
-								    lmac_iter,
-								    remaining_quota);
-			if (work_done) {
-				budget -=  work_done;
-				if (budget <= 0) {
-					yield = DP_TIMER_WORK_EXHAUST;
-					goto budget_done;
-				}
-				remaining_quota = budget;
-				total_work_done += work_done;
-			}
-		}
-
-		yield = dp_should_timer_irq_yield(soc, total_work_done,
-						  start_time);
-		total_work_done = 0;
-	}
-
-budget_done:
-	if (yield == DP_TIMER_WORK_EXHAUST ||
-	    yield == DP_TIMER_TIME_EXHAUST)
-		qdf_timer_mod(&soc->mon_vdev_timer, 1);
-	else
-		qdf_timer_mod(&soc->mon_vdev_timer, DP_INTR_POLL_TIMER_MS);
 }
 
 /* dp_interrupt_timer()- timer poll for interrupts
@@ -4235,7 +4123,7 @@ static inline QDF_STATUS dp_pdev_attach_wifi3(struct cdp_soc_t *txrx_soc,
 	struct wlan_cfg_dp_soc_ctxt *soc_cfg_ctx;
 	int nss_cfg;
 
-	pdev = dp_context_alloc_mem(soc, DP_PDEV_TYPE, sizeof(*pdev));
+	pdev = qdf_mem_malloc(sizeof(*pdev));
 	if (!pdev) {
 		QDF_TRACE(QDF_MODULE_ID_DP, QDF_TRACE_LEVEL_ERROR,
 			  FL("DP PDEV memory allocation failed"));
@@ -4582,7 +4470,7 @@ static void dp_pdev_detach(struct cdp_pdev *txrx_pdev, int force)
 
 	wlan_cfg_pdev_detach(pdev->wlan_cfg_ctx);
 	wlan_minidump_remove(pdev);
-	dp_context_free_mem(soc, DP_PDEV_TYPE, pdev);
+	qdf_mem_free(pdev);
 }
 
 /*
@@ -4780,10 +4668,6 @@ static void dp_soc_detach(struct cdp_soc_t *txrx_soc)
 	dp_hw_link_desc_pool_banks_free(soc, WLAN_INVALID_PDEV_ID);
 	wlan_cfg_soc_detach(soc->wlan_cfg_ctx);
 	dp_soc_rx_history_detach(soc);
-	if (soc->mon_vdev_timer_state & MON_VDEV_TIMER_INIT) {
-		qdf_timer_free(&soc->mon_vdev_timer);
-		soc->mon_vdev_timer_state = 0;
-	}
 
 	qdf_mem_free(soc);
 }
@@ -4989,10 +4873,6 @@ static QDF_STATUS dp_rxdma_ring_config(struct dp_soc *soc)
 		       dp_mon_reap_timer_handler, (void *)soc,
 		       QDF_TIMER_TYPE_WAKE_APPS);
 	soc->reap_timer_init = 1;
-	qdf_timer_init(soc->osdev, &soc->mon_vdev_timer,
-		       dp_mon_vdev_timer, (void *)soc,
-		       QDF_TIMER_TYPE_WAKE_APPS);
-	soc->mon_vdev_timer_state |= MON_VDEV_TIMER_INIT;
 	return status;
 }
 #else
@@ -5217,14 +5097,6 @@ static QDF_STATUS dp_rx_dump_fisa_stats(struct dp_soc *soc)
 }
 
 static void dp_rx_dump_fisa_table(struct dp_soc *soc)
-{
-}
-
-static void dp_suspend_fse_cache_flush(struct dp_soc *soc)
-{
-}
-
-static void dp_resume_fse_cache_flush(struct dp_soc *soc)
 {
 }
 #endif /* !WLAN_SUPPORT_RX_FISA */
@@ -5510,11 +5382,6 @@ static QDF_STATUS dp_vdev_attach_wifi3(struct cdp_soc_t *cdp_soc,
 		if ((pdev->vdev_count == 0) ||
 		    (wlan_op_mode_monitor == vdev->opmode))
 			qdf_timer_mod(&soc->int_timer, DP_INTR_POLL_TIMER_MS);
-	} else if (soc->intr_mode == DP_INTR_MSI &&
-		   wlan_op_mode_monitor == vdev->opmode &&
-		   soc->mon_vdev_timer_state & MON_VDEV_TIMER_INIT) {
-		qdf_timer_mod(&soc->mon_vdev_timer, DP_INTR_POLL_TIMER_MS);
-		soc->mon_vdev_timer_state |= MON_VDEV_TIMER_RUNNING;
 	}
 
 	dp_vdev_id_map_tbl_add(soc, vdev, vdev_id);
@@ -6246,7 +6113,6 @@ dp_peer_setup_wifi3(struct cdp_soc_t *soc_hdl, uint8_t vdev_id,
 	struct dp_peer *peer =
 			dp_peer_find_hash_find(soc, peer_mac, 0, vdev_id,
 					       DP_MOD_ID_CDP);
-	enum wlan_op_mode vdev_opmode;
 
 	if (!peer)
 		return QDF_STATUS_E_FAILURE;
@@ -6257,8 +6123,6 @@ dp_peer_setup_wifi3(struct cdp_soc_t *soc_hdl, uint8_t vdev_id,
 		goto fail;
 	}
 
-	/* save vdev related member in case vdev freed */
-	vdev_opmode = vdev->opmode;
 	pdev = vdev->pdev;
 	dp_peer_setup_get_reo_hash(vdev, &reo_dest, &hash_based);
 
@@ -6290,8 +6154,7 @@ dp_peer_setup_wifi3(struct cdp_soc_t *soc_hdl, uint8_t vdev_id,
 
 	qdf_atomic_set(&peer->is_default_route_set, 1);
 
-	if (vdev_opmode != wlan_op_mode_monitor)
-		dp_peer_rx_init(pdev, peer);
+	dp_peer_rx_init(pdev, peer);
 
 	dp_peer_ppdu_delayed_ba_init(peer);
 
@@ -6710,13 +6573,6 @@ static void dp_flush_monitor_rings(struct dp_soc *soc)
 	int budget;
 	void *mon_dst_srng;
 
-	/* Reset monitor filters before reaping the ring*/
-	qdf_spin_lock_bh(&pdev->mon_lock);
-	dp_mon_filter_reset_mon_mode(pdev);
-	if (dp_mon_filter_update(pdev) != QDF_STATUS_SUCCESS)
-		dp_info("failed to reset monitor filters");
-	qdf_spin_unlock_bh(&pdev->mon_lock);
-
 	if (pdev->mon_chan_band == REG_BAND_UNKNOWN)
 		return;
 
@@ -6780,11 +6636,6 @@ void dp_vdev_unref_delete(struct dp_soc *soc, struct dp_vdev *vdev,
 		if (soc->intr_mode == DP_INTR_POLL) {
 			qdf_timer_sync_cancel(&soc->int_timer);
 			dp_flush_monitor_rings(soc);
-		} else if (soc->intr_mode == DP_INTR_MSI &&
-			soc->mon_vdev_timer_state & MON_VDEV_TIMER_RUNNING) {
-			qdf_timer_sync_cancel(&soc->mon_vdev_timer);
-			dp_flush_monitor_rings(soc);
-			soc->mon_vdev_timer_state &= ~MON_VDEV_TIMER_RUNNING;
 		}
 		pdev->monitor_vdev = NULL;
 		goto free_vdev;
@@ -7069,7 +6920,7 @@ static uint8_t dp_get_mon_vdev_from_pdev_wifi3(struct cdp_soc_t *soc_hdl,
 	struct dp_soc *soc = cdp_soc_t_to_dp_soc(soc_hdl);
 	struct dp_pdev *pdev = dp_get_pdev_from_soc_pdev_id_wifi3(soc, pdev_id);
 
-	if (qdf_unlikely(!pdev || !pdev->monitor_vdev))
+	if (qdf_unlikely(!pdev))
 		return -EINVAL;
 
 	return pdev->monitor_vdev->vdev_id;
@@ -10198,50 +10049,6 @@ static uint8_t dp_soc_is_swlm_enabled(struct cdp_soc_t *soc_hdl)
 #endif
 
 /**
- * dp_display_srng_info() - Dump the srng HP TP info
- * @soc_hdl: CDP Soc handle
- *
- * This function dumps the SW hp/tp values for the important rings.
- * HW hp/tp values are not being dumped, since it can lead to
- * READ NOC error when UMAC is in low power state. MCC does not have
- * device force wake working yet.
- *
- * Return: none
- */
-static void dp_display_srng_info(struct cdp_soc_t *soc_hdl)
-{
-	struct dp_soc *soc = cdp_soc_t_to_dp_soc(soc_hdl);
-	hal_soc_handle_t hal_soc = soc->hal_soc;
-	uint32_t hp, tp, i;
-
-	dp_info("SRNG HP-TP data:");
-	for (i = 0; i < soc->num_tcl_data_rings; i++) {
-		hal_get_sw_hptp(hal_soc, soc->tcl_data_ring[i].hal_srng,
-				&hp, &tp);
-		dp_info("TCL DATA ring[%d]: hp=0x%x, tp=0x%x", i, hp, tp);
-
-		hal_get_sw_hptp(hal_soc, soc->tx_comp_ring[i].hal_srng,
-				&hp, &tp);
-		dp_info("TX comp ring[%d]: hp=0x%x, tp=0x%x", i, hp, tp);
-	}
-
-	for (i = 0; i < soc->num_reo_dest_rings; i++) {
-		hal_get_sw_hptp(hal_soc, soc->reo_dest_ring[i].hal_srng,
-				&hp, &tp);
-		dp_info("REO DST ring[%d]: hp=0x%x, tp=0x%x", i, hp, tp);
-	}
-
-	hal_get_sw_hptp(hal_soc, soc->reo_exception_ring.hal_srng, &hp, &tp);
-	dp_info("REO exception ring: hp=0x%x, tp=0x%x", hp, tp);
-
-	hal_get_sw_hptp(hal_soc, soc->rx_rel_ring.hal_srng, &hp, &tp);
-	dp_info("WBM RX release ring: hp=0x%x, tp=0x%x", hp, tp);
-
-	hal_get_sw_hptp(hal_soc, soc->wbm_desc_rel_ring.hal_srng, &hp, &tp);
-	dp_info("WBM desc release ring: hp=0x%x, tp=0x%x", hp, tp);
-}
-
-/**
  * dp_soc_get_dp_txrx_handle() - get context for external-dp from dp soc
  * @soc_handle: datapath soc handle
  *
@@ -10829,7 +10636,6 @@ static uint32_t dp_get_cfg(struct cdp_soc_t *soc, enum cdp_dp_cfg cfg)
 		break;
 	case cfg_dp_wow_check_rx_pending:
 		value = dpsoc->wlan_cfg_ctx->wow_check_rx_pending_enable;
-		break;
 	default:
 		value =  0;
 	}
@@ -11459,8 +11265,8 @@ dp_txrx_ext_stats_request(struct cdp_soc_t *soc_hdl, uint8_t pdev_id,
 	req->rx_mpdu_received = soc->ext_stats.rx_mpdu_received;
 	req->rx_mpdu_delivered = soc->ext_stats.rx_mpdu_received;
 	req->rx_mpdu_missed = soc->ext_stats.rx_mpdu_missed;
-	/* only count error source from RXDMA */
-	req->rx_mpdu_error = pdev->stats.err.rxdma_error;
+	req->rx_mpdu_error = soc->stats.rx.err_ring_pkts -
+				soc->stats.rx.rx_frags;
 
 	return QDF_STATUS_SUCCESS;
 }
@@ -11629,7 +11435,6 @@ static struct cdp_misc_ops dp_ops_misc = {
 	.set_swlm_enable = dp_soc_set_swlm_enable,
 	.is_swlm_enabled = dp_soc_is_swlm_enabled,
 #endif
-	.display_txrx_hw_info = dp_display_srng_info,
 };
 #endif
 
@@ -11708,8 +11513,6 @@ static QDF_STATUS dp_bus_suspend(struct cdp_soc_t *soc_hdl, uint8_t pdev_id)
 		dp_service_mon_rings(soc, DP_MON_REAP_BUDGET);
 	}
 
-	dp_suspend_fse_cache_flush(soc);
-
 	return QDF_STATUS_SUCCESS;
 }
 
@@ -11732,8 +11535,6 @@ static QDF_STATUS dp_bus_resume(struct cdp_soc_t *soc_hdl, uint8_t pdev_id)
 	    soc->reap_timer_init)
 		qdf_timer_mod(&soc->mon_reap_timer,
 			      DP_INTR_POLL_TIMER_MS);
-
-	dp_resume_fse_cache_flush(soc);
 
 	return QDF_STATUS_SUCCESS;
 }

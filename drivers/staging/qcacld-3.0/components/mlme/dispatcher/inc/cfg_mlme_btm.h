@@ -100,9 +100,7 @@
  *
  * BIT 8: BTM query preference over 11k neighbor report request
  *
- * BIT 9: BTM query with candidate list
- *
- * BIT 10-31: Reserved
+ * BIT 9-31: Reserved
  *
  * Supported Feature: STA
  *

@@ -326,8 +326,8 @@ static void lim_external_auth_add_pre_auth_node(struct mac_context *mac_ctx,
 			 QDF_MAC_ADDR_REF(mac_hdr->sa));
 		return;
 	}
-	pe_debug("Creating preauth node for SAE peer " QDF_MAC_ADDR_FMT,
-		 QDF_MAC_ADDR_REF(mac_hdr->sa));
+	pe_debug("Creating preauth node(%d)for SAE peer " QDF_MAC_ADDR_FMT,
+		 auth_node->authNodeIdx, QDF_MAC_ADDR_REF(mac_hdr->sa));
 	qdf_mem_copy((uint8_t *)auth_node->peerMacAddr,
 		     mac_hdr->sa, sizeof(tSirMacAddr));
 	auth_node->mlmState = mlm_state;
@@ -1319,17 +1319,14 @@ lim_process_auth_frame(struct mac_context *mac_ctx, uint8_t *rx_pkt_info,
 		(mac_hdr->seqControl.seqNumLo);
 
 	if (pe_session->prev_auth_seq_num == curr_seq_num &&
-	    !qdf_mem_cmp(pe_session->prev_auth_mac_addr, &mac_hdr->sa,
-			 ETH_ALEN) &&
 	    mac_hdr->fc.retry) {
 		pe_debug("auth frame, seq num: %d is already processed, drop it",
 			 curr_seq_num);
 		return;
 	}
 
-	/* save seq number and mac_addr in pe_session */
+	/* save seq number in pe_session */
 	pe_session->prev_auth_seq_num = curr_seq_num;
-	qdf_mem_copy(pe_session->prev_auth_mac_addr, mac_hdr->sa, ETH_ALEN);
 
 	body_ptr = WMA_GET_RX_MPDU_DATA(rx_pkt_info);
 

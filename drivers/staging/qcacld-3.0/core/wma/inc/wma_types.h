@@ -108,6 +108,7 @@
 
 
 /* WMA Messages */
+
 enum wmamsgtype {
 	WMA_MSG_TYPES_BEGIN = SIR_HAL_MSG_TYPES_BEGIN,
 	WMA_ITC_MSG_TYPES_BEGIN = SIR_HAL_ITC_MSG_TYPES_BEGIN,
@@ -154,6 +155,7 @@ enum wmamsgtype {
 	WMA_TIMER_TRAFFIC_ACTIVITY_REQ = SIR_HAL_TIMER_TRAFFIC_ACTIVITY_REQ,
 	WMA_TIMER_ADC_RSSI_STATS = SIR_HAL_TIMER_ADC_RSSI_STATS,
 	WMA_TIMER_TRAFFIC_STATS_IND = SIR_HAL_TRAFFIC_STATS_IND,
+
 #ifdef WLAN_FEATURE_11W
 	WMA_EXCLUDE_UNENCRYPTED_IND = SIR_HAL_EXCLUDE_UNENCRYPTED_IND,
 #endif
@@ -173,6 +175,7 @@ enum wmamsgtype {
 	WMA_SET_TX_POWER_REQ = SIR_HAL_SET_TX_POWER_REQ,
 	WMA_SET_TX_POWER_RSP = SIR_HAL_SET_TX_POWER_RSP,
 	WMA_GET_TX_POWER_REQ = SIR_HAL_GET_TX_POWER_REQ,
+	WMA_SEND_MAX_TX_POWER = SIR_HAL_SEND_MAX_TX_POWER,
 
 	WMA_ENABLE_UAPSD_REQ = SIR_HAL_ENABLE_UAPSD_REQ,
 	WMA_DISABLE_UAPSD_REQ = SIR_HAL_DISABLE_UAPSD_REQ,
@@ -451,7 +454,6 @@ enum wmamsgtype {
 	WMA_TWT_DEL_DIALOG_REQUEST = SIR_HAL_TWT_DEL_DIALOG_REQUEST,
 	WMA_TWT_PAUSE_DIALOG_REQUEST = SIR_HAL_TWT_PAUSE_DIALOG_REQUEST,
 	WMA_TWT_RESUME_DIALOG_REQUEST =  SIR_HAL_TWT_RESUME_DIALOG_REQUEST,
-	WMA_PEER_CREATE_REQ = SIR_HAL_PEER_CREATE_REQ,
 };
 
 #define WMA_DATA_STALL_TRIGGER 6
@@ -460,7 +462,7 @@ enum wmamsgtype {
 #define HAL_USE_BD_RATE2_FOR_MANAGEMENT_FRAME 0x40
 
 #define wma_tx_frame(hHal, pFrmBuf, frmLen, frmType, txDir, tid, pCompFunc, \
-		   pData, txFlag, sessionid, channel_freq, rid, peer_rssi) \
+		   pData, txFlag, sessionid, channel_freq, rid) \
 	(QDF_STATUS)( wma_tx_packet( \
 		      cds_get_context(QDF_MODULE_ID_WMA), \
 		      (pFrmBuf), \
@@ -475,12 +477,11 @@ enum wmamsgtype {
 		      (sessionid), \
 		      (false), \
 		      (channel_freq), \
-		      (rid), \
-		      (peer_rssi)))
+		      (rid)))
 
 #define wma_tx_frameWithTxComplete(hHal, pFrmBuf, frmLen, frmType, txDir, tid, \
 	 pCompFunc, pData, pCBackFnTxComp, txFlag, sessionid, tdlsflag, \
-	 channel_freq, rid, peer_rssi) \
+	 channel_freq, rid) \
 	(QDF_STATUS)( wma_tx_packet( \
 		      cds_get_context(QDF_MODULE_ID_WMA), \
 		      (pFrmBuf), \
@@ -495,8 +496,7 @@ enum wmamsgtype {
 		      (sessionid), \
 		      (tdlsflag), \
 		      (channel_freq), \
-		      (rid), \
-		      (peer_rssi)))
+		      (rid)))
 
 /**
  * struct sUapsd_Params - Powersave Offload Changes
@@ -689,7 +689,6 @@ void wma_tx_abort(uint8_t vdev_id);
  * @tdls_flag: tdls flag
  * @channel_freq: channel frequency
  * @rid: rate id
- * @peer_rssi: peer RSSI value
  *
  * This function sends the frame corresponding to the
  * given vdev id.
@@ -703,8 +702,7 @@ QDF_STATUS wma_tx_packet(void *wma_context, void *tx_frame, uint16_t frmLen,
 			 void *pData,
 			 wma_tx_ota_comp_callback tx_frm_ota_comp_cb,
 			 uint8_t tx_flag, uint8_t vdev_id, bool tdls_flag,
-			 uint16_t channel_freq, enum rateid rid,
-			 int8_t peer_rssi);
+			 uint16_t channel_freq, enum rateid rid);
 
 /**
  * wma_open() - Allocate wma context and initialize it.

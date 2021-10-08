@@ -54,7 +54,6 @@
 #include "pci_api.h"
 #include "ahb_api.h"
 #include "wlan_cfg.h"
-#include "qdf_hang_event_notifier.h"
 
 /* Maximum ms timeout for host to wake up target */
 #define PCIE_WAKE_TIMEOUT 1000
@@ -2339,33 +2338,6 @@ static int __hif_check_link_status(struct hif_softc *scn)
 	return -EACCES;
 }
 
-#ifdef HIF_BUS_LOG_INFO
-void hif_log_pcie_info(struct hif_softc *scn, uint8_t *data,
-		       unsigned int *offset)
-{
-	struct hif_pci_softc *sc = HIF_GET_PCI_SOFTC(scn);
-	struct hang_event_bus_info info = {0};
-	size_t size;
-
-	if (!sc) {
-		hif_err("HIF Bus Context is Invalid");
-		return;
-	}
-
-	pfrm_read_config_word(sc->pdev, PCI_DEVICE_ID, &info.dev_id);
-
-	size = sizeof(info);
-	QDF_HANG_EVT_SET_HDR(&info.tlv_header, HANG_EVT_TAG_BUS_INFO,
-			     size - QDF_HANG_EVENT_TLV_HDR_SIZE);
-
-	if (*offset + size > QDF_WLAN_HANG_FW_OFFSET)
-		return;
-
-	qdf_mem_copy(data + *offset, &info, size);
-	*offset = *offset + size;
-}
-#endif
-
 /**
  * hif_pci_bus_resume(): prepare hif for resume
  *
@@ -2418,12 +2390,8 @@ int hif_pci_bus_resume_noirq(struct hif_softc *scn)
 {
 	hif_apps_wake_irq_disable(GET_HIF_OPAQUE_HDL(scn));
 
-	/* a vote for link up can come in the middle of the ongoing resume
-	 * process. hence, clear the link suspend flag once
-	 * hif_bus_resume_noirq() succeeds since PCIe link is already resumed
-	 * by this time
-	 */
-	qdf_atomic_set(&scn->link_suspended, 0);
+	if (hif_can_suspend_link(GET_HIF_OPAQUE_HDL(scn)))
+		qdf_atomic_set(&scn->link_suspended, 0);
 
 	return 0;
 }

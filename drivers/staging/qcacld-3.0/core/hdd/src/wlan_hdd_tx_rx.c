@@ -485,8 +485,6 @@ int hdd_set_udp_qos_upgrade_config(struct hdd_adapter *adapter,
 
 	adapter->upgrade_udp_qos_threshold = priority;
 
-	hdd_debug("UDP packets qos upgrade to: %d", priority);
-
 	return 0;
 }
 
@@ -960,52 +958,6 @@ static void wlan_hdd_fix_broadcast_eapol(struct hdd_adapter *adapter,
 }
 #endif /* HANDLE_BROADCAST_EAPOL_TX_FRAME */
 
-#ifdef WLAN_DP_FEATURE_MARK_ICMP_REQ_TO_FW
-/**
- * hdd_mark_icmp_req_to_fw() - Mark the ICMP request at a certain time interval
- *			       to be sent to the FW.
- * @hdd_ctx: Global hdd context (Caller's responsibility to validate)
- * @skb: packet to be transmitted
- *
- * This func sets the "to_fw" flag in the packet context block, if the
- * current packet is an ICMP request packet. This marking is done at a
- * specific time interval, unless the INI value indicates to disable/enable
- * this for all frames.
- *
- * Return: none
- */
-static void hdd_mark_icmp_req_to_fw(struct hdd_context *hdd_ctx,
-				    struct sk_buff *skb)
-{
-	uint64_t curr_time, time_delta;
-	int time_interval_ms = hdd_ctx->config->icmp_req_to_fw_mark_interval;
-	static uint64_t prev_marked_icmp_time;
-
-	if (!hdd_ctx->config->icmp_req_to_fw_mark_interval)
-		return;
-
-	if (qdf_nbuf_get_icmp_subtype(skb) != QDF_PROTO_ICMP_REQ)
-		return;
-
-	/* Mark all ICMP request to be sent to FW */
-	if (time_interval_ms == WLAN_CFG_ICMP_REQ_TO_FW_MARK_ALL)
-		QDF_NBUF_CB_TX_PACKET_TO_FW(skb) = 1;
-
-	curr_time = qdf_get_log_timestamp();
-	time_delta = curr_time - prev_marked_icmp_time;
-	if (time_delta >= (time_interval_ms *
-			   QDF_LOG_TIMESTAMP_CYCLES_PER_10_US * 100)) {
-		QDF_NBUF_CB_TX_PACKET_TO_FW(skb) = 1;
-		prev_marked_icmp_time = curr_time;
-	}
-}
-#else
-static void hdd_mark_icmp_req_to_fw(struct hdd_context *hdd_ctx,
-				    struct sk_buff *skb)
-{
-}
-#endif
-
 /**
  * __hdd_hard_start_xmit() - Transmit a frame
  * @skb: pointer to OS packet (sk_buff)
@@ -1096,11 +1048,7 @@ static void __hdd_hard_start_xmit(struct sk_buff *skb,
 			QDF_NBUF_CB_TX_EXTRA_FRAG_FLAGS_NOTIFY_COMP(skb) = 1;
 			is_dhcp = true;
 		}
-	} else if (QDF_NBUF_CB_GET_PACKET_TYPE(skb) ==
-		   QDF_NBUF_CB_PACKET_TYPE_ICMP) {
-		hdd_mark_icmp_req_to_fw(hdd_ctx, skb);
 	}
-
 	/* track connectivity stats */
 	if (adapter->pkt_type_bitmap)
 		hdd_tx_rx_collect_connectivity_stats_info(skb, adapter,
@@ -1569,6 +1517,73 @@ static bool hdd_is_mcast_replay(struct sk_buff *skb)
 				skb->dev->dev_addr)))
 			return true;
 	}
+	return false;
+}
+
+/**
+ * hdd_is_arp_local() - check if local or non local arp
+ * @skb: pointer to sk_buff
+ *
+ * Return: true if local arp or false otherwise.
+ */
+static bool hdd_is_arp_local(struct sk_buff *skb)
+{
+	struct arphdr *arp;
+	struct in_ifaddr **ifap = NULL;
+	struct in_ifaddr *ifa = NULL;
+	struct in_device *in_dev;
+	unsigned char *arp_ptr;
+	__be32 tip;
+
+	arp = (struct arphdr *)skb->data;
+	if (arp->ar_op == htons(ARPOP_REQUEST)) {
+		/* if fail to acquire rtnl lock, assume it's local arp */
+		if (!rtnl_trylock())
+			return true;
+
+		in_dev = __in_dev_get_rtnl(skb->dev);
+		if (in_dev) {
+			for (ifap = &in_dev->ifa_list; (ifa = *ifap) != NULL;
+				ifap = &ifa->ifa_next) {
+				if (!strcmp(skb->dev->name, ifa->ifa_label))
+					break;
+			}
+		}
+
+		if (ifa && ifa->ifa_local) {
+			arp_ptr = (unsigned char *)(arp + 1);
+			arp_ptr += (skb->dev->addr_len + 4 +
+					skb->dev->addr_len);
+			memcpy(&tip, arp_ptr, 4);
+			hdd_debug("ARP packet: local IP: %x dest IP: %x",
+				ifa->ifa_local, tip);
+			if (ifa->ifa_local == tip) {
+				rtnl_unlock();
+				return true;
+			}
+		}
+		rtnl_unlock();
+	}
+
+	return false;
+}
+
+/**
+ * hdd_is_rx_wake_lock_needed() - check if wake lock is needed
+ * @skb: pointer to sk_buff
+ *
+ * RX wake lock is needed for:
+ * 1) Unicast data packet OR
+ * 2) Local ARP data packet
+ *
+ * Return: true if wake lock is needed or false otherwise.
+ */
+static bool hdd_is_rx_wake_lock_needed(struct sk_buff *skb)
+{
+	if ((skb->pkt_type != PACKET_BROADCAST &&
+	     skb->pkt_type != PACKET_MULTICAST) || hdd_is_arp_local(skb))
+		return true;
+
 	return false;
 }
 
@@ -2045,9 +2060,6 @@ QDF_STATUS hdd_rx_thread_gro_flush_ind_cbk(void *adapter, int rx_ctx_id)
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	if (hdd_adapter->runtime_disable_rx_thread)
-		return QDF_STATUS_SUCCESS;
-
 	if (hdd_is_low_tput_gro_enable(hdd_adapter->hdd_ctx)) {
 		hdd_adapter->hdd_stats.tx_rx_stats.rx_gro_flush_skip++;
 		gro_flush_code = DP_RX_GRO_LOW_TPUT_FLUSH;
@@ -2219,8 +2231,7 @@ QDF_STATUS hdd_rx_deliver_to_stack(struct hdd_adapter *adapter,
 
 	if (skb_receive_offload_ok && hdd_ctx->receive_offload_cb &&
 	    !hdd_ctx->dp_agg_param.gro_force_flush[rx_ctx_id] &&
-	    !adapter->gro_flushed[rx_ctx_id] &&
-	    !adapter->runtime_disable_rx_thread) {
+	    !adapter->gro_flushed[rx_ctx_id]) {
 		status = hdd_ctx->receive_offload_cb(adapter, skb);
 
 		if (QDF_IS_STATUS_SUCCESS(status)) {
@@ -2409,6 +2420,7 @@ QDF_STATUS hdd_rx_packet_cbk(void *adapter_context,
 	struct hdd_station_ctx *sta_ctx = NULL;
 	unsigned int cpu_index;
 	struct qdf_mac_addr *mac_addr, *dest_mac_addr;
+	bool wake_lock = false;
 	uint8_t pkt_type = 0;
 	bool track_arp = false;
 	struct wlan_objmgr_vdev *vdev;
@@ -2543,6 +2555,21 @@ QDF_STATUS hdd_rx_packet_cbk(void *adapter_context,
 						rx_usolict_arp_n_mcast_drp);
 			qdf_nbuf_free(skb);
 			continue;
+		}
+
+		/* hold configurable wakelock for unicast traffic */
+		if (!hdd_is_current_high_throughput(hdd_ctx) &&
+		    hdd_ctx->config->rx_wakelock_timeout &&
+		    sta_ctx->conn_info.is_authenticated)
+			wake_lock = hdd_is_rx_wake_lock_needed(skb);
+
+		if (wake_lock) {
+			cds_host_diag_log_work(&hdd_ctx->rx_wake_lock,
+						   hdd_ctx->config->rx_wakelock_timeout,
+						   WIFI_POWER_EVENT_WAKELOCK_HOLD_RX);
+			qdf_wake_lock_timeout_acquire(&hdd_ctx->rx_wake_lock,
+							  hdd_ctx->config->
+								  rx_wakelock_timeout);
 		}
 
 		/* Remove SKB from internal tracking table before submitting
@@ -3634,10 +3661,10 @@ void hdd_dp_cfg_update(struct wlan_objmgr_psoc *psoc,
 	hdd_set_rx_mode_value(hdd_ctx);
 	config->multicast_replay_filter =
 		cfg_get(psoc, CFG_DP_FILTER_MULTICAST_REPLAY);
+	config->rx_wakelock_timeout =
+		cfg_get(psoc, CFG_DP_RX_WAKELOCK_TIMEOUT);
 	config->num_dp_rx_threads = cfg_get(psoc, CFG_DP_NUM_DP_RX_THREADS);
 	config->cfg_wmi_credit_cnt = cfg_get(psoc, CFG_DP_HTC_WMI_CREDIT_CNT);
-	config->icmp_req_to_fw_mark_interval =
-		cfg_get(psoc, CFG_DP_ICMP_REQ_TO_FW_MARK_INTERVAL);
 	hdd_dp_dp_trace_cfg_update(config, psoc);
 	hdd_dp_nud_tracking_cfg_update(config, psoc);
 }

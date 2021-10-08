@@ -157,7 +157,6 @@ struct wlan_srng_cfg {
  * @rxdma_err_dst_ring: rxdma error detination ring size
  * @raw_mode_war: enable/disable raw mode war
  * @enable_data_stall_detection: flag to enable data stall detection
- * @enable_force_rx_64_ba: flag to enable force 64 blockack in RX
  * @disable_intra_bss_fwd: flag to disable intra bss forwarding
  * @rxdma1_enable: flag to indicate if rxdma1 is enabled
  * @tx_desc_limit_0: tx_desc limit for 5G H
@@ -193,6 +192,8 @@ struct wlan_srng_cfg {
  * @is_swlm_enabled: flag to enable/disable SWLM
  * @tx_per_pkt_vdev_id_check: Enable tx perpkt vdev id check
  * @wow_check_rx_pending_enable: Enable RX frame pending check in WoW
+ * @send_icmp_req_to_fw: Enable sending ICMP Request packets to FW at
+ *			 regular intervals
  */
 struct wlan_cfg_dp_soc_ctxt {
 	int num_int_ctxts;
@@ -268,7 +269,6 @@ struct wlan_cfg_dp_soc_ctxt {
 	uint32_t per_pkt_trace;
 	bool raw_mode_war;
 	bool enable_data_stall_detection;
-	bool enable_force_rx_64_ba;
 	bool disable_intra_bss_fwd;
 	bool rxdma1_enable;
 	int max_ast_idx;
@@ -307,6 +307,7 @@ struct wlan_cfg_dp_soc_ctxt {
 	bool fst_in_cmem;
 	bool tx_per_pkt_vdev_id_check;
 	bool wow_check_rx_pending_enable;
+	int send_icmp_req_to_fw;
 };
 
 /**
@@ -1479,10 +1480,11 @@ bool wlan_cfg_is_fst_in_cmem_enabled(struct wlan_cfg_dp_soc_ctxt *cfg);
 bool wlan_cfg_is_swlm_enabled(struct wlan_cfg_dp_soc_ctxt *cfg);
 
 /**
- * wlan_cfg_is_dp_force_rx_64_ba() - Get force use 64 BA flag
- * @cfg: config context
+ * wlan_cfg_send_icmp_req_to_fw() - Check if ICMP request packets are to be
+ *				    sent to FW or not.
+ * @cfg: soc configuration context
  *
- * Return: force use 64 BA flag
+ * Return: Value set in the ini "send_icmp_req_to_fw"
  */
-bool wlan_cfg_is_dp_force_rx_64_ba(struct wlan_cfg_dp_soc_ctxt *cfg);
+int wlan_cfg_send_icmp_req_to_fw(struct wlan_cfg_dp_soc_ctxt *cfg);
 #endif

@@ -3441,6 +3441,7 @@ void hif_unconfig_ce(struct hif_softc *hif_sc)
  */
 static void hif_post_static_buf_to_target(struct hif_softc *scn)
 {
+	void *target_va;
 	phys_addr_t target_pa;
 	struct ce_info *ce_info_ptr;
 	uint32_t msi_data_start;
@@ -3449,19 +3450,15 @@ static void hif_post_static_buf_to_target(struct hif_softc *scn)
 	uint32_t i = 0;
 	int ret;
 
-	scn->vaddr_qmi_bypass =
-			(uint32_t *)qdf_mem_alloc_consistent(scn->qdf_dev,
-							     scn->qdf_dev->dev,
-							     FW_SHARED_MEM,
-							     &target_pa);
-	if (!scn->vaddr_qmi_bypass) {
-		hif_err("Memory allocation failed could not post target buf");
+	target_va = qdf_mem_alloc_consistent(scn->qdf_dev,
+					     scn->qdf_dev->dev,
+					     FW_SHARED_MEM +
+					     sizeof(struct ce_info),
+					     &target_pa);
+	if (!target_va)
 		return;
-	}
 
-	scn->paddr_qmi_bypass = target_pa;
-
-	ce_info_ptr = (struct ce_info *)scn->vaddr_qmi_bypass;
+	ce_info_ptr = (struct ce_info *)target_va;
 
 	if (scn->vaddr_rri_on_ddr) {
 		ce_info_ptr->rri_over_ddr_low_paddr  =
@@ -3485,26 +3482,7 @@ static void hif_post_static_buf_to_target(struct hif_softc *scn)
 	}
 
 	hif_write32_mb(scn, scn->mem + BYPASS_QMI_TEMP_REGISTER, target_pa);
-	hif_info("target va %pK target pa %pa", scn->vaddr_qmi_bypass,
-		 &target_pa);
-}
-
-/**
- * hif_cleanup_static_buf_to_target() -  clean up static buffer to WLAN FW
- * @scn: pointer to HIF structure
- *
- *
- * Return: void
- */
-void hif_cleanup_static_buf_to_target(struct hif_softc *scn)
-{
-	void *target_va = scn->vaddr_qmi_bypass;
-	phys_addr_t target_pa = scn->paddr_qmi_bypass;
-
-	qdf_mem_free_consistent(scn->qdf_dev, scn->qdf_dev->dev,
-				FW_SHARED_MEM, target_va,
-				target_pa, 0);
-	hif_write32_mb(scn, scn->mem + BYPASS_QMI_TEMP_REGISTER, 0);
+	hif_info("target va %pK target pa %pa", target_va, &target_pa);
 }
 #else
 /**
@@ -3517,47 +3495,22 @@ void hif_cleanup_static_buf_to_target(struct hif_softc *scn)
  */
 static void hif_post_static_buf_to_target(struct hif_softc *scn)
 {
-	qdf_dma_addr_t target_pa;
+	void *target_va;
+	phys_addr_t target_pa;
 
-	scn->vaddr_qmi_bypass =
-			(uint32_t *)qdf_mem_alloc_consistent(scn->qdf_dev,
-							     scn->qdf_dev->dev,
-							     FW_SHARED_MEM,
-							     &target_pa);
-	if (!scn->vaddr_qmi_bypass) {
+	target_va = qdf_mem_alloc_consistent(scn->qdf_dev, scn->qdf_dev->dev,
+				FW_SHARED_MEM, &target_pa);
+	if (!target_va) {
 		hif_err("Memory allocation failed could not post target buf");
 		return;
 	}
-
-	scn->paddr_qmi_bypass = target_pa;
 	hif_write32_mb(scn, scn->mem + BYPASS_QMI_TEMP_REGISTER, target_pa);
-}
-
-/**
- * hif_cleanup_static_buf_to_target() -  clean up static buffer to WLAN FW
- * @scn: pointer to HIF structure
- *
- *
- * Return: void
- */
-void hif_cleanup_static_buf_to_target(struct hif_softc *scn)
-{
-	void *target_va = scn->vaddr_qmi_bypass;
-	phys_addr_t target_pa = scn->paddr_qmi_bypass;
-
-	qdf_mem_free_consistent(scn->qdf_dev, scn->qdf_dev->dev,
-				FW_SHARED_MEM, target_va,
-				target_pa, 0);
-	hif_write32_mb(snc, scn->mem + BYPASS_QMI_TEMP_REGISTER, 0);
+	hif_info("target va %pK target pa %pa", target_va, &target_pa);
 }
 #endif
 
 #else
 static inline void hif_post_static_buf_to_target(struct hif_softc *scn)
-{
-}
-
-void hif_cleanup_static_buf_to_target(struct hif_softc *scn)
 {
 }
 #endif
@@ -4343,9 +4296,6 @@ void hif_log_ce_info(struct hif_softc *scn, uint8_t *data,
 	info.ce_count = curr_index;
 	size = sizeof(info) -
 		(CE_COUNT_MAX - info.ce_count) * sizeof(struct ce_index);
-
-	if (*offset + size > QDF_WLAN_HANG_FW_OFFSET)
-		return;
 
 	QDF_HANG_EVT_SET_HDR(&info.tlv_header, HANG_EVT_TAG_CE_INFO,
 			     size - QDF_HANG_EVENT_TLV_HDR_SIZE);

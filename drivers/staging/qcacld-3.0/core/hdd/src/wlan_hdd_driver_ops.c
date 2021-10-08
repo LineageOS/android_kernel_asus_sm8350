@@ -1128,13 +1128,10 @@ static int __wlan_hdd_bus_suspend(struct wow_enable_params wow_params)
 	hdd_info("starting bus suspend");
 
 	hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
-
-	err = wlan_hdd_validate_context(hdd_ctx);
-	if (err)
-		return err;
-
-	/* Wait for the stop module if already in progress */
-	hdd_psoc_idle_timer_stop(hdd_ctx);
+	if (!hdd_ctx) {
+		hdd_err_rl("hdd context is NULL");
+		return -ENODEV;
+	}
 
 	/* If Wifi is off, return success for system suspend */
 	if (hdd_ctx->driver_status != DRIVER_MODULES_ENABLED) {
@@ -1142,6 +1139,9 @@ static int __wlan_hdd_bus_suspend(struct wow_enable_params wow_params)
 		return 0;
 	}
 
+	err = wlan_hdd_validate_context(hdd_ctx);
+	if (err)
+		return err;
 
 	hif_ctx = cds_get_context(QDF_MODULE_ID_HIF);
 	if (!hif_ctx) {

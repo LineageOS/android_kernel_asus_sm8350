@@ -28,7 +28,6 @@
 #include <wmi_unified_param.h>
 #include <sir_api.h>
 #include "wlan_cm_roam_public_struct.h"
-#include "cfg_mlme_generic.h"
 
 #define OWE_TRANSITION_OUI_TYPE "\x50\x6f\x9a\x1c"
 #define OWE_TRANSITION_OUI_SIZE 4
@@ -1213,10 +1212,10 @@ struct wlan_mlme_ratemask {
  * @bigtk_support: Whether BIGTK is supported or not
  * @stop_all_host_scan_support: Target capability that indicates if the target
  * supports stop all host scan request type.
+ * @peer_create_conf_support: Peer create confirmation command support
  * @dual_sta_roam_fw_support: Firmware support for dual sta roaming feature
  * @sae_connect_retries: sae connect retry bitmask
  * @wls_6ghz_capable: wifi location service(WLS) is 6ghz capable
- * @monitor_mode_concurrency: Monitor mode concurrency supported
  */
 struct wlan_mlme_generic {
 	uint32_t band_capability;
@@ -1255,10 +1254,10 @@ struct wlan_mlme_generic {
 	uint8_t dfs_chan_ageout_time;
 	bool bigtk_support;
 	bool stop_all_host_scan_support;
+	bool peer_create_conf_support;
 	bool dual_sta_roam_fw_support;
 	uint32_t sae_connect_retries;
 	bool wls_6ghz_capable;
-	enum monitor_mode_concurrency monitor_mode_concurrency;
 };
 
 /*
@@ -1337,8 +1336,6 @@ struct wlan_mlme_acs {
  * @is_twt_enabled: global twt configuration
  * @is_twt_responder_enabled: twt responder
  * @is_twt_requestor_enabled: twt requestor
- * @is_bcast_responder_enabled: bcast responder enable/disable
- * @is_bcast_requestor_enabled: bcast requestor enable/disable
  * @twt_congestion_timeout: congestion timeout value
  */
 struct wlan_mlme_cfg_twt {
@@ -1346,8 +1343,6 @@ struct wlan_mlme_cfg_twt {
 	bool is_twt_enabled;
 	bool is_twt_responder_enabled;
 	bool is_twt_requestor_enabled;
-	bool is_bcast_responder_enabled;
-	bool is_bcast_requestor_enabled;
 	uint32_t twt_congestion_timeout;
 };
 
@@ -1990,6 +1985,7 @@ struct wlan_mlme_rssi_cfg_score  {
  * @roam_trigger_bitmap: bitmap for various roam triggers
  * @roam_score_delta: percentage delta in roam score
  * @apsd_enabled: Enable automatic power save delivery
+ * @vendor_roam_score_algorithm: Preferred vendor roam score algorithm
  * @min_roam_score_delta: Minimum difference between connected AP's and
  *			candidate AP's roam score to start roaming.
  */
@@ -1998,6 +1994,7 @@ struct wlan_mlme_roam_scoring_cfg {
 	uint32_t roam_trigger_bitmap;
 	uint32_t roam_score_delta;
 	bool apsd_enabled;
+	uint32_t vendor_roam_score_algorithm;
 	uint32_t min_roam_score_delta;
 };
 

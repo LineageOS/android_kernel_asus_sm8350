@@ -38,7 +38,6 @@
 #include <cdp_txrx_ops.h>
 #include <cdp_txrx_stats_struct.h>
 #include <cdp_txrx_host_stats.h>
-#include <cdp_txrx_ctrl.h>
 #include <cds_api.h>
 
 #ifdef WLAN_SUPPORT_TWT
@@ -350,8 +349,6 @@ static QDF_STATUS target_if_cp_stats_extract_pdev_stats(
 	uint32_t i;
 	QDF_STATUS status;
 	wmi_host_pdev_stats pdev_stats;
-	void *soc = cds_get_context(QDF_MODULE_ID_SOC);
-	cdp_config_param_type val;
 
 	ev->num_pdev_stats = stats_param->num_pdev_stats;
 	if (!ev->num_pdev_stats)
@@ -373,9 +370,6 @@ static QDF_STATUS target_if_cp_stats_extract_pdev_stats(
 			return status;
 		}
 		ev->pdev_stats[i].max_pwr = pdev_stats.chan_tx_pwr;
-
-		val.cdp_pdev_param_chn_noise_flr = pdev_stats.chan_nf;
-		cdp_txrx_set_pdev_param(soc, 0, CDP_CHAN_NOISE_FLOOR, val);
 	}
 
 	return QDF_STATUS_SUCCESS;
@@ -804,18 +798,6 @@ static QDF_STATUS target_if_cp_stats_extract_event(struct wmi_unified *wmi_hdl,
 	return status;
 }
 
-uint8_t target_if_mc_cp_get_mac_id(struct vdev_mlme_obj *vdev_mlme)
-{
-	uint8_t mac_id = 0;
-
-	if (wlan_reg_is_24ghz_ch_freq(vdev_mlme->vdev->vdev_mlme.des_chan->ch_freq))
-		mac_id = TGT_MAC_ID_24G;
-	else
-		mac_id = TGT_MAC_ID_5G;
-
-	return mac_id;
-}
-
 /**
  * target_if_mc_cp_stats_stats_event_handler() - function to handle stats event
  * from firmware.
@@ -1066,10 +1048,6 @@ static void target_if_cp_stats_inc_wake_lock_stats(uint32_t reason,
 
 	case WOW_REASON_CHIP_POWER_FAILURE_DETECT:
 		stats->pwr_save_fail_detected++;
-		break;
-
-	case WOW_REASON_LOCAL_DATA_UC_DROP:
-		stats->uc_drop_wake_up_count++;
 		break;
 
 	default:

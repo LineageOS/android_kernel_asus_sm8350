@@ -75,7 +75,6 @@
 
 #if defined(WLAN_MAX_PDEVS) && (WLAN_MAX_PDEVS == 1)
 #define MAX_PDEV_CNT 1
-#define WLAN_DP_RESET_MON_BUF_RING_FILTER
 #else
 #define MAX_PDEV_CNT 3
 #endif
@@ -365,14 +364,6 @@ struct dp_rx_nbuf_frag_info {
 		qdf_nbuf_t nbuf;
 		qdf_frag_t vaddr;
 	} virt_addr;
-};
-
-/**
- * enum dp_ctxt - context type
- * @DP_PDEV_TYPE: PDEV context
- */
-enum dp_ctxt_type {
-	DP_PDEV_TYPE
 };
 
 /**
@@ -898,8 +889,6 @@ struct dp_soc_stats {
 		uint32_t near_full;
 		/* Break ring reaping as not all scattered msdu received */
 		uint32_t msdu_scatter_wait_break;
-		/* Number of bar frames received */
-		uint32_t bar_frame;
 
 		struct {
 			/* Invalid RBM error count */
@@ -981,8 +970,6 @@ struct dp_soc_stats {
 			uint32_t nbuf_sanity_fail;
 			/* Duplicate link desc refilled */
 			uint32_t dup_refill_link_desc;
-			/* REO OOR eapol drop count */
-			uint32_t reo_err_oor_eapol_drop;
 		} err;
 
 		/* packet count per core - per ring */
@@ -1549,8 +1536,6 @@ struct dp_soc {
 	qdf_timer_t int_timer;
 	uint8_t intr_mode;
 	uint8_t lmac_polled_mode;
-	qdf_timer_t mon_vdev_timer;
-	uint8_t mon_vdev_timer_state;
 
 	qdf_list_t reo_desc_freelist;
 	qdf_spinlock_t reo_desc_freelist_lock;
@@ -2979,8 +2964,6 @@ struct dp_rx_fst {
 	struct dp_soc *soc_hdl;
 	qdf_atomic_t fse_cache_flush_posted;
 	qdf_timer_t fse_cache_flush_timer;
-	/* Allow FSE cache flush cmd to FW */
-	bool fse_cache_flush_allow;
 	struct fse_cache_flush_history cache_fl_rec[MAX_FSE_CACHE_FL_HST];
 	/* FISA DP stats */
 	struct dp_fisa_stats stats;

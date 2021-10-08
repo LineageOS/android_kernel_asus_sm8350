@@ -1061,8 +1061,6 @@ struct hdd_chan_change_params {
  * @dfs: dfs context to prevent/allow runtime pm
  * @connect: connect context to prevent/allow runtime pm
  * @user: user context to prevent/allow runtime pm
- * @is_user_wakelock_acquired: boolean to check if user wakelock status
- * @monitor_mode: monitor mode context to prevent/allow runtime pm
  *
  * Runtime PM control for underlying activities
  */
@@ -1071,7 +1069,6 @@ struct hdd_runtime_pm_context {
 	qdf_runtime_lock_t connect;
 	qdf_runtime_lock_t user;
 	bool is_user_wakelock_acquired;
-	qdf_runtime_lock_t monitor_mode;
 };
 
 /*
@@ -1439,8 +1436,6 @@ struct hdd_adapter {
 	ol_txrx_rx_fp rx_stack;
 
 	qdf_work_t netdev_features_update_work;
-	/* Flag to indicate whether it is a pre cac adapter or not */
-	bool is_pre_cac_adapter;
 };
 
 #define WLAN_HDD_GET_STATION_CTX_PTR(adapter) (&(adapter)->session.station)
@@ -1759,7 +1754,6 @@ struct hdd_adapter_ops_history {
  * @qos_cpu_mask: voted cpu core mask
  * @adapter_ops_wq: High priority workqueue for handling adapter operations
  * @multi_client_thermal_mitigation: Multi client thermal mitigation by fw
- * @disconnect_for_sta_mon_conc: disconnect if sta monitor intf concurrency
  */
 struct hdd_context {
 	struct wlan_objmgr_psoc *psoc;
@@ -1830,6 +1824,7 @@ struct hdd_context {
 	/** P2P Device MAC Address for the adapter  */
 	struct qdf_mac_addr p2p_device_address;
 
+	qdf_wake_lock_t rx_wake_lock;
 	qdf_wake_lock_t sap_wake_lock;
 
 	/* Flag keeps track of wiphy suspend/resume */
@@ -2100,7 +2095,6 @@ struct hdd_context {
 #ifdef FEATURE_WPSS_THERMAL_MITIGATION
 	bool multi_client_thermal_mitigation;
 #endif
-	bool disconnect_for_sta_mon_conc;
 };
 
 /**
@@ -2610,11 +2604,6 @@ void hdd_deinit_adapter(struct hdd_context *hdd_ctx,
 QDF_STATUS hdd_stop_adapter(struct hdd_context *hdd_ctx,
 			    struct hdd_adapter *adapter);
 
-/**
- * hdd_set_station_ops() - update net_device ops
- * @dev: Handle to struct net_device to be updated.
- * Return: None
- */
 void hdd_set_station_ops(struct net_device *dev);
 
 /**
@@ -4551,57 +4540,7 @@ QDF_STATUS hdd_common_roam_callback(struct wlan_objmgr_psoc *psoc,
 				    eCsrRoamResult roam_result);
 
 #ifdef WLAN_FEATURE_PKT_CAPTURE
-/**
- * wlan_hdd_is_mon_concurrency() - check if MONITOR and STA concurrency
- * is UP when packet capture mode is enabled.
- *
- * Return: True - if STA and monitor concurrency is there, else False
- *
- */
-bool wlan_hdd_is_mon_concurrency(void);
 
-/**
- * wlan_hdd_del_monitor() - delete monitor interface
- * @hdd_ctx: pointer to hdd context
- * @adapter: adapter to be deleted
- * @rtnl_held: rtnl lock held
- *
- * This function is invoked to delete monitor interface.
- *
- * Return: None
- */
-void wlan_hdd_del_monitor(struct hdd_context *hdd_ctx,
-			  struct hdd_adapter *adapter, bool rtnl_held);
-
-/**
- * wlan_hdd_del_p2p_interface() - delete p2p interface
- * @hdd_ctx: pointer to hdd context
- *
- * This function is invoked to delete p2p interface.
- *
- * Return: None
- */
-void
-wlan_hdd_del_p2p_interface(struct hdd_context *hdd_ctx);
-
-#else
-static inline
-void wlan_hdd_del_monitor(struct hdd_context *hdd_ctx,
-			  struct hdd_adapter *adapter, bool rtnl_held)
-{
-}
-
-static inline
-bool wlan_hdd_is_mon_concurrency(void)
-{
-	return false;
-}
-
-static inline
-void wlan_hdd_del_p2p_interface(struct hdd_context *hdd_ctx)
-{
-}
-#endif /* WLAN_FEATURE_PKT_CAPTURE */
 /**
  * wlan_hdd_is_session_type_monitor() - check if session type is MONITOR
  * @session_type: session type
@@ -4610,6 +4549,15 @@ void wlan_hdd_del_p2p_interface(struct hdd_context *hdd_ctx)
  *
  */
 bool wlan_hdd_is_session_type_monitor(uint8_t session_type);
+
+/**
+ * wlan_hdd_check_mon_concurrency() - check if MONITOR and STA concurrency
+ * is UP when packet capture mode is enabled.
+ *
+ * Return: True - if STA and monitor concurrency is there, else False
+ *
+ */
+bool wlan_hdd_check_mon_concurrency(void);
 
 /**
  * wlan_hdd_add_monitor_check() - check for monitor intf and add if needed
@@ -4626,6 +4574,47 @@ int wlan_hdd_add_monitor_check(struct hdd_context *hdd_ctx,
 			       struct hdd_adapter **adapter,
 			       const char *name, bool rtnl_held,
 			       unsigned char name_assign_type);
+
+/**
+ * wlan_hdd_del_monitor() - delete monitor interface
+ * @hdd_ctx: pointer to hdd context
+ * @adapter: adapter to be deleted
+ * @rtnl_held: rtnl lock held
+ *
+ * This function is invoked to delete monitor interface.
+ *
+ * Return: None
+ */
+void wlan_hdd_del_monitor(struct hdd_context *hdd_ctx,
+			  struct hdd_adapter *adapter, bool rtnl_held);
+#else
+static inline
+bool wlan_hdd_is_session_type_monitor(uint8_t session_type)
+{
+	return false;
+}
+
+static inline
+bool wlan_hdd_check_mon_concurrency(void)
+{
+	return false;
+}
+
+static inline
+int wlan_hdd_add_monitor_check(struct hdd_context *hdd_ctx,
+			       struct hdd_adapter **adapter,
+			       const char *name, bool rtnl_held,
+			       unsigned char name_assign_type)
+{
+	return 0;
+}
+
+static inline
+void wlan_hdd_del_monitor(struct hdd_context *hdd_ctx,
+			  struct hdd_adapter *adapter, bool rtnl_held)
+{
+}
+#endif /* WLAN_FEATURE_PKT_CAPTURE */
 
 #ifdef CONFIG_WLAN_DEBUG_CRASH_INJECT
 /**

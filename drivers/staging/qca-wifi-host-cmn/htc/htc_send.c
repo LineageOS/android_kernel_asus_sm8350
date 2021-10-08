@@ -121,8 +121,6 @@ static inline void restore_tx_packet(HTC_TARGET *target, HTC_PACKET *pPacket)
 	if (pPacket->PktInfo.AsTx.Flags &
 		HTC_TX_PACKET_FLAG_HTC_HEADER_IN_NETBUF_DATA) {
 		qdf_nbuf_pull_head(netbuf, sizeof(HTC_FRAME_HDR));
-		pPacket->PktInfo.AsTx.Flags &=
-			~HTC_TX_PACKET_FLAG_HTC_HEADER_IN_NETBUF_DATA;
 	}
 }
 
@@ -1420,12 +1418,7 @@ static enum HTC_SEND_QUEUE_RESULT htc_try_send(HTC_TARGET *target,
 				 * before giving the packet back to the user via
 				 * the EpSendFull callback.
 				 */
-				qdf_nbuf_pull_head
-					(GET_HTC_PACKET_NET_BUF_CONTEXT
-						(pPacket),
-					sizeof(HTC_FRAME_HDR));
-				pPacket->PktInfo.AsTx.Flags &=
-					~HTC_TX_PACKET_FLAG_HTC_HEADER_IN_NETBUF_DATA;
+				restore_tx_packet(target, pPacket);
 
 				if (pEndpoint->EpCallBacks.
 				    EpSendFull(pEndpoint->EpCallBacks.pContext,
@@ -1450,8 +1443,6 @@ static enum HTC_SEND_QUEUE_RESULT htc_try_send(HTC_TARGET *target,
 						(GET_HTC_PACKET_NET_BUF_CONTEXT
 							(pPacket),
 						sizeof(HTC_FRAME_HDR));
-					pPacket->PktInfo.AsTx.Flags |=
-						HTC_TX_PACKET_FLAG_HTC_HEADER_IN_NETBUF_DATA;
 
 					HTC_PACKET_ENQUEUE(&sendQueue, pPacket);
 				}
