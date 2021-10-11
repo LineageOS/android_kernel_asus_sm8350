@@ -133,8 +133,7 @@ static inline void hal_reg_write_result_check(struct hal_soc *hal_soc,
 	}
 }
 
-#if !defined(QCA_WIFI_QCA6390) && !defined(QCA_WIFI_QCA6490) || \
-    !defined(QCA_WIFI_QCA6750)
+#if !defined(QCA_WIFI_QCA6390) && !defined(QCA_WIFI_QCA6490)
 static inline void hal_lock_reg_access(struct hal_soc *soc,
 				       unsigned long *flags)
 {
@@ -2611,4 +2610,16 @@ static inline QDF_STATUS hal_construct_shadow_regs(void *hal_soc)
 	return QDF_STATUS_SUCCESS;
 }
 #endif /* GENERIC_SHADOW_REGISTER_ACCESS_ENABLE */
+
+#ifdef FEATURE_HAL_DELAYED_REG_WRITE
+/**
+ * hal_flush_reg_write_work() - flush all writes from register write queue
+ * @arg: hal_soc pointer
+ *
+ * Return: None
+ */
+void hal_flush_reg_write_work(hal_soc_handle_t hal_handle);
+#else
+static inline void hal_flush_reg_write_work(hal_soc_handle_t hal_handle) { }
+#endif
 #endif /* _HAL_APIH_ */
