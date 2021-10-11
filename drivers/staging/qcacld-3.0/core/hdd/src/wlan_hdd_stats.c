@@ -5380,6 +5380,8 @@ static int wlan_hdd_get_sta_stats(struct wiphy *wiphy,
 		  (int)rx_mcs_index, (int)tx_nss, (int)rx_nss,
 		  (int)tx_dcm, (int)rx_dcm, (int)tx_gi, (int)rx_gi);
 
+	printk("[wlan]: BSSID=%2X:%2X:%2X:%2X:%2X:%2X RSSI=%d, Rate=(%d, %d), flags=(0x%x, 0x%x), MCS=(%d,%d), NSS=(%d,%d).\n", sta_ctx->conn_info.bssid.bytes[0], sta_ctx->conn_info.bssid.bytes[1], sta_ctx->conn_info.bssid.bytes[2], sta_ctx->conn_info.bssid.bytes[3], sta_ctx->conn_info.bssid.bytes[4], sta_ctx->conn_info.bssid.bytes[5], sinfo->signal, my_tx_rate, my_rx_rate, (int)tx_rate_flags, (int)rx_rate_flags, (int)tx_mcs_index, (int)rx_mcs_index, (int)tx_nss, (int)rx_nss);
+
 	if (!ucfg_mlme_stats_is_link_speed_report_actual(hdd_ctx->psoc)) {
 		bool tx_rate_calc, rx_rate_calc;
 		uint8_t tx_nss_max, rx_nss_max;

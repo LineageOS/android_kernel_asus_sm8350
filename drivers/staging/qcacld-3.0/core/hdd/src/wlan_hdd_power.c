@@ -100,6 +100,8 @@ void hdd_wlan_suspend_resume_event(uint8_t state)
 	WLAN_HOST_DIAG_EVENT_DEF(suspend_state, struct host_event_suspend);
 	qdf_mem_zero(&suspend_state, sizeof(suspend_state));
 
+	hdd_info("%s: suspend_state is %d", __func__, state);
+
 	suspend_state.state = state;
 	WLAN_HOST_DIAG_EVENT_REPORT(&suspend_state, EVENT_WLAN_SUSPEND_RESUME);
 }
@@ -1306,7 +1308,7 @@ hdd_suspend_wlan(void)
 	struct hdd_adapter *adapter = NULL, *next_adapter = NULL;
 	uint32_t conn_state_mask = 0;
 
-	hdd_info("WLAN being suspended by OS");
+	hdd_info("[wlan]: hdd_suspend_wlan +. WLAN being suspended by OS");
 
 	hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
 	if (!hdd_ctx) {
@@ -1352,6 +1354,7 @@ hdd_suspend_wlan(void)
 	hdd_configure_sar_sleep_index(hdd_ctx);
 
 	hdd_wlan_suspend_resume_event(HDD_WLAN_EARLY_SUSPEND);
+	hdd_info("[wlan]: hdd_suspend_wlan -.");
 
 	return 0;
 }
@@ -1367,7 +1370,7 @@ static int hdd_resume_wlan(void)
 	struct hdd_adapter *adapter, *next_adapter = NULL;
 	QDF_STATUS status;
 
-	hdd_info("WLAN being resumed by OS");
+	hdd_info("[wlan]: hdd_resumed_wlan +. WLAN being resumed by OS");
 
 	hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
 	if (!hdd_ctx) {
@@ -1415,6 +1418,7 @@ static int hdd_resume_wlan(void)
 
 	hdd_configure_sar_resume_index(hdd_ctx);
 
+	hdd_info("[wlan]: hdd_resumed_wlan -.");
 	return 0;
 }
 
@@ -1461,7 +1465,7 @@ QDF_STATUS hdd_wlan_shutdown(void)
 	struct wlan_objmgr_vdev *vdev;
 	void *soc = cds_get_context(QDF_MODULE_ID_SOC);
 
-	hdd_info("WLAN driver shutting down!");
+	hdd_info("[wlan]: hdd_wlan_shutdown +. WLAN driver shutting down!");
 
 	/* Get the HDD context. */
 	hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
@@ -1531,6 +1535,7 @@ QDF_STATUS hdd_wlan_shutdown(void)
 
 	hdd_info("WLAN driver shutdown complete");
 
+	hdd_info("[wlan]: hdd_wlan_shutdown -.");
 	return QDF_STATUS_SUCCESS;
 }
 
