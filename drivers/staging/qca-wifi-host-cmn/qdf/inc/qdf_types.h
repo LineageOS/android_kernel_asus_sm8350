@@ -1345,6 +1345,7 @@ enum qdf_suspend_type {
  * @QDF_VDEV_PEER_DELETE_ALL_RESPONSE_TIMED_OUT: Peer delete all resp timeout
  * @QDF_WMI_BUF_SEQUENCE_MISMATCH: WMI Tx completion buffer sequence mismatch
  * @QDF_HAL_REG_WRITE_FAILURE: HAL register writing failures
+ * @QDF_RX_REG_PKT_ROUTE_ERR: MSDU buf errors exceed thresh in REO err path
  */
 enum qdf_hang_reason {
 	QDF_REASON_UNSPECIFIED,
@@ -1369,6 +1370,7 @@ enum qdf_hang_reason {
 	QDF_VDEV_PEER_DELETE_ALL_RESPONSE_TIMED_OUT,
 	QDF_WMI_BUF_SEQUENCE_MISMATCH,
 	QDF_HAL_REG_WRITE_FAILURE,
+	QDF_RX_REG_PKT_ROUTE_ERR,
 };
 
 /**
