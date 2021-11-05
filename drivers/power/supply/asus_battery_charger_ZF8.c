@@ -79,9 +79,9 @@ bool g_wifi_hs_en = false;
 
 //ASUS_BSP battery safety upgrade +++
 #define CYCLE_COUNT_DATA_MAGIC  0x85
-#define CYCLE_COUNT_FILE_NAME   "/batinfo/.bs"
-#define BAT_PERCENT_FILE_NAME   "/batinfo/Batpercentage"
-#define BAT_SAFETY_FILE_NAME   "/batinfo/bat_safety"
+#define CYCLE_COUNT_FILE_NAME   "/vendor/batinfo/.bs"
+#define BAT_PERCENT_FILE_NAME   "/vendor/batinfo/Batpercentage"
+#define BAT_SAFETY_FILE_NAME   "/vendor/batinfo/bat_safety"
 #define CYCLE_COUNT_SD_FILE_NAME   "/sdcard/.bs"
 #define BAT_PERCENT_SD_FILE_NAME   "/sdcard/Batpercentage"
 #define BAT_CYCLE_SD_FILE_NAME   "/sdcard/Batcyclecount"
@@ -134,8 +134,8 @@ struct delayed_work asus_min_check_work;
 #define BAT_HEALTH_DATA_OFFSET  0x0
 #define BAT_HEALTH_DATA_MAGIC  0x86
 #define BAT_HEALTH_DATA_BACKUP_MAGIC 0x87
-#define BAT_HEALTH_DATA_FILE_NAME   "/batinfo/bat_health"
-#define BAT_HEALTH_DATA_SD_FILE_NAME   "/batinfo/.bh"
+#define BAT_HEALTH_DATA_FILE_NAME   "/vendor/batinfo/bat_health"
+#define BAT_HEALTH_DATA_SD_FILE_NAME   "/vendor/batinfo/.bh"
 #define BAT_HEALTH_START_LEVEL 70
 #define BAT_HEALTH_END_LEVEL 100
 static bool g_bathealth_initialized = false;
@@ -222,16 +222,16 @@ static ssize_t uts_status_proc_write(struct file *filp, const char __user *buff,
 	case 2:
 		printk("%s: QXDM disable\n");
 		g_qxdm_en = false;
-		break; 
+		break;
 	case 3:
 		printk("%s: QXDM enable\n");
 		g_qxdm_en = true;
-		break;       
+		break;
 	default:
 		printk("%s: Invalid mode\n");
 		break;
 	}
-    
+
 	return len;
 }
 
@@ -282,9 +282,9 @@ void tight_camera_motor(void)
    {
         pr_err("open motor_auto success!\n");
 	}
-	
+
 	sprintf(buf,"%s", "242");
-	
+
 	ksys_write(filep, buf, strlen(buf));
 	ksys_sync();
 	ksys_close(filep);
@@ -831,7 +831,7 @@ static ssize_t write_pm8350b_register_store(struct class *c,
 	char messages[10];
 
 	pr_err("write_pm8350b_register_store %s count %d ",buf,count);
-	
+
 	messages[0] = *buf;
 	messages[1] = *(buf+1);
 	messages[2] = *(buf+2);
@@ -843,23 +843,23 @@ static ssize_t write_pm8350b_register_store(struct class *c,
 
 	write_data = messages;
 
-	first = strsep(&write_data," ");	
+	first = strsep(&write_data," ");
 	second	= write_data;
 	rc = kstrtoint(first,16,&tmp[0]);//字符串转整形 10:十进制
-	if(rc)	
+	if(rc)
 	{
 		pr_err("error in kstrtoint");
 		return -1;
 	}
-	
+
 	rc = kstrtoint(second,16,&tmp[1]);
 	if(rc)
 	{
 		return -1;
 	}
-    
+
 	pr_err("address %x , data %x \n", tmp[0] , tmp[1]);
-    
+
 	rc = oem_prop_write(BATTMAN_OEM_Write_PM8350B_Register, tmp, 2);
 	if (rc < 0) {
 			pr_err("Failed to set BATTMAN_OEM_Panel_Check rc=%d\n", rc);
@@ -1504,7 +1504,7 @@ static void handle_message(struct battery_chg_dev *bcdev, void *data,
 
     struct pmic_glink_hdr *hdr = data;
     bool ack_set = false;
-    
+
     switch (hdr->opcode) {
     case OEM_OPCODE_READ_BUFFER:
         if (len == sizeof(*oem_read_buffer_resp_msg)) {
@@ -1689,28 +1689,28 @@ static void print_battery_status(void) {
         pr_err("Failed to get battery full design, rc=%d\n", rc);
     }
     fcc = prop.intval;
-    
+
     rc = power_supply_get_property(qti_phy_bat,
         POWER_SUPPLY_PROP_VOLTAGE_NOW, &prop);
     if (rc < 0) {
         pr_err("Failed to get battery vol , rc=%d\n", rc);
     }
     bat_vol = prop.intval;
-    
+
     rc = power_supply_get_property(qti_phy_bat,
         POWER_SUPPLY_PROP_CURRENT_NOW, &prop);
     if (rc < 0) {
         pr_err("Failed to get battery current , rc=%d\n", rc);
     }
     bat_cur= prop.intval;
-    
+
     rc = power_supply_get_property(qti_phy_bat,
         POWER_SUPPLY_PROP_TEMP, &prop);
     if (rc < 0) {
         pr_err("Failed to get battery temp , rc=%d\n", rc);
     }
     bat_temp= prop.intval;
-    
+
     rc = power_supply_get_property(qti_phy_bat,
         POWER_SUPPLY_PROP_STATUS, &prop);
     if (rc < 0) {
@@ -1741,12 +1741,12 @@ static void print_battery_status(void) {
 			health_type[bat_health]);
 
 	ASUSEvtlog("[BAT][Ser]%s", battInfo);
-	
+
 	//ASUS_BSP +++ add to printk the WIFI hotspot & QXDM UTS event
 	snprintf(UTSInfo, sizeof(UTSInfo), "WIFI_HS=%d, QXDM=%d", g_wifi_hs_en, g_qxdm_en);
 	ASUSEvtlog("[UTS][Status]%s", UTSInfo);
 	//ASUS_BSP --- add to printk the WIFI hotspot & QXDM UTS event
-	
+
 	ktime_get_coarse_real_ts64(&g_last_print_time);
 	schedule_delayed_work(&g_bcdev->update_gauge_status_work, 180*HZ);
 }
@@ -3379,7 +3379,7 @@ int asuslib_init(void) {
     bat_id_extcon = extcon_dev_allocate(asus_fg_extcon_cable);
     if (IS_ERR(bat_id_extcon)) {
         rc = PTR_ERR(bat_id_extcon);
-    }       
+    }
     bat_id_extcon->fnode_name = "battery_id";
     printk("[BAT]extcon_dev_register");
     rc = extcon_dev_register(bat_id_extcon);
@@ -3426,10 +3426,10 @@ int asuslib_init(void) {
     asus_get_Batt_ID();
 
 	create_uts_status_proc_file(); //ASUS_BSP LiJen add to printk the WIFI hotspot & QXDM UTS event
-	
+
 	INIT_DELAYED_WORK(&g_bcdev->update_gauge_status_work, update_gauge_status_worker);
 	schedule_delayed_work(&g_bcdev->update_gauge_status_work, 0);
-	
+
 	INIT_DELAYED_WORK(&g_bcdev->enter_ship_work, enter_ship_mode_worker);
 
     //register drm notifier
