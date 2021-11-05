@@ -758,6 +758,30 @@ static struct file_operations dimming_speed_ops = {
 	.write = dimming_speed_write,
 };
 
+static ssize_t lcd_brightness_read(struct file *file, char __user *buf,
+				   size_t count, loff_t *ppos)
+{
+	int len = 0;
+	ssize_t ret = 0;
+	char *buff;
+
+	buff = kzalloc(100, GFP_KERNEL);
+	if (!buff)
+		return -ENOMEM;
+
+	if (*ppos)
+		return 0;
+
+	DSI_LOG("dc lcd brightness read +++ val:%d\n",
+		g_display->panel->bl_config.bl_level);
+
+	len += sprintf(buff, "%d\n", g_display->panel->bl_config.bl_level);
+	ret = simple_read_from_buffer(buf, count, ppos, buff, len);
+	kfree(buff);
+
+	return ret;
+}
+
 static ssize_t lcd_brightness_write(struct file *filp, const char *buff, size_t len, loff_t *off)
 {
 	char messages[256];
@@ -803,6 +827,7 @@ static ssize_t lcd_brightness_write(struct file *filp, const char *buff, size_t 
 }
 
 static struct file_operations lcd_brightness_ops = {
+	.read = lcd_brightness_read,
 	.write = lcd_brightness_write,
 };
 // global_hbm_mode_ops() - set Fod HBM on/off & read Fod HBM status
