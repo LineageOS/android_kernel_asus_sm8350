@@ -2086,6 +2086,9 @@ static int wcd937x_tx_master_ch_put(struct snd_kcontrol *kcontrol,
 		return -EINVAL;
 
 	wcd937x_tx_get_slave_ch_type_idx(kcontrol->id.name, &slave_ch_idx);
+	
+	if (slave_ch_idx < 0 || slave_ch_idx >= WCD937X_MAX_SLAVE_CH_TYPES)
+		return -EINVAL;
 
 	if (slave_ch_idx < 0 || slave_ch_idx >= WCD937X_MAX_SLAVE_CH_TYPES)
 		return -EINVAL;
