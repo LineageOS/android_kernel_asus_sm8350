@@ -147,7 +147,7 @@ lim_process_disassoc_frame(struct mac_context *mac, uint8_t *pRxPacketInfo,
 	/* Get reasonCode from Disassociation frame body */
 	reasonCode = sir_read_u16(pBody);
 
-	pe_nofl_info("Disassoc RX: vdev %d from "QDF_MAC_ADDR_FMT" for "QDF_MAC_ADDR_FMT" RSSI = %d reason %d mlm state = %d, sme state = %d systemrole = %d ",
+	pe_nofl_info("[wlan] Disassoc RX: vdev %d from "QDF_MAC_ADDR_FMT" for "QDF_MAC_ADDR_FMT" RSSI = %d reason %d mlm state = %d, sme state = %d systemrole = %d ",
 		     pe_session->vdev_id, QDF_MAC_ADDR_REF(pHdr->sa),
 		     QDF_MAC_ADDR_REF(pHdr->da), frame_rssi,
 		     reasonCode, pe_session->limMlmState,

@@ -105,6 +105,7 @@ static int wlan_hdd_recovery_notifier_call(struct notifier_block *block,
 		cmd->vdev_substate = wlan_vdev_mlme_get_substate(vdev);
 		hdd_hang_data->offset += total_len;
 		hdd_objmgr_put_vdev(vdev);
+
 		hdd_adapter_dev_put_debug(adapter, dbgid);
 	}
 

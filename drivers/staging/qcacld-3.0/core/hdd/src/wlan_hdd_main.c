@@ -6608,6 +6608,8 @@ struct hdd_adapter *hdd_open_adapter(struct hdd_context *hdd_ctx, uint8_t sessio
 	QDF_STATUS status = QDF_STATUS_E_FAILURE;
 	uint32_t i;
 
+	hdd_info("[wlan]: iface(%s) type(%d)", iface_name, session_type);
+
 	if (hdd_ctx->current_intf_count >= WLAN_MAX_VDEVS) {
 		/*
 		 * Max limit reached on the number of vdevs configured by the

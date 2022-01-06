@@ -3303,6 +3303,7 @@ cppflags-y += -DDP_RX_DESC_COOKIE_INVALIDATE
 cppflags-y += -DMON_ENABLE_DROP_FOR_MAC
 cppflags-y += -DPCI_LINK_STATUS_SANITY
 cppflags-y += -DDP_MON_RSSI_IN_DBM
+cppflags-y += -DDISABLE_EAPOL_INTRABSS_FWD
 endif
 
 # Enable Low latency optimisation mode
@@ -3492,6 +3493,10 @@ endif
 
 ifdef CONFIG_SCHED_HISTORY_SIZE
 ccflags-y += -DWLAN_SCHED_HISTORY_SIZE=$(CONFIG_SCHED_HISTORY_SIZE)
+endif
+
+ifdef CONFIG_HANDLE_RX_REROUTE_ERR
+cppflags-y += -DHANDLE_RX_REROUTE_ERR
 endif
 
 # configure log buffer size

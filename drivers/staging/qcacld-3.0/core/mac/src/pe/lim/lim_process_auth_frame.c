@@ -326,8 +326,8 @@ static void lim_external_auth_add_pre_auth_node(struct mac_context *mac_ctx,
 			 QDF_MAC_ADDR_REF(mac_hdr->sa));
 		return;
 	}
-	pe_debug("Creating preauth node for SAE peer " QDF_MAC_ADDR_FMT,
-		 QDF_MAC_ADDR_REF(mac_hdr->sa));
+	pe_debug("Creating preauth node(%d)for SAE peer " QDF_MAC_ADDR_FMT,
+		 auth_node->authNodeIdx, QDF_MAC_ADDR_REF(mac_hdr->sa));
 	qdf_mem_copy((uint8_t *)auth_node->peerMacAddr,
 		     mac_hdr->sa, sizeof(tSirMacAddr));
 	auth_node->mlmState = mlm_state;

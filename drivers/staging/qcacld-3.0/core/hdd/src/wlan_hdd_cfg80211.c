@@ -3057,6 +3057,14 @@ static int __wlan_hdd_cfg80211_do_acs(struct wiphy *wiphy,
 		hdd_debug("waiting for channel list to update");
 		qdf_wait_for_event_completion(&hdd_ctx->regulatory_update_event,
 					      CHANNEL_LIST_UPDATE_TIMEOUT);
+		/* In case of set country failure in FW, response never comes
+		 * so wait the full timeout, then set in_progress to false.
+		 * If the response comes back, in_progress will already be set
+		 * to false anyways.
+		 */
+		qdf_mutex_acquire(&hdd_ctx->regulatory_status_lock);
+		hdd_ctx->is_regulatory_update_in_progress = false;
+		qdf_mutex_release(&hdd_ctx->regulatory_status_lock);
 	} else {
 		qdf_mutex_release(&hdd_ctx->regulatory_status_lock);
 	}
@@ -13795,11 +13803,12 @@ end:
 
 const struct nla_policy qca_wlan_vendor_set_trace_level_policy[
 		QCA_WLAN_VENDOR_ATTR_SET_TRACE_LEVEL_MAX + 1] = {
-	[QCA_WLAN_VENDOR_ATTR_SET_TRACE_LEVEL_PARAM] =
-	VENDOR_NLA_POLICY_NESTED(qca_wlan_vendor_set_trace_level_policy),
+	[QCA_WLAN_VENDOR_ATTR_SET_TRACE_LEVEL_PARAM] = {.type = NLA_NESTED },
+	//VENDOR_NLA_POLICY_NESTED(qca_wlan_vendor_set_trace_level_policy),
 	[QCA_WLAN_VENDOR_ATTR_SET_TRACE_LEVEL_MODULE_ID] = {.type = NLA_U32 },
 	[QCA_WLAN_VENDOR_ATTR_SET_TRACE_LEVEL_TRACE_MASK] = {.type = NLA_U32 },
 };
+
 
 /**
  * __wlan_hdd_cfg80211_set_trace_level() - Set the trace level
@@ -13882,7 +13891,8 @@ __wlan_hdd_cfg80211_set_trace_level(struct wiphy *wiphy,
 		      (tb2[QCA_WLAN_VENDOR_ATTR_SET_TRACE_LEVEL_TRACE_MASK]);
 
 		status = hdd_qdf_trace_enable(module_id, bit_mask);
-
+		hdd_info("set verbose mask %d for the category %d",
+				bit_mask, module_id);
 		if (status != 0)
 			hdd_err("can not set verbose mask %d for the category %d",
 				bit_mask, module_id);
@@ -17660,6 +17670,9 @@ static int __wlan_hdd_cfg80211_add_key(struct wiphy *wiphy,
 	if (pairwise)
 		wma_set_peer_ucast_cipher(mac_address.bytes, cipher);
 
+	cdp_peer_flush_frags(cds_get_context(QDF_MODULE_ID_SOC),
+			     wlan_vdev_get_id(vdev), mac_address.bytes);
+
 	switch (adapter->device_mode) {
 	case QDF_SAP_MODE:
 	case QDF_P2P_GO_MODE:
@@ -18189,6 +18202,13 @@ wlan_hdd_inform_bss_frame(struct hdd_adapter *adapter,
 		  bss_desc->timeStamp[0], ((bss_desc->seq_ctrl.seqNumHi <<
 		  HIGH_SEQ_NUM_OFFSET) | bss_desc->seq_ctrl.seqNumLo),
 		  bss_desc->fProbeRsp);
+
+	//ASUS_BSP+++ "add for the RSSI (value = 0) issue"
+	if( bss_data.rssi == 0 ) {
+	       hdd_info("[wlan]: wlan_hdd_cfg80211_inform_bss_frame, rssi (0 -> -9900).\n");
+	       bss_data.rssi = (-9900);
+	}
+	//ASUS_BSP--- "add for the RSSI (value = 0) issue"
 
 	bss_status = wlan_cfg80211_inform_bss_frame_data(wiphy, &bss_data);
 	hdd_ctx->beacon_probe_rsp_cnt_per_scan++;
@@ -20735,6 +20755,14 @@ static int __wlan_hdd_cfg80211_connect(struct wiphy *wiphy,
 		hdd_debug("waiting for channel list to update");
 		qdf_wait_for_event_completion(&hdd_ctx->regulatory_update_event,
 					      CHANNEL_LIST_UPDATE_TIMEOUT);
+		/* In case of set country failure in FW, response never comes
+		 * so wait the full timeout, then set in_progress to false.
+		 * If the response comes back, in_progress will already be set
+		 * to false anyways.
+		 */
+		qdf_mutex_acquire(&hdd_ctx->regulatory_status_lock);
+		hdd_ctx->is_regulatory_update_in_progress = false;
+		qdf_mutex_release(&hdd_ctx->regulatory_status_lock);
 	} else {
 		qdf_mutex_release(&hdd_ctx->regulatory_status_lock);
 	}
@@ -21295,7 +21323,7 @@ static int __wlan_hdd_cfg80211_disconnect(struct wiphy *wiphy,
 					  false, true, vdev);
 		hdd_objmgr_put_vdev(vdev);
 
-		hdd_nofl_info("%s(vdevid-%d): Received Disconnect reason:%d %s",
+		hdd_nofl_info("[%s](vdevid-%d): Received Disconnect reason:%d %s",
 			      dev->name, adapter->vdev_id, reason,
 			      hdd_ieee80211_reason_code_to_str(reason));
 		status = wlan_hdd_disconnect(adapter, reasonCode, reason);

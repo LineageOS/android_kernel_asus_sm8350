@@ -1955,12 +1955,12 @@ wma_log_roam_scan_candidates(struct wmi_roam_candidate_info *ap,
 	uint16_t i;
 	char time[TIME_STRING_LEN], time2[TIME_STRING_LEN];
 
-	wma_nofl_info("%62s%62s", LINE_STR, LINE_STR);
-	wma_nofl_info("%13s %16s %8s %4s %4s %5s/%3s %3s/%3s %7s %7s %6s %12s %20s",
+	wma_nofl_debug("%62s%62s", LINE_STR, LINE_STR);
+	wma_nofl_debug("%13s %16s %8s %4s %4s %5s/%3s %3s/%3s %7s %7s %6s %12s %20s",
 		      "AP BSSID", "TSTAMP", "CH", "TY", "ETP", "RSSI",
 		      "SCR", "CU%", "SCR", "TOT_SCR", "BL_RSN", "BL_SRC",
 		      "BL_TSTAMP", "BL_TIMEOUT(ms)");
-	wma_nofl_info("%62s%62s", LINE_STR, LINE_STR);
+	wma_nofl_debug("%62s%62s", LINE_STR, LINE_STR);
 
 	if (num_entries > MAX_ROAM_CANDIDATE_AP)
 		num_entries = MAX_ROAM_CANDIDATE_AP;
@@ -1968,7 +1968,7 @@ wma_log_roam_scan_candidates(struct wmi_roam_candidate_info *ap,
 	for (i = 0; i < num_entries; i++) {
 		mlme_get_converted_timestamp(ap->timestamp, time);
 		mlme_get_converted_timestamp(ap->bl_timestamp, time2);
-		wma_nofl_info(QDF_MAC_ADDR_FMT " %17s %4d %-4s %4d %3d/%-4d %2d/%-4d %5d %7d %7d   %17s %9d",
+		wma_nofl_debug(QDF_MAC_ADDR_FMT " %17s %4d %-4s %4d %3d/%-4d %2d/%-4d %5d %7d %7d   %17s %9d",
 			      QDF_MAC_ADDR_REF(ap->bssid.bytes), time,
 			      ap->freq,
 			      ((ap->type == 0) ? "C_AP" :
@@ -2125,8 +2125,8 @@ wma_rso_print_11kv_info(struct wmi_neighbor_report_data *neigh_rpt,
 	}
 
 	mlme_get_converted_timestamp(neigh_rpt->req_time, time);
-	wma_nofl_info("%s [%s] VDEV[%d]", time,
-		      (type == 1) ? "BTM_QUERY" : "NEIGH_RPT_REQ", vdev_id);
+	wma_debug("%s [%s] VDEV[%d]", time,
+		 (type == 1) ? "BTM_QUERY" : "NEIGH_RPT_REQ", vdev_id);
 
 	if (neigh_rpt->resp_time) {
 		mlme_get_converted_timestamp(neigh_rpt->resp_time, time1);

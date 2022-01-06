@@ -363,7 +363,7 @@ lim_tear_down_link_with_ap(struct mac_context *mac, uint8_t sessionId,
 	 */
 	pe_session->pmmOffloadInfo.bcnmiss = false;
 
-	pe_info("Session %d Vdev %d reason code %d trigger %d",
+	pe_info("[wlan]: No ProbeRsp from AP after HB failure. Session %d Vdev %d reason code %d trigger %d",
 		pe_session->peSessionId, pe_session->vdev_id, reasonCode,
 		trigger);
 
@@ -486,7 +486,7 @@ void lim_handle_heart_beat_failure(struct mac_context *mac_ctx,
 			goto hb_handler_fail;
 		}
 		/* Beacon frame not received within heartbeat timeout. */
-		pe_warn("Heartbeat Failure");
+		pe_info("[wlan] Heartbeat Failure");
 		mac_ctx->lim.gLimHBfailureCntInLinkEstState++;
 
 		/*
@@ -507,7 +507,7 @@ void lim_handle_heart_beat_failure(struct mac_context *mac_ctx,
 			 * it is still around. Wait until certain
 			 * timeout for Probe Response from AP.
 			 */
-			pe_debug("HB missed from AP. Sending Probe Req");
+			pe_info("[wlan] HB missed from AP. Sending Probe Req");
 			/* for searching AP, we don't include any more IE */
 			if (session->lim_join_req) {
 				scan_ie = &session->lim_join_req->addIEScan;

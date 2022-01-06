@@ -558,7 +558,7 @@ void lim_process_mlm_auth_cnf(struct mac_context *mac_ctx, uint32_t *msg)
 		/* MAC based authentication failure */
 		if (session_entry->limSmeState ==
 			eLIM_SME_WT_AUTH_STATE) {
-			pe_err("Auth Failure occurred");
+			pe_err("[wlan] Auth Failure occurred");
 			session_entry->limSmeState =
 				eLIM_SME_JOIN_FAILURE_STATE;
 			MTRACE(mac_trace(mac_ctx, TRACE_CODE_SME_STATE,
@@ -647,7 +647,7 @@ void lim_process_mlm_assoc_cnf(struct mac_context *mac_ctx,
 	}
 	if (((tLimMlmAssocCnf *) msg)->resultCode != eSIR_SME_SUCCESS) {
 		/* Association failure */
-		pe_err("SessionId:%d Association failure resultCode: %d limSmeState:%d",
+		pe_err("[wlan] SessionId:%d Association failure resultCode: %d limSmeState:%d",
 			session_entry->peSessionId,
 			((tLimMlmAssocCnf *) msg)->resultCode,
 			session_entry->limSmeState);
