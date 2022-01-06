@@ -4174,7 +4174,11 @@ static int rx_macro_probe(struct platform_device *pdev)
 	int ret = 0;
 	u8 bcl_pmic_params[3];
 	u32 default_clk_id = 0;
+#if defined ASUS_VODKA_PROJECT
+	u32 is_used_rx_swr_gpio = 0;
+#else
 	u32 is_used_rx_swr_gpio = 1;
+#endif
 	const char *is_used_rx_swr_gpio_dt = "qcom,is-used-swr-gpio";
 	const char *cdc_mclk_clk_rate = "qcom,cdc-mclk-clk-rate";
 
@@ -4228,7 +4232,11 @@ static int rx_macro_probe(struct platform_device *pdev)
 		if (ret) {
 			dev_err(&pdev->dev, "%s: error reading %s in dt\n",
 				__func__, is_used_rx_swr_gpio_dt);
+#if defined ASUS_VODKA_PROJECT
+			is_used_rx_swr_gpio = 0;
+#else
 			is_used_rx_swr_gpio = 1;
+#endif
 		}
 	}
 	rx_priv->rx_swr_gpio_p = of_parse_phandle(pdev->dev.of_node,
