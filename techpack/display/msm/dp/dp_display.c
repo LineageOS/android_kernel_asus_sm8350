@@ -1212,6 +1212,9 @@ static int dp_display_process_hpd_high(struct dp_display_private *dp)
 
 	rc = dp->panel->read_sink_caps(dp->panel,
 			dp->dp_display.base_connector, dp->hpd->multi_func);
+
+	/* ASUS BSP Display +++ */
+	dp->debug->aux_err = true;
 	/*
 	 * ETIMEDOUT --> cable may have been removed
 	 * ENOTCONN --> no downstream device connected
@@ -1332,6 +1335,9 @@ static int dp_display_process_hpd_low(struct dp_display_private *dp)
 	mutex_unlock(&dp->session_lock);
 
 	dp->panel->video_test = false;
+
+	/* ASUS BSP Display +++ */
+	dp->debug->aux_err = false;
 
 	return rc;
 }
@@ -2930,6 +2936,11 @@ static enum drm_mode_status dp_display_validate_mode(
 			mode->picture_aspect_ratio != debug->aspect_ratio))
 		goto end;
 
+	/* ASUS BSP Display +++ */
+	if (!dp_asus_validate_mode(dp_panel, mode))
+		goto end;
+	/* ASUS BSP Display --- */
+
 	mode_status = MODE_OK;
 end:
 	mutex_unlock(&dp->session_lock);
@@ -3132,6 +3143,8 @@ static int dp_display_init_aux_switch(struct dp_display_private *dp)
 	int rc = 0;
 	const char *phandle = "qcom,dp-aux-switch";
 	struct notifier_block nb;
+
+	return rc; /* ASUS BSP Display, add for DisplayPort +++ */
 
 	if (!dp->pdev->dev.of_node) {
 		DP_ERR("cannot find dev.of_node\n");

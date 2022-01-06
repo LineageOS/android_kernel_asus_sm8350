@@ -291,6 +291,11 @@ struct dsi_display {
 	bool is_active;
 
 	bool trusted_vm_env;
+#if defined(CONFIG_PXLW_IRIS)
+	u32 off;
+	u32 cnt;
+	u8 cmd_data_type;
+#endif
 	bool hw_ownership;
 
 	int tx_cmd_buf_ndx;
