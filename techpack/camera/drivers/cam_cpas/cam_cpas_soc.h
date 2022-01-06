@@ -11,8 +11,9 @@
 
 #define CAM_REGULATOR_LEVEL_MAX 16
 #define CAM_CPAS_MAX_TREE_NODES 50
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 #define CAM_CPAS_MAX_FUSE_FEATURE 10
-
+#endif
 /**
  * struct cam_cpas_vdd_ahb_mapping : Voltage to ahb level mapping
  *
@@ -72,6 +73,7 @@ struct cam_cpas_tree_node {
 	struct cam_cpas_tree_node *parent_node;
 };
 
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 /**
  * struct cam_cpas_feature_info : CPAS fuse feature info
  * @feature: Identifier for feature
@@ -88,6 +90,7 @@ struct cam_cpas_feature_info {
 	bool enable;
 	uint32_t hw_map;
 };
+#endif
 
 /**
  * struct cam_cpas_private_soc : CPAS private DT info
@@ -128,10 +131,17 @@ struct cam_cpas_private_soc {
 	uint32_t camnoc_bus_width;
 	uint32_t camnoc_axi_clk_bw_margin;
 	uint64_t camnoc_axi_min_ib_bw;
+	#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	struct cam_cpas_fuse_info fuse_info;
 	uint32_t rpmh_info[CAM_RPMH_BCM_INFO_MAX];
 	uint32_t num_feature_info;
 	struct cam_cpas_feature_info  feature_info[CAM_CPAS_MAX_FUSE_FEATURE];
+	#else
+	uint32_t feature_mask;
+	struct cam_cpas_fuse_info fuse_info;
+	uint32_t rpmh_info[CAM_RPMH_BCM_INFO_MAX];
+	#endif	
+	
 };
 
 void cam_cpas_util_debug_parse_data(struct cam_cpas_private_soc *soc_private);

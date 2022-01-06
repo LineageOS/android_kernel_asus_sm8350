@@ -734,6 +734,11 @@ static void __cam_isp_ctx_send_sof_timestamp(
 	if ((ctx_isp->use_frame_header_ts) || (request_id == 0))
 		goto end;
 
+	#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	if (request_id == 0)
+		goto end;
+	#endif
+	
 	req_msg.session_hdl = ctx_isp->base->session_hdl;
 	req_msg.u.frame_msg.frame_id = ctx_isp->frame_id;
 	req_msg.u.frame_msg.request_id = request_id;

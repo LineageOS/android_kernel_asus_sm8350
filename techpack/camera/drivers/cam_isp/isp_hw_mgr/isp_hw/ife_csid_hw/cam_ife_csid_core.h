@@ -76,9 +76,11 @@
 #define CAM_CSID_EVT_PAYLOAD_MAX                  10
 #define CAM_CSID_MIN_HBI_CFG_MAX_VAL              0xF
 
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 #define CAM_CSID_RESOLUTION_22MP_WIDTH            5612
 #define CAM_CSID_RESOLUTION_25MP_WIDTH            6048
 #define CAM_CSID_RESOLUTION_28MP_WIDTH            7308
+#endif
 
 /* enum cam_csid_path_halt_mode select the path halt mode control */
 enum cam_csid_path_halt_mode {
@@ -98,6 +100,23 @@ enum cam_csid_path_timestamp_stb_sel {
 	CSID_TIMESTAMP_STB_POST_IRQ,
 	CSID_TIMESTAMP_STB_MAX,
 };
+
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+//ASUS_BSP +++ "Add for camera csi debug"
+/* enum cam_csid_error_state*/
+enum cam_csid_error_state {
+	DEFAUT = 0,
+	CSID_LAN0_OVERFLOW = 1,
+	CSID_LAN1_OVERFLOW = 2,
+	CSID_LAN2_OVERFLOW = 3,
+	CSID_LAN3_OVERFLOW = 4,
+	CSID_TG_OVERFLOW = 5,
+	CSID_CPHY_PH_CRC = 6,
+	CSID_ERROR_CRC = 7,
+	CSID_ERROR_ECC = 8,
+};
+//ASUS_BSP ---"Add for camera csi debug"
+#endif
 
 /**
  * enum cam_ife_pix_path_res_id - Specify the csid patch

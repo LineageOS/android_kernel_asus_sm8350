@@ -684,6 +684,7 @@ int cam_vfe_core_init(struct cam_vfe_hw_core_info  *core_info,
 		return -ENODEV;
 	}
 
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	if (!cam_cpas_is_feature_supported(CAM_CPAS_ISP_FUSE,
 		(1 << hw_intf->hw_idx), 0) ||
 		!cam_cpas_is_feature_supported(CAM_CPAS_ISP_LITE_FUSE,
@@ -692,6 +693,7 @@ int cam_vfe_core_init(struct cam_vfe_hw_core_info  *core_info,
 			hw_intf->hw_idx);
 		return -ENXIO;
 	}
+#endif
 
 	rc = cam_irq_controller_init(drv_name,
 		CAM_SOC_GET_REG_MAP_START(soc_info, VFE_CORE_BASE_IDX),

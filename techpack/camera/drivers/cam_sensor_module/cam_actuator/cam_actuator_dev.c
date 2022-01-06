@@ -9,7 +9,9 @@
 #include "cam_actuator_core.h"
 #include "cam_trace.h"
 #include "camera_main.h"
-
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+#include "asus_actuator.h"
+#endif
 static long cam_actuator_subdev_ioctl(struct v4l2_subdev *sd,
 	unsigned int cmd, void *arg)
 {
@@ -215,7 +217,6 @@ static int32_t cam_actuator_driver_i2c_probe(struct i2c_client *client,
 		cam_actuator_apply_request;
 	a_ctrl->last_flush_req = 0;
 	a_ctrl->cam_act_state = CAM_ACTUATOR_INIT;
-
 	return rc;
 
 unreg_subdev:
@@ -305,8 +306,13 @@ static int cam_actuator_component_bind(struct device *dev,
 
 	platform_set_drvdata(pdev, a_ctrl);
 	a_ctrl->cam_act_state = CAM_ACTUATOR_INIT;
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	asus_actuator_init(a_ctrl);
+#endif
 	CAM_DBG(CAM_ACTUATOR, "Component bound successfully");
-
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	CAM_INFO(CAM_ACTUATOR, "Actuator Probe Success.");
+#endif
 	return rc;
 
 free_mem:

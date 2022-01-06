@@ -210,6 +210,7 @@ static int cam_csiphy_component_bind(struct device *dev,
 		CAM_ERR(CAM_CSIPHY, "DT parsing failed: %d", rc);
 		goto csiphy_no_resource;
 	}
+#if defined ASUS_ZS673KS_PROJECT || defined ASUS_PICASSO_PROJECT || defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	/* validate PHY FUSE only for CSIPHY4 */
 	if ((new_csiphy_dev->soc_info.index == 4) &&
 		!cam_cpas_is_feature_supported(
@@ -219,6 +220,7 @@ static int cam_csiphy_component_bind(struct device *dev,
 			new_csiphy_dev->soc_info.index);
 		goto csiphy_no_resource;
 	}
+#endif
 
 	new_csiphy_dev->v4l2_dev_str.internal_ops =
 		&csiphy_subdev_intern_ops;
