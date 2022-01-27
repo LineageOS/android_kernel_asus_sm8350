@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2014-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014-2021, The Linux Foundation. All rights reserved.
  */
 
 /*
@@ -2095,6 +2095,8 @@ static int ipa3_wwan_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 		/* Get MTU */
 		case RMNET_IOCTL_GET_MTU:
 			mux_channel = rmnet_ipa3_ctx->mux_channel;
+			ext_ioctl_data.u.mtu_params.if_name
+				[IFNAMSIZ-1] = '\0';
 			rmnet_index =
 				find_vchannel_name_index(ext_ioctl_data.u.mtu_params.if_name);
 
@@ -2115,6 +2117,8 @@ static int ipa3_wwan_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 		/* Set MTU */
 		case RMNET_IOCTL_SET_MTU:
 			mux_channel = rmnet_ipa3_ctx->mux_channel;
+			ext_ioctl_data.u.mtu_params.if_name
+				[IFNAMSIZ-1] = '\0';
 			rmnet_index =
 				find_vchannel_name_index(ext_ioctl_data.u.mtu_params.if_name);
 
@@ -3286,8 +3290,9 @@ static int rmnet_ipa3_set_data_quota_wifi(struct wan_ioctl_set_data_quota *data)
 	IPAWANDBG("iface name %s, quota %lu\n",
 		  data->interface_name, (unsigned long) data->quota_mbytes);
 
-	if (ipa3_ctx_get_type(IPA_HW_TYPE) >= IPA_HW_v4_5 &&
-		ipa3_ctx_get_type(IPA_HW_TYPE) != IPA_HW_v4_11) {
+	if ((ipa3_ctx_get_type(IPA_HW_TYPE) >= IPA_HW_v4_5 &&
+		ipa3_ctx_get_type(IPA_HW_TYPE) != IPA_HW_v4_11) ||
+		ipa3_ctx->is_bw_monitor_supported) {
 		IPADBG("use ipa-uc for quota\n");
 		rc = ipa3_uc_quota_monitor(data->set_quota);
 	} else {
