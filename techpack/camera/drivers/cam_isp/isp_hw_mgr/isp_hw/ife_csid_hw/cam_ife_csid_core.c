@@ -78,6 +78,7 @@ static int cam_ife_csid_is_ipp_ppp_format_supported(
 	case CAM_FORMAT_DPCM_14_10_14:
 	case CAM_FORMAT_DPCM_12_10_12:
 	case CAM_FORMAT_YUV422:
+	case CAM_FORMAT_YUV422_10:
 		rc = 0;
 		break;
 	default:
@@ -260,6 +261,10 @@ static int cam_ife_csid_get_format_rdi(
 		*decode_fmt  = 0x1;
 		*plain_fmt = 0x0;
 		break;
+	case CAM_FORMAT_YUV422_10:
+		*decode_fmt  = 0x2;
+		*plain_fmt = 0x1;
+		break;
 	default:
 		rc = -EINVAL;
 		break;
@@ -341,6 +346,10 @@ static int cam_ife_csid_get_format_ipp_ppp(
 	case CAM_FORMAT_YUV422:
 		*decode_fmt  = 0x1;
 		*plain_fmt = 0;
+		break;
+	case CAM_FORMAT_YUV422_10:
+		*decode_fmt  = 0x2;
+		*plain_fmt = 0x1;
 		break;
 	default:
 		CAM_ERR(CAM_ISP, "Unsupported format %d",
@@ -2073,8 +2082,10 @@ static int cam_ife_csid_init_config_pxl_path(
 	}
 
 	if (is_ipp && csid_hw->binning_supported &&
-		csid_hw->binning_enable)
+		csid_hw->binning_enable) {
 		val |= (1 << pxl_reg->quad_cfa_bin_en_shift_val);
+		val |= (1 << pxl_reg->horizontal_bin_en_shift_val);
+	}
 
 	val |= (1 << pxl_reg->pix_store_en_shift_val);
 	cam_io_w_mb(val, soc_info->reg_map[0].mem_base +
@@ -4248,6 +4259,8 @@ int cam_ife_csid_stop(void *hw_priv,
 		res->res_state = CAM_ISP_RESOURCE_STATE_INIT_HW;
 	}
 
+	csid_hw->error_irq_count = 0;
+
 	CAM_DBG(CAM_ISP,  "%s: Exit\n", __func__);
 
 	return rc;
@@ -4351,6 +4364,13 @@ static int cam_ife_csid_sof_irq_debug(
 		CAM_INFO(CAM_ISP, "SOF freeze: CSID SOF irq %s, CSID HW:%d",
 			(sof_irq_enable) ? "enabled" : "disabled",
 			csid_hw->hw_intf->hw_idx);
+
+	CAM_INFO(CAM_ISP, "Notify CSIPHY: %d",
+		csid_hw->csi2_rx_cfg.phy_sel);
+
+	cam_subdev_notify_message(CAM_CSIPHY_DEVICE_TYPE,
+		CAM_SUBDEV_MESSAGE_IRQ_ERR,
+		csid_hw->csi2_rx_cfg.phy_sel);
 
 	return 0;
 }
