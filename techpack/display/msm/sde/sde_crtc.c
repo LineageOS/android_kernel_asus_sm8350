@@ -3640,8 +3640,11 @@ int sde_crtc_reset_hw(struct drm_crtc *crtc, struct drm_crtc_state *old_state,
 		}
 	}
 
-	/* Early out if simple ctl reset succeeded */
-	if (i == sde_crtc->num_ctls)
+	/*
+	 * Early out if simple ctl reset succeeded or reset is
+	 * being performed after timeout
+	 */
+	if (i == sde_crtc->num_ctls || crtc->state == old_state)
 		return 0;
 
 	SDE_DEBUG("crtc%d: issuing hard reset\n", DRMID(crtc));
@@ -6179,6 +6182,9 @@ static int _sde_debugfs_fence_status_show(struct seq_file *s, void *data)
 	dev = crtc->dev;
 	cstate = to_sde_crtc_state(crtc->state);
 
+	if (!sde_crtc->kickoff_in_progress)
+		goto skip_input_fence;
+
 	/* Dump input fence info */
 	seq_puts(s, "===Input fence===\n");
 	drm_atomic_crtc_for_each_plane(plane, crtc) {
@@ -6206,6 +6212,7 @@ static int _sde_debugfs_fence_status_show(struct seq_file *s, void *data)
 		}
 	}
 
+skip_input_fence:
 	/* Dump release fence info */
 	seq_puts(s, "\n");
 	seq_puts(s, "===Release fence===\n");
