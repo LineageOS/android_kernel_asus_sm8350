@@ -42,6 +42,7 @@
 #define FW_ASSERT_TIMEOUT		5000
 #define CNSS_EVENT_PENDING		2989
 #define COLD_BOOT_CAL_SHUTDOWN_DELAY_MS	50
+#define MAX_NAME_LEN			12
 
 #define CNSS_QUIRKS_DEFAULT		0
 #ifdef CONFIG_CNSS_EMULATION
@@ -303,6 +304,9 @@ int cnss_wlan_enable(struct device *dev,
 	struct cnss_plat_data *plat_priv = cnss_bus_dev_to_plat_priv(dev);
 	int ret = 0;
 
+	if (!plat_priv)
+		return -ENODEV;
+
 	if (plat_priv->device_id == QCA6174_DEVICE_ID)
 		return 0;
 
@@ -338,6 +342,9 @@ int cnss_wlan_disable(struct device *dev, enum cnss_driver_mode mode)
 {
 	struct cnss_plat_data *plat_priv = cnss_bus_dev_to_plat_priv(dev);
 	int ret = 0;
+
+	if (!plat_priv)
+		return -ENODEV;
 
 	if (plat_priv->device_id == QCA6174_DEVICE_ID)
 		return 0;
@@ -414,6 +421,9 @@ int cnss_set_fw_log_mode(struct device *dev, u8 fw_log_mode)
 {
 	struct cnss_plat_data *plat_priv = cnss_bus_dev_to_plat_priv(dev);
 
+	if (!plat_priv)
+		return -ENODEV;
+
 	if (plat_priv->device_id == QCA6174_DEVICE_ID)
 		return 0;
 
@@ -455,6 +465,8 @@ static int cnss_fw_mem_ready_hdlr(struct cnss_plat_data *plat_priv)
 	if (ret)
 		goto out;
 
+	if (plat_priv->hds_enabled)
+		cnss_wlfw_bdf_dnld_send_sync(plat_priv, CNSS_BDF_HDS);
 	cnss_wlfw_bdf_dnld_send_sync(plat_priv, CNSS_BDF_REGDB);
 
 	if (plat_priv->device_id == QCN7605_DEVICE_ID)
@@ -536,11 +548,11 @@ static int cnss_setup_dms_mac(struct cnss_plat_data *plat_priv)
 				break;
 
 			ret = cnss_qmi_get_dms_mac(plat_priv);
-			if (ret == 0)
+			if (ret != -EAGAIN)
 				break;
 			msleep(CNSS_DMS_QMI_CONNECTION_WAIT_MS);
 		}
-		if (!plat_priv->dms.mac_valid) {
+		if (!plat_priv->dms.nv_mac_not_prov && !plat_priv->dms.mac_valid) {
 			cnss_pr_err("Unable to get MAC from DMS after retries\n");
 			CNSS_ASSERT(0);
 			return -EINVAL;
@@ -758,6 +770,10 @@ unsigned int cnss_get_timeout(struct cnss_plat_data *plat_priv,
 		return (qmi_timeout + WLAN_COLD_BOOT_CAL_TIMEOUT);
 	case CNSS_TIMEOUT_WLAN_WATCHDOG:
 		return ((qmi_timeout << 1) + WLAN_WD_TIMEOUT_MS);
+	case CNSS_TIMEOUT_RDDM:
+		return CNSS_RDDM_TIMEOUT_MS;
+	case CNSS_TIMEOUT_RECOVERY:
+		return RECOVERY_TIMEOUT;
 	default:
 		return qmi_timeout;
 	}
@@ -913,6 +929,7 @@ EXPORT_SYMBOL(cnss_idle_restart);
 int cnss_idle_shutdown(struct device *dev)
 {
 	struct cnss_plat_data *plat_priv = cnss_bus_dev_to_plat_priv(dev);
+	unsigned int timeout;
 	int ret;
 
 	if (!plat_priv) {
@@ -932,11 +949,12 @@ int cnss_idle_shutdown(struct device *dev)
 		goto skip_wait;
 
 	reinit_completion(&plat_priv->recovery_complete);
+	timeout = cnss_get_timeout(plat_priv, CNSS_TIMEOUT_RECOVERY);
 	ret = wait_for_completion_timeout(&plat_priv->recovery_complete,
-					  msecs_to_jiffies(RECOVERY_TIMEOUT));
+					  msecs_to_jiffies(timeout));
 	if (!ret) {
 		cnss_pr_err("Timeout (%ums) waiting for recovery to complete\n",
-			    RECOVERY_TIMEOUT);
+			    timeout);
 		CNSS_ASSERT(0);
 	}
 
@@ -1274,10 +1292,11 @@ static int cnss_do_recovery(struct cnss_plat_data *plat_priv,
 
 	/* FW recovery sequence has multiple steps and firmware load requires
 	 * linux PM in awake state. Thus hold the cnss wake source until
-	 * WLAN MISSION enabled.
+	 * WLAN MISSION enabled. CNSS_TIMEOUT_RECOVERY option should cover all
+	 * time taken in this process.
 	 */
-	pm_wakeup_ws_event(plat_priv->recovery_ws, RECOVERY_TIMEOUT +
-			   cnss_get_boot_timeout(NULL),
+	pm_wakeup_ws_event(plat_priv->recovery_ws,
+			   cnss_get_timeout(plat_priv, CNSS_TIMEOUT_RECOVERY),
 			   true);
 
 	switch (reason) {
@@ -1464,6 +1483,7 @@ EXPORT_SYMBOL(cnss_force_fw_assert);
 int cnss_force_collect_rddm(struct device *dev)
 {
 	struct cnss_plat_data *plat_priv = cnss_bus_dev_to_plat_priv(dev);
+	unsigned int timeout;
 	int ret = 0;
 
 	if (!plat_priv) {
@@ -1500,12 +1520,12 @@ int cnss_force_collect_rddm(struct device *dev)
 
 wait_rddm:
 	reinit_completion(&plat_priv->rddm_complete);
-	ret = wait_for_completion_timeout
-		(&plat_priv->rddm_complete,
-		 msecs_to_jiffies(CNSS_RDDM_TIMEOUT_MS));
+	timeout = cnss_get_timeout(plat_priv, CNSS_TIMEOUT_RDDM);
+	ret = wait_for_completion_timeout(&plat_priv->rddm_complete,
+					  msecs_to_jiffies(timeout));
 	if (!ret) {
 		cnss_pr_err("Timeout (%ums) waiting for RDDM to complete\n",
-			    CNSS_RDDM_TIMEOUT_MS);
+			    timeout);
 		ret = -ETIMEDOUT;
 	} else if (ret > 0) {
 		ret = 0;
@@ -1569,6 +1589,9 @@ static int cnss_cold_boot_cal_start_hdlr(struct cnss_plat_data *plat_priv)
 
 	if (test_bit(CNSS_COLD_BOOT_CAL_DONE, &plat_priv->driver_state)) {
 		cnss_pr_dbg("Calibration complete. Ignore calibration req\n");
+		goto out;
+	} else if (test_bit(CNSS_IN_COLD_BOOT_CAL, &plat_priv->driver_state)) {
+		cnss_pr_dbg("Calibration in progress. Ignore new calibration req\n");
 		goto out;
 	}
 
@@ -2139,13 +2162,15 @@ int cnss_do_elf_ramdump(struct cnss_plat_data *plat_priv)
 			continue;
 		}
 
+		seg = kcalloc(1, sizeof(*seg), GFP_KERNEL);
+		if (!seg)
+			continue;
+
 		if (meta_info.entry[dump_seg->type].entry_start == 0) {
 			meta_info.entry[dump_seg->type].type = dump_seg->type;
 			meta_info.entry[dump_seg->type].entry_start = i + 1;
 		}
 		meta_info.entry[dump_seg->type].entry_num++;
-
-		seg = kcalloc(1, sizeof(*seg), GFP_KERNEL);
 		seg->da = dump_seg->address;
 		seg->va = dump_seg->v_address;
 		seg->size = dump_seg->size;
@@ -2153,16 +2178,19 @@ int cnss_do_elf_ramdump(struct cnss_plat_data *plat_priv)
 		dump_seg++;
 	}
 
+	seg = kcalloc(1, sizeof(*seg), GFP_KERNEL);
+	if (!seg)
+		goto do_elf_dump;
+
 	meta_info.magic = CNSS_RAMDUMP_MAGIC;
 	meta_info.version = CNSS_RAMDUMP_VERSION;
 	meta_info.chipset = plat_priv->device_id;
 	meta_info.total_entries = CNSS_FW_DUMP_TYPE_MAX;
-
-	seg = kcalloc(1, sizeof(*seg), GFP_KERNEL);
 	seg->va = &meta_info;
 	seg->size = sizeof(meta_info);
 	list_add(&seg->node, &head);
 
+do_elf_dump:
 	ret = do_elf_dump(&head, info_v2->ramdump_dev);
 
 	while (!list_empty(&head)) {
@@ -2493,6 +2521,25 @@ int cnss_minidump_add_region(struct cnss_plat_data *plat_priv,
 			     enum cnss_fw_dump_type type, int seg_no,
 			     void *va, phys_addr_t pa, size_t size)
 {
+	char name[MAX_NAME_LEN];
+
+	switch (type) {
+	case CNSS_FW_IMAGE:
+		snprintf(name, MAX_NAME_LEN, "FBC_%X", seg_no);
+		break;
+	case CNSS_FW_RDDM:
+		snprintf(name, MAX_NAME_LEN, "RDDM_%X", seg_no);
+		break;
+	case CNSS_FW_REMOTE_HEAP:
+		snprintf(name, MAX_NAME_LEN, "RHEAP_%X", seg_no);
+		break;
+	default:
+		cnss_pr_err("Unknown dump type ID: %d\n", type);
+		return -EINVAL;
+	}
+
+	cnss_pr_dbg("Dump region: %s, va: %pK, pa: %pa, size: 0x%zx\n",
+		    name, va, &pa, size);
 	return 0;
 }
 
@@ -2512,8 +2559,8 @@ int cnss_request_firmware_direct(struct cnss_plat_data *plat_priv,
 		return request_firmware_direct(fw_entry, filename,
 					       &plat_priv->plat_dev->dev);
 	else
-		return request_firmware(fw_entry, filename,
-					&plat_priv->plat_dev->dev);
+		return firmware_request_nowarn(fw_entry, filename,
+					       &plat_priv->plat_dev->dev);
 }
 
 #if IS_ENABLED(CONFIG_INTERCONNECT)
@@ -2650,6 +2697,32 @@ static int cnss_register_bus_scale(struct cnss_plat_data *plat_priv)
 
 static void cnss_unregister_bus_scale(struct cnss_plat_data *plat_priv) {}
 #endif /* CONFIG_INTERCONNECT */
+
+static ssize_t enable_hds_store(struct device *dev,
+				struct device_attribute *attr,
+				const char *buf, size_t count)
+{
+	struct cnss_plat_data *plat_priv = dev_get_drvdata(dev);
+	unsigned int enable_hds = 0;
+
+	if (!plat_priv)
+		return -ENODEV;
+
+	if (sscanf(buf, "%du", &enable_hds) != 1) {
+		cnss_pr_err("Invalid enable_hds sysfs command\n");
+		return -EINVAL;
+	}
+
+	if (enable_hds)
+		plat_priv->hds_enabled = true;
+	else
+		plat_priv->hds_enabled = false;
+
+	cnss_pr_dbg("%s HDS file download, count is %zu\n",
+		    plat_priv->hds_enabled ? "Enable" : "Disable", count);
+
+	return count;
+}
 
 static ssize_t recovery_store(struct device *dev,
 			      struct device_attribute *attr,
@@ -2794,6 +2867,7 @@ static ssize_t hw_trace_override_store(struct device *dev,
 static DEVICE_ATTR_WO(fs_ready);
 static DEVICE_ATTR_WO(shutdown);
 static DEVICE_ATTR_WO(recovery);
+static DEVICE_ATTR_WO(enable_hds);
 static DEVICE_ATTR_WO(qdss_trace_start);
 static DEVICE_ATTR_WO(qdss_trace_stop);
 static DEVICE_ATTR_WO(qdss_conf_download);
@@ -2803,6 +2877,7 @@ static struct attribute *cnss_attrs[] = {
 	&dev_attr_fs_ready.attr,
 	&dev_attr_shutdown.attr,
 	&dev_attr_recovery.attr,
+	&dev_attr_enable_hds.attr,
 	&dev_attr_qdss_trace_start.attr,
 	&dev_attr_qdss_trace_stop.attr,
 	&dev_attr_qdss_conf_download.attr,

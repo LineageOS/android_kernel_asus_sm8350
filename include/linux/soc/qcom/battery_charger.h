@@ -39,6 +39,11 @@ struct psy_state {
 	u32			opcode_set;
 };
 
+enum usb_connector_type {
+        USB_CONNECTOR_TYPE_TYPEC,
+        USB_CONNECTOR_TYPE_MICRO_USB,
+};
+
 enum psy_type {
 	PSY_TYPE_BATTERY,
 	PSY_TYPE_USB,
@@ -50,12 +55,15 @@ struct battery_chg_dev {
 	struct device			*dev;
 	struct class			battery_class;
 	struct pmic_glink_client	*client;
+	struct typec_role_class		*typec_class;
 	struct mutex			rw_lock;
 	struct completion		ack;
 	struct completion		fw_buf_ack;
 	struct completion		fw_update_ack;
 	struct psy_state		psy_list[PSY_TYPE_MAX];
 	struct dentry			*debugfs_dir;
+	/* extcon for VBUS/ID notification for USB for micro USB */
+	struct extcon_dev		*extcon;
 	u32				*thermal_levels;
 	const char			*wls_fw_name;
 	int				curr_thermal_level;
@@ -78,6 +86,8 @@ struct battery_chg_dev {
 	u32				restrict_fcc_ua;
 	u32				last_fcc_ua;
 	u32				usb_icl_ua;
+	u32				connector_type;
+	u32				usb_prev_mode;
 	bool				restrict_chg_en;
 	/* To track the driver initialization status */
 	bool				initialized;
