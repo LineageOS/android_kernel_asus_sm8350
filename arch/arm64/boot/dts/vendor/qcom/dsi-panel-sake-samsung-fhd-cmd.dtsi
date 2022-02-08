@@ -2,7 +2,6 @@
 	dsi_samsung_fhd_cmd: qcom,mdss_dsi_samsung_fhd_cmd {
 		qcom,mdss-dsi-panel-name = "ASUS ams592YP01 cmd mode dsc fhd plus panel";
 		qcom,mdss-dsi-panel-type = "dsi_cmd_mode";
-		qcom,mdss-dsi-panel-physical-type = "oled";
 		qcom,mdss-dsi-virtual-channel-id = <0>;
 		qcom,mdss-dsi-stream = <0>;
 		qcom,mdss-dsi-bpp = <24>;
