@@ -252,6 +252,8 @@ static int dsi_panel_reset(struct dsi_panel *panel)
 			DSI_ERR("unable to set dir for disp gpio rc=%d\n", rc);
 			goto exit;
 		}
+
+		msleep(10);
 	}
 
 	if (r_config->count) {
@@ -371,6 +373,8 @@ error_disable_gpio:
 error_disable_vregs:
 	(void)dsi_pwr_enable_regulator(&panel->power_info, false);
 
+	msleep(10);
+
 exit:
 	return rc;
 }
@@ -383,12 +387,15 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 		DSI_DEBUG("TWM Enabled, skip panel power off\n");
 		return rc;
 	}
-	if (gpio_is_valid(panel->reset_config.disp_en_gpio))
-		gpio_set_value(panel->reset_config.disp_en_gpio, 0);
 
 	if (gpio_is_valid(panel->reset_config.reset_gpio) &&
 					!panel->reset_gpio_always_on)
 		gpio_set_value(panel->reset_config.reset_gpio, 0);
+
+	msleep(5);
+
+	if (gpio_is_valid(panel->reset_config.disp_en_gpio))
+		gpio_set_value(panel->reset_config.disp_en_gpio, 0);
 
 	if (gpio_is_valid(panel->reset_config.lcd_mode_sel_gpio))
 		gpio_set_value(panel->reset_config.lcd_mode_sel_gpio, 0);
