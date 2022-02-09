@@ -503,6 +503,9 @@ fw_get_filesystem_firmware(struct device *device, struct fw_priv *fw_priv,
 			break;
 		}
 
+		if (!strncmp(fw_priv->fw_name, "slpi", 4))
+			snprintf(path, PATH_MAX, "%s/%s", "/vendor/firmware", fw_priv->fw_name);
+
 		fw_priv->size = 0;
 		rc = kernel_read_file_from_path(path, &buffer, &size,
 						msize, id);
