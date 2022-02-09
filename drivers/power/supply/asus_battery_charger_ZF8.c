@@ -1759,11 +1759,8 @@ static void print_battery_status(void) {
 			charging_stats[charge_status],
 			health_type[bat_health]);
 
-	ASUSEvtlog("[BAT][Ser]%s", battInfo);
-	
 	//ASUS_BSP +++ add to printk the WIFI hotspot & QXDM UTS event
 	snprintf(UTSInfo, sizeof(UTSInfo), "WIFI_HS=%d, QXDM=%d", g_wifi_hs_en, g_qxdm_en);
-	ASUSEvtlog("[UTS][Status]%s", UTSInfo);
 	//ASUS_BSP --- add to printk the WIFI hotspot & QXDM UTS event
 	
 	ktime_get_coarse_real_ts64(&g_last_print_time);
