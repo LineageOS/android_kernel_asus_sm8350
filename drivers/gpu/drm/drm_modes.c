@@ -995,6 +995,11 @@ static bool drm_mode_match_aspect_ratio(const struct drm_display_mode *mode1,
 	return mode1->picture_aspect_ratio == mode2->picture_aspect_ratio;
 }
 
+bool is_dsi_mode(const struct drm_display_mode *mode)
+{
+	return 2400 == mode->vdisplay && 2415 == mode->vtotal;
+}
+
 /**
  * drm_mode_match - test modes for (partial) equality
  * @mode1: first mode
@@ -1014,6 +1019,9 @@ bool drm_mode_match(const struct drm_display_mode *mode1,
 		return true;
 
 	if (!mode1 || !mode2)
+		return false;
+
+	if (is_dsi_mode(mode1) && mode1->vrefresh != mode2->vrefresh)
 		return false;
 
 	if (match_flags & DRM_MODE_MATCH_TIMINGS &&
@@ -1333,6 +1341,9 @@ static int drm_mode_compare(void *priv, struct list_head *lh_a, struct list_head
 	if (diff)
 		return diff;
 
+	if (is_dsi_mode(a))
+		diff = a->vrefresh - b->vrefresh;
+	else
 	diff = b->vrefresh - a->vrefresh;
 	if (diff)
 		return diff;
