@@ -12,6 +12,16 @@ endif
 ccflags-y += -I$(srctree)/techpack/camera/include/uapi/camera
 ccflags-y += -I$(srctree)
 
+ifeq ($(CONFIG_MACH_ASUS_SAKE),y)
+ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE=ANDROID_GKI_VFS_EXPORT_ONLY
+ccflags-y += -DANDROID_GKI_VFS_EXPORT_ONLY=VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver
+endif
+
+ifeq ($(CONFIG_MACH_ASUS_VODKA),y)
+ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE=ANDROID_GKI_VFS_EXPORT_ONLY
+ccflags-y += -DANDROID_GKI_VFS_EXPORT_ONLY=VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver
+endif
+
 camera-y := \
 	cam_req_mgr/cam_req_mgr_core.o \
 	cam_req_mgr/cam_req_mgr_dev.o \
@@ -171,6 +181,27 @@ camera-$(CONFIG_SPECTRA_SENSOR) += \
 	cam_sensor_module/cam_sensor_io/cam_sensor_spi.o \
 	cam_sensor_module/cam_sensor_utils/cam_sensor_util.o \
 	cam_sensor_module/cam_res_mgr/cam_res_mgr.o
+
+camera-$(CONFIG_SPECTRA_SENSOR) += \
+	cam_sensor_module/cam_ois/onsemi_i2c.o \
+	cam_sensor_module/cam_ois/onsemi_interface.o \
+	cam_sensor_module/cam_ois/asus_ois.o \
+
+ifeq ($(CONFIG_MACH_ASUS_SAKE),y)
+camera-$(CONFIG_SPECTRA_SENSOR) += \
+	cam_sensor_module/cam_ois/utils.o \
+	cam_sensor_module/cam_actuator/actuator_i2c.o \
+	cam_sensor_module/cam_actuator/asus_actuator.o \
+	cam_sensor_module/cam_sensor/asus_cam_sensor.o
+endif
+
+ifeq ($(CONFIG_MACH_ASUS_VODKA),y)
+camera-$(CONFIG_SPECTRA_SENSOR) += \
+  cam_sensor_module/cam_ois/utils.o \
+	cam_sensor_module/cam_actuator/actuator_i2c.o \
+	cam_sensor_module/cam_actuator/asus_actuator.o \
+	cam_sensor_module/cam_sensor/asus_cam_sensor.o
+endif
 
 camera-$(CONFIG_LEDS_QPNP_FLASH_V2) += \
 	cam_sensor_module/cam_flash/cam_flash_dev.o \

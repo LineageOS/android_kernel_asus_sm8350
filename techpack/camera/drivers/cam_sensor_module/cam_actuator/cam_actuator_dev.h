@@ -115,6 +115,8 @@ struct cam_actuator_ctrl_t {
 	struct cam_actuator_query_cap act_info;
 	struct actuator_intf_params bridge_intf;
 	uint32_t last_flush_req;
+	uint32_t lens_pos;
+	uint8_t debug_node_created;
 };
 
 /**
