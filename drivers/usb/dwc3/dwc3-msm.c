@@ -5017,6 +5017,7 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 		}
 	}
 
+#ifndef CONFIG_MACH_ASUS
 	/* Check charger detection type to obtain charger type */
 	if (of_get_property(mdwc->dev->of_node, "io-channel-names", NULL))
 		mdwc->apsd_source = IIO;
@@ -5024,6 +5025,7 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 		mdwc->apsd_source = REMOTE_PROC;
 	else
 		mdwc->apsd_source = PSY;
+#endif
 
 	if (of_property_read_bool(node, "extcon")) {
 		ret = dwc3_msm_extcon_register(mdwc);
