@@ -77,7 +77,7 @@
 #define QUERY_REQ_TIMEOUT 1500 /* 1.5 seconds */
 
 /* Task management command timeout */
-#define TM_CMD_TIMEOUT	100 /* msecs */
+#define TM_CMD_TIMEOUT	500 /* msecs */
 
 /* maximum number of retries for a general UIC command  */
 #define UFS_UIC_COMMAND_RETRIES 3
