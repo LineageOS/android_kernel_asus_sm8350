@@ -8,7 +8,12 @@
 #include "cam_ois_soc.h"
 #include "cam_ois_core.h"
 #include "cam_debug_util.h"
+
 #include "camera_main.h"
+#include "onsemi_i2c.h"
+#include "onsemi_interface.h"
+#include "asus_ois.h"
+struct mutex g_dualoisMutex;
 
 static int cam_ois_subdev_close_internal(struct v4l2_subdev *sd,
 	struct v4l2_subdev_fh *fh)
@@ -309,6 +314,7 @@ static int cam_ois_component_bind(struct device *dev,
 	INIT_LIST_HEAD(&(o_ctrl->i2c_calib_data.list_head));
 	INIT_LIST_HEAD(&(o_ctrl->i2c_mode_data.list_head));
 	mutex_init(&(o_ctrl->ois_mutex));
+	mutex_init(&g_dualoisMutex);
 	rc = cam_ois_driver_soc_init(o_ctrl);
 	if (rc) {
 		CAM_ERR(CAM_OIS, "failed: soc init rc %d", rc);
@@ -328,10 +334,12 @@ static int cam_ois_component_bind(struct device *dev,
 
 	platform_set_drvdata(pdev, o_ctrl);
 	o_ctrl->cam_ois_state = CAM_OIS_INIT;
+	asus_ois_init(o_ctrl);
 	CAM_DBG(CAM_OIS, "Component bound successfully");
 	return rc;
 unreg_subdev:
 	cam_unregister_subdev(&(o_ctrl->v4l2_dev_str));
+	mutex_destroy(&g_dualoisMutex);
 free_soc:
 	kfree(soc_private);
 free_cci_client:
@@ -376,6 +384,7 @@ static void cam_ois_component_unbind(struct device *dev,
 	platform_set_drvdata(pdev, NULL);
 	v4l2_set_subdevdata(&o_ctrl->v4l2_dev_str.sd, NULL);
 	kfree(o_ctrl);
+	mutex_destroy(&g_dualoisMutex);
 }
 
 const static struct component_ops cam_ois_component_ops = {
