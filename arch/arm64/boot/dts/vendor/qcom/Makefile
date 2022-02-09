@@ -23,14 +23,8 @@ dtbo-$(CONFIG_ARCH_LAHAINA) += lahaina-rumi-overlay.dtbo \
 	lahaina-qrd-hsp-pro-overlay.dtbo
 
 dtbo-$(CONFIG_MACH_ASUS_SAKE) += \
-	SAKE-ER1-overlay.dtbo \
-	SAKE-ER2-overlay.dtbo \
-	SAKE-EVB-overlay.dtbo \
-	SAKE-EVB2-overlay.dtbo \
 	SAKE-MP-overlay.dtbo \
-	SAKE-PR-overlay.dtbo \
-	SAKE-SR1-overlay.dtbo \
-	SAKE-SR2-overlay.dtbo
+	SAKE-PR-overlay.dtbo
 
 dtbo-$(CONFIG_MACH_ASUS_VODKA) += \
 	VODKA-ER1-overlay.dtbo \
@@ -70,14 +64,8 @@ lahaina-cdp-hsp-pro-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb \
 lahaina-qrd-hsp-pro-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb \
 					lahaina-v2.1.dtb
 
-SAKE-ER1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-SAKE-ER2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-SAKE-EVB-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-SAKE-EVB2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 SAKE-MP-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 SAKE-PR-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-SAKE-SR1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-SAKE-SR2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 
 VODKA-ER1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 VODKA-ER2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
