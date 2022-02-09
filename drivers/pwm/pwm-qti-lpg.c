@@ -129,6 +129,8 @@
 
 #define SDAM_LUT_COUNT_MAX			64
 
+static int flag = 0;
+
 enum lpg_src {
 	LUT_PATTERN = 0,
 	PWM_VALUE,
@@ -256,13 +258,28 @@ static int qpnp_lpg_masked_write(struct qpnp_lpg_channel *lpg,
 
 static int qpnp_lut_write(struct qpnp_lpg_lut *lut, u16 addr, u8 val)
 {
-	int rc;
+	int rc = 0;
 
 	mutex_lock(&lut->chip->bus_lock);
-	rc = regmap_write(lut->chip->regmap, lut->reg_base + addr, val);
+
+	if (flag == 1) {
+		if (addr == REG_LPG_LUT_RAMP_CONTROL && val == 0x01) {
+			val = 0x03;
+			flag = 0;
+		} else if (addr == REG_LPG_LUT_RAMP_CONTROL && val == 0x02) {
+			goto exit;
+		}
+	}
+
+	if (addr == REG_LPG_LUT_RAMP_CONTROL && val == 0x04)
+		flag = 1;
+	else
+		rc = regmap_write(lut->chip->regmap, lut->reg_base + addr, val);
+
 	if (rc < 0)
 		dev_err(lut->chip->dev, "Write addr 0x%x with value %d failed, rc=%d\n",
 				lut->reg_base + addr, val, rc);
+exit:
 	mutex_unlock(&lut->chip->bus_lock);
 
 	return rc;
