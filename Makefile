@@ -1021,6 +1021,12 @@ KBUILD_CFLAGS   += $(KCFLAGS)
 KBUILD_LDFLAGS_MODULE += --build-id
 LDFLAGS_vmlinux += --build-id
 
+ifeq ($(CONFIG_MACH_ASUS_SAKE),y)
+KBUILD_CPPFLAGS += -DASUS_SAKE_PROJECT=1
+else ifeq ($(CONFIG_MACH_ASUS_VODKA),y)
+KBUILD_CPPFLAGS += -DASUS_VODKA_PROJECT=1
+endif
+
 ifeq ($(CONFIG_STRIP_ASM_SYMS),y)
 LDFLAGS_vmlinux	+= $(call ld-option, -X,)
 endif
