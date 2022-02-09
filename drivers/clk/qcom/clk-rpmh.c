@@ -472,7 +472,9 @@ DEFINE_CLK_RPMH_VRM(lahaina, ln_bb_clk1, ln_bb_clk1_ao, "lnbclka1", 2);
 DEFINE_CLK_RPMH_VRM(lahaina, ln_bb_clk2, ln_bb_clk2_ao, "lnbclka2", 2);
 DEFINE_CLK_RPMH_VRM(lahaina, rf_clk1, rf_clk1_ao, "rfclka1", 1);
 DEFINE_CLK_RPMH_VRM_OPT(lahaina, rf_clk2, rf_clk2_ao, "rfclka2", 1);
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 DEFINE_CLK_RPMH_VRM(lahaina, rf_clk3, rf_clk3_ao, "rfclka3", 1);
+#endif
 DEFINE_CLK_RPMH_VRM(lahaina, rf_clk4, rf_clk4_ao, "rfclka4", 1);
 DEFINE_CLK_RPMH_VRM(lahaina, rf_clk5, rf_clk5_ao, "rfclka5", 1);
 DEFINE_CLK_RPMH_BCM(lahaina, ipa, "IP0");
@@ -492,8 +494,10 @@ static struct clk_hw *lahaina_rpmh_clocks[] = {
 	[RPMH_RF_CLK1_A]	= &lahaina_rf_clk1_ao.hw,
 	[RPMH_RF_CLK2]		= &lahaina_rf_clk2.hw,
 	[RPMH_RF_CLK2_A]	= &lahaina_rf_clk2_ao.hw,
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	[RPMH_RF_CLK3]		= &lahaina_rf_clk3.hw,
 	[RPMH_RF_CLK3_A]	= &lahaina_rf_clk3_ao.hw,
+#endif
 	[RPMH_RF_CLK4]		= &lahaina_rf_clk4.hw,
 	[RPMH_RF_CLK4_A]	= &lahaina_rf_clk4_ao.hw,
 	[RPMH_RF_CLK5]		= &lahaina_rf_clk5.hw,
@@ -515,8 +519,10 @@ static struct clk_hw *shima_rpmh_clocks[] = {
 	[RPMH_LN_BB_CLK2_A]	= &lahaina_ln_bb_clk2_ao.hw,
 	[RPMH_RF_CLK1]		= &lahaina_rf_clk1.hw,
 	[RPMH_RF_CLK1_A]	= &lahaina_rf_clk1_ao.hw,
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	[RPMH_RF_CLK3]		= &lahaina_rf_clk3.hw,
 	[RPMH_RF_CLK3_A]	= &lahaina_rf_clk3_ao.hw,
+#endif
 	[RPMH_RF_CLK4]		= &lahaina_rf_clk4.hw,
 	[RPMH_RF_CLK4_A]	= &lahaina_rf_clk4_ao.hw,
 	[RPMH_IPA_CLK]		= &lahaina_ipa.hw,
@@ -542,8 +548,10 @@ static struct clk_hw *sdxlemur_rpmh_clocks[] = {
 	[RPMH_RF_CLK1_A]	= &lahaina_rf_clk1_ao.hw,
 	[RPMH_RF_CLK2]		= &lahaina_rf_clk2.hw,
 	[RPMH_RF_CLK2_A]	= &lahaina_rf_clk2_ao.hw,
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	[RPMH_RF_CLK3]		= &lahaina_rf_clk3.hw,
 	[RPMH_RF_CLK3_A]	= &lahaina_rf_clk3_ao.hw,
+#endif
 	[RPMH_RF_CLK4]		= &lahaina_rf_clk4.hw,
 	[RPMH_RF_CLK4_A]	= &lahaina_rf_clk4_ao.hw,
 	[RPMH_IPA_CLK]		= &lahaina_ipa.hw,
@@ -564,8 +572,10 @@ static struct clk_hw *yupik_rpmh_clocks[] = {
 	[RPMH_LN_BB_CLK2_A]	= &lahaina_ln_bb_clk2_ao.hw,
 	[RPMH_RF_CLK1]		= &lahaina_rf_clk1.hw,
 	[RPMH_RF_CLK1_A]	= &lahaina_rf_clk1_ao.hw,
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 	[RPMH_RF_CLK3]		= &lahaina_rf_clk3.hw,
 	[RPMH_RF_CLK3_A]	= &lahaina_rf_clk3_ao.hw,
+#endif
 	[RPMH_RF_CLK4]		= &lahaina_rf_clk4.hw,
 	[RPMH_RF_CLK4_A]	= &lahaina_rf_clk4_ao.hw,
 	[RPMH_IPA_CLK]		= &lahaina_ipa.hw,
