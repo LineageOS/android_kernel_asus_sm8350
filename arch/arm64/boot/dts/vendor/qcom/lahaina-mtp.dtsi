@@ -247,5 +247,3 @@
 				&nfc_clk_req_suspend &nfc_fwdl_suspend>;
 	};
 };
-
-#include "camera/lahaina-camera-sensor-mtp.dtsi"
