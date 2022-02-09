@@ -154,6 +154,18 @@ static char *ramdisk_execute_command;
 bool static_key_initialized __read_mostly;
 EXPORT_SYMBOL_GPL(static_key_initialized);
 
+bool g_Charger_mode = false;
+static int set_charger_mode(char *str)
+{
+	g_Charger_mode = !strcmp("charger", str);
+
+	printk("g_Charger_mode = %d\n", g_Charger_mode);
+
+	return 0;
+}
+__setup("androidboot.mode=", set_charger_mode);
+EXPORT_SYMBOL(g_Charger_mode);
+
 #if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
 enum DEVICE_HWID g_ASUS_hwID = HW_REV_INVALID;
 EXPORT_SYMBOL(g_ASUS_hwID);
