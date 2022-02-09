@@ -390,6 +390,11 @@
 		reg = <0x0 0x8b600000 0x0 0x100000>;
 	};
 
+	asus_debug_mem: asus_debug_resion@9b800000 {
+		no-map;
+		reg = <0x0 0x9b800000 0x0 0x00400000>;
+	};
+
 	pil_modem_mem: modem_region@8b800000 {
 		no-map;
 		reg = <0x0 0x8b800000 0x0 0x10000000>;
