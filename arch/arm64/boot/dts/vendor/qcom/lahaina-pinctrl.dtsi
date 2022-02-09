@@ -1715,6 +1715,66 @@
 		};
 	};
 
+	pmx_ts_active_back {
+		ts_active_back: ts_active_back {
+			mux {
+				pins = "gpio163", "gpio162";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio163", "gpio162";
+				drive-strength = <8>;
+				bias-pull-up;
+			};
+		};
+	};
+
+	pmx_ts_reset_suspend_back {
+		ts_reset_suspend_back: ts_reset_suspend_back {
+			mux {
+				pins = "gpio163";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio163";
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+		};
+	};
+
+	pmx_ts_int_suspend_back {
+		ts_int_suspend_back: ts_int_suspend_back {
+			mux {
+				pins = "gpio162";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio162";
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+		};
+	};
+
+	pmx_ts_release_back {
+		ts_release_back: ts_release_back {
+			mux {
+				pins = "gpio163", "gpio162";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio163", "gpio162";
+				drive-strength = <2>;
+				bias-disable;
+			};
+		};
+	};
+
 	pri_aux_pcm_clk {
 		pri_aux_pcm_clk_sleep: pri_aux_pcm_clk_sleep {
 			mux {
