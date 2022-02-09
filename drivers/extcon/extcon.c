@@ -405,7 +405,7 @@ static ssize_t cable_state_show(struct device *dev,
  *
  * Returns 0 if success or error number if fail.
  */
-int extcon_sync(struct extcon_dev *edev, unsigned int id)
+static int _extcon_sync(struct extcon_dev *edev, unsigned int id, bool use_id)
 {
 	char name_buf[120];
 	char state_buf[120];
@@ -419,6 +419,9 @@ int extcon_sync(struct extcon_dev *edev, unsigned int id)
 
 	if (!edev)
 		return -EINVAL;
+
+	if (!use_id)
+		goto skip_id;
 
 	index = find_cable_index_by_id(edev, id);
 	if (index < 0)
@@ -440,6 +443,7 @@ int extcon_sync(struct extcon_dev *edev, unsigned int id)
 	 */
 	raw_notifier_call_chain(&edev->nh_all, state, edev);
 
+skip_id:
 	spin_lock_irqsave(&edev->lock, flags);
 	/* This could be in interrupt handler */
 	prop_buf = (char *)get_zeroed_page(GFP_ATOMIC);
@@ -476,6 +480,11 @@ int extcon_sync(struct extcon_dev *edev, unsigned int id)
 	free_page((unsigned long)prop_buf);
 
 	return 0;
+}
+
+int extcon_sync(struct extcon_dev *edev, unsigned int id)
+{
+	return _extcon_sync(edev, id, true);
 }
 EXPORT_SYMBOL_GPL(extcon_sync);
 
@@ -597,6 +606,46 @@ int extcon_set_state_sync(struct extcon_dev *edev, unsigned int id, bool state)
 	return extcon_sync(edev, id);
 }
 EXPORT_SYMBOL_GPL(extcon_set_state_sync);
+
+#ifdef CONFIG_MACH_ASUS
+int asus_extcon_sync(struct extcon_dev *edev)
+{
+	return _extcon_sync(edev, 0, false);
+}
+EXPORT_SYMBOL_GPL(asus_extcon_sync);
+
+static int asus_extcon_set_state(struct extcon_dev *edev, int cable_state)
+{
+	unsigned long flags;
+
+	if (!edev)
+		return -EINVAL;
+
+	spin_lock_irqsave(&edev->lock, flags);
+
+	if (edev->state != cable_state)
+		goto out;
+
+	edev->state = cable_state;
+
+out:
+	spin_unlock_irqrestore(&edev->lock, flags);
+
+	return 0;
+}
+
+int asus_extcon_set_state_sync(struct extcon_dev *edev, int cable_state)
+{
+	int ret;
+
+	ret = asus_extcon_set_state(edev, cable_state);
+	if (ret)
+		return ret;
+
+	return asus_extcon_sync(edev);
+}
+EXPORT_SYMBOL_GPL(asus_extcon_set_state_sync);
+#endif
 
 /**
  * extcon_get_property() - Get the property value of an external connector.
@@ -1054,6 +1103,9 @@ struct extcon_dev *extcon_dev_allocate(const unsigned int *supported_cable)
 
 	return edev;
 }
+#ifdef CONFIG_MACH_ASUS
+EXPORT_SYMBOL_GPL(extcon_dev_allocate);
+#endif
 
 /*
  * extcon_dev_free() - Free the memory of extcon device.
@@ -1105,6 +1157,25 @@ int extcon_dev_register(struct extcon_dev *edev)
 	edev->dev.class = extcon_class;
 	edev->dev.release = extcon_dev_release;
 
+#ifdef CONFIG_MACH_ASUS
+	/* ASUS BSP charger +++ */
+	if (edev->fnode_name != NULL) {
+		edev->name = edev->fnode_name;
+		dev_set_name(&edev->dev, edev->fnode_name,
+			(unsigned long)atomic_inc_return(&edev_no));
+	} else {
+		edev->name = dev_name(edev->dev.parent);
+		if (IS_ERR_OR_NULL(edev->name)) {
+			dev_err(&edev->dev,
+				"extcon device name is null\n");
+			return -EINVAL;
+		}
+		dev_set_name(&edev->dev, "extcon%lu",
+			(unsigned long)atomic_inc_return(&edev_no));
+	}
+	/* ASUS BSP charger --- */
+
+#else
 	edev->name = dev_name(edev->dev.parent);
 	if (IS_ERR_OR_NULL(edev->name)) {
 		dev_err(&edev->dev,
@@ -1113,6 +1184,7 @@ int extcon_dev_register(struct extcon_dev *edev)
 	}
 	dev_set_name(&edev->dev, "extcon%lu",
 			(unsigned long)atomic_inc_return(&edev_no));
+#endif
 
 	if (edev->max_supported) {
 		char *str;
