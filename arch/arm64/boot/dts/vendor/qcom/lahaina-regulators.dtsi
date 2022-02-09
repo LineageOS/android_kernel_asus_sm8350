@@ -729,9 +729,9 @@
 		L11C: pm8350c_l11: regulator-pm8350c-l11 {
 			regulator-name = "pm8350c_l11";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <2400000>;
-			regulator-max-microvolt = <3008000>;
-			qcom,init-voltage = <2504000>;
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			qcom,init-voltage = <3300000>;
 			qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 	};
@@ -823,12 +823,17 @@
 	rpmh-regulator-smpe2 {
 		compatible = "qcom,rpmh-vrm-regulator";
 		qcom,resource-name = "smpe2";
+		qcom,regulator-type = "pmic5-hfsmps";
+		qcom,supported-modes = <RPMH_REGULATOR_MODE_HPM>;
+		qcom,mode-threshold-currents = <0>;
+		qcom,send-defaults;
 		S2E: pmr735a_s2: regulator-pmr735a-s2 {
 			regulator-name = "pmr735a_s2";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <500000>;
-			regulator-max-microvolt = <1020000>;
-			qcom,init-voltage = <852000>;
+			regulator-min-microvolt = <976000>;
+			regulator-max-microvolt = <976000>;
+			qcom,init-voltage = <976000>;
+			qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 	};
 
