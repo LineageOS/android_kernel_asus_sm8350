@@ -511,6 +511,11 @@ fw_get_filesystem_firmware(struct device *device, struct fw_priv *fw_priv,
 			snprintf(path, PATH_MAX, "%s/%s", "/vendor/firmware", fw_priv->fw_name);
 #endif
 
+#if defined ASUS_SAKE_PROJECT
+		if (!strncmp(fw_priv->fw_name, "aw8697", 6))
+			snprintf(path, PATH_MAX, "%s/%s", "/vendor/firmware", fw_priv->fw_name);
+#endif
+
 		fw_priv->size = 0;
 		rc = kernel_read_file_from_path(path, &buffer, &size,
 						msize, id);
