@@ -405,7 +405,7 @@ static ssize_t cable_state_show(struct device *dev,
  *
  * Returns 0 if success or error number if fail.
  */
-static int _extcon_sync(struct extcon_dev *edev, unsigned int id, bool use_id)
+int extcon_sync(struct extcon_dev *edev, unsigned int id)
 {
 	char name_buf[120];
 	char state_buf[120];
@@ -419,9 +419,6 @@ static int _extcon_sync(struct extcon_dev *edev, unsigned int id, bool use_id)
 
 	if (!edev)
 		return -EINVAL;
-
-	if (!use_id)
-		goto skip_id;
 
 	index = find_cable_index_by_id(edev, id);
 	if (index < 0)
@@ -443,7 +440,6 @@ static int _extcon_sync(struct extcon_dev *edev, unsigned int id, bool use_id)
 	 */
 	raw_notifier_call_chain(&edev->nh_all, state, edev);
 
-skip_id:
 	spin_lock_irqsave(&edev->lock, flags);
 	/* This could be in interrupt handler */
 	prop_buf = (char *)get_zeroed_page(GFP_ATOMIC);
@@ -480,11 +476,6 @@ skip_id:
 	free_page((unsigned long)prop_buf);
 
 	return 0;
-}
-
-int extcon_sync(struct extcon_dev *edev, unsigned int id)
-{
-	return _extcon_sync(edev, id, true);
 }
 EXPORT_SYMBOL_GPL(extcon_sync);
 
@@ -606,15 +597,99 @@ int extcon_set_state_sync(struct extcon_dev *edev, unsigned int id, bool state)
 	return extcon_sync(edev, id);
 }
 EXPORT_SYMBOL_GPL(extcon_set_state_sync);
-
 #ifdef CONFIG_MACH_ASUS
+//ASUS_BSP charger +++
+int asus_extcon_get_state(struct extcon_dev *edev)
+{
+	int state = edev->state;
+
+	if (!edev)
+		return -EINVAL;
+
+	return state;
+}
+EXPORT_SYMBOL_GPL(asus_extcon_get_state);
+
+void asus_extcon_set_fnode_name(struct extcon_dev *edev, const char *fname)
+{
+	if (!edev)
+		return;
+
+	edev->fnode_name = fname;
+}
+EXPORT_SYMBOL_GPL(asus_extcon_set_fnode_name);
+
+void asus_extcon_set_name(struct extcon_dev *edev, const char *name)
+{
+	if (!edev)
+		return;
+
+	edev->name = name;
+}
+EXPORT_SYMBOL_GPL(asus_extcon_set_name);
+
+static bool asus_is_extcon_changed(struct extcon_dev *edev, int new_state)
+{
+	int state = edev->state;
+	printk("[BAT]state=%d",state);
+	return (state != new_state);
+}
+
 int asus_extcon_sync(struct extcon_dev *edev)
 {
-	return _extcon_sync(edev, 0, false);
+	char name_buf[120];
+	char state_buf[120];
+	char *prop_buf;
+	char *envp[3];
+	int env_offset = 0;
+	int length;
+	unsigned long flags;
+
+	if (!edev)
+		return -EINVAL;
+
+	spin_lock_irqsave(&edev->lock, flags);
+
+	/* This could be in interrupt handler */
+	prop_buf = (char *)get_zeroed_page(GFP_ATOMIC);
+	if (!prop_buf) {
+		/* Unlock early before uevent */
+		spin_unlock_irqrestore(&edev->lock, flags);
+
+		dev_err(&edev->dev, "out of memory in extcon_set_state\n");
+		kobject_uevent(&edev->dev.kobj, KOBJ_CHANGE);
+
+		return -ENOMEM;
+	}
+
+	length = name_show(&edev->dev, NULL, prop_buf);
+	if (length > 0) {
+		if (prop_buf[length - 1] == '\n')
+			prop_buf[length - 1] = 0;
+		snprintf(name_buf, sizeof(name_buf), "NAME=%s", prop_buf);
+		envp[env_offset++] = name_buf;
+	}
+
+	length = state_show(&edev->dev, NULL, prop_buf);
+	if (length > 0) {
+		if (prop_buf[length - 1] == '\n')
+			prop_buf[length - 1] = 0;
+		snprintf(state_buf, sizeof(state_buf), "STATE=%s", prop_buf);
+		envp[env_offset++] = state_buf;
+	}
+	envp[env_offset] = NULL;
+
+	/* Unlock early before uevent */
+	spin_unlock_irqrestore(&edev->lock, flags);
+	kobject_uevent_env(&edev->dev.kobj, KOBJ_CHANGE, envp);
+	free_page((unsigned long)prop_buf);
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(asus_extcon_sync);
 
-static int asus_extcon_set_state(struct extcon_dev *edev, int cable_state)
+bool boot_completed_flag = 1;
+int asus_extcon_set_state(struct extcon_dev *edev, int cable_state)
 {
 	unsigned long flags;
 
@@ -623,28 +698,65 @@ static int asus_extcon_set_state(struct extcon_dev *edev, int cable_state)
 
 	spin_lock_irqsave(&edev->lock, flags);
 
-	if (edev->state != cable_state)
+	/* Check whether the external connector's state is changed. */
+	if (!asus_is_extcon_changed(edev, cable_state) || !boot_completed_flag)
 		goto out;
 
+	/* Don't check mutual exclusiveness & property since the state no longer represents multi-cable. */
+	/* Update the state for a external connector. */
 	edev->state = cable_state;
-
 out:
 	spin_unlock_irqrestore(&edev->lock, flags);
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(asus_extcon_set_state);
 
 int asus_extcon_set_state_sync(struct extcon_dev *edev, int cable_state)
 {
 	int ret;
+	unsigned long flags;
 
+	/* Check whether the external connector's state is changed. */
+	spin_lock_irqsave(&edev->lock, flags);
+	printk("[BAT]asus_is_extcon_changed");
+	ret = asus_is_extcon_changed(edev, cable_state);
+	printk("[BAT]%d",ret);
+	spin_unlock_irqrestore(&edev->lock, flags);
+	if (!ret)
+		return 0;
+	printk("[BAT]asus_extcon_set_state");
 	ret = asus_extcon_set_state(edev, cable_state);
-	if (ret)
+	if (ret < 0)
 		return ret;
 
 	return asus_extcon_sync(edev);
 }
 EXPORT_SYMBOL_GPL(asus_extcon_set_state_sync);
+//ASUS_BSP charger ---
+
+//ASUS_BSP +++
+int asus_extcon_set_Capstate_sync(struct extcon_dev *edev, int cable_state)
+{
+	int ret;
+	unsigned long flags;
+	printk("[CAP] %s", edev->name);
+	/* Check whether the external connector's state is changed. */
+	spin_lock_irqsave(&edev->lock, flags);
+	ret = asus_is_extcon_changed(edev, cable_state);
+	printk("[CAP] CAP_extcon_changed ret = %d", ret);
+	spin_unlock_irqrestore(&edev->lock, flags);
+	if (!ret)
+		return 0;
+	ret = asus_extcon_set_state(edev, cable_state);
+	printk("[CAP] CAP_extcon_changed set state = %d", ret);
+	if (ret < 0)
+		return ret;
+
+	return asus_extcon_sync(edev);
+}
+EXPORT_SYMBOL_GPL(asus_extcon_set_Capstate_sync);
+//ASUS_BSP  ---
 #endif
 
 /**
