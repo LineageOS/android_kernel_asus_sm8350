@@ -1,3 +1,42 @@
+ifeq ($(CONFIG_MACH_ASUS_SAKE), y)
+dtbo-y += \
+	SAKE-ER1-overlay.dtbo \
+	SAKE-ER2-overlay.dtbo \
+	SAKE-EVB-overlay.dtbo \
+	SAKE-EVB2-overlay.dtbo \
+	SAKE-MP-overlay.dtbo \
+	SAKE-PR-overlay.dtbo \
+	SAKE-SR1-overlay.dtbo \
+	SAKE-SR2-overlay.dtbo
+
+SAKE-ER1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-ER2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-EVB-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-EVB2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-MP-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-PR-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-SR1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-SR2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+else ifeq ($(CONFIG_MACH_ASUS_VODKA), y)
+dtbo-$(CONFIG_MACH_ASUS_VODKA) += \
+	VODKA-ER1-overlay.dtbo \
+	VODKA-ER2-overlay.dtbo \
+	VODKA-EVB-overlay.dtbo \
+	VODKA-EVB2-overlay.dtbo \
+	VODKA-MP-overlay.dtbo \
+	VODKA-PR-overlay.dtbo \
+	VODKA-SR1-overlay.dtbo \
+	VODKA-SR2-overlay.dtbo
+
+VODKA-ER1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-ER2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-EVB-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-EVB2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-MP-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-PR-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-SR1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-SR2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+else
 ifneq ($(CONFIG_ARCH_QTI_VM), y)
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
 dtbo-$(CONFIG_ARCH_LAHAINA) += lahaina-rumi-overlay.dtbo \
@@ -489,6 +528,7 @@ dtb-$(CONFIG_ARCH_DIREWOLF) += direwolf-ivi-rumi.dtb \
 	direwolf-ivi-adp-star.dtb \
 	direwolf-adas-rumi.dtb \
 	direwolf-adas-adp-star.dtb
+endif
 endif
 
 always		:= $(dtb-y)
