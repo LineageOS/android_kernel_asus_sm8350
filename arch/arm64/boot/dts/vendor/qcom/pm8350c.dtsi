@@ -38,8 +38,8 @@
 			nvmem = <&pmk8350_sdam_21 &pmk8350_sdam_22>;
 			nvmem-names = "lpg_chan_sdam", "lut_sdam";
 			qcom,lut-sdam-base = <0x45>;
-			qcom,lut-patterns = <0 10 20 30 40 50 60 70 80 90 100
-					     90 80 70 60 50 40 30 20 10 0>;
+			qcom,lut-patterns = <10 10 10 10 0 0 0 0 0 0 0
+					     0 0 0 0 0 0 0 0 0 0>;
 			qcom,tick-duration-us = <8000>;
 
 			lpg@1 {
