@@ -51,12 +51,16 @@
 #define WLS_FW_BUF_SIZE			128
 #define DEFAULT_RESTRICT_FCC_UA		1000000
 
+#ifdef CONFIG_MACH_ASUS
+//Move to battery_charger.h
+#else
 enum psy_type {
 	PSY_TYPE_BATTERY,
 	PSY_TYPE_USB,
 	PSY_TYPE_WLS,
 	PSY_TYPE_MAX,
 };
+#endif
 
 enum ship_mode_type {
 	SHIP_MODE_PMIC,
@@ -201,6 +205,11 @@ struct battery_charger_ship_mode_req_msg {
 	u32			ship_mode_type;
 };
 
+#ifdef CONFIG_MACH_ASUS
+struct battery_chg_dev *g_bcdev;
+#endif
+
+#ifndef CONFIG_MACH_ASUS
 struct psy_state {
 	struct power_supply	*psy;
 	char			*model;
@@ -244,6 +253,7 @@ struct battery_chg_dev {
 	/* To track the driver initialization status */
 	bool				initialized;
 };
+#endif
 
 static const int battery_prop_map[BATT_PROP_MAX] = {
 	[BATT_STATUS]		= POWER_SUPPLY_PROP_STATUS,
@@ -326,7 +336,7 @@ static int battery_chg_fw_write(struct battery_chg_dev *bcdev, void *data,
 	return rc;
 }
 
-static int battery_chg_write(struct battery_chg_dev *bcdev, void *data,
+int battery_chg_write(struct battery_chg_dev *bcdev, void *data,
 				int len)
 {
 	int rc;
@@ -841,6 +851,10 @@ static int usb_psy_set_icl(struct battery_chg_dev *bcdev, u32 prop_id, int val)
 	 * port type. Also, clients like EUD driver can pass 0 or -22 to
 	 * suspend or unsuspend the input for its use case.
 	 */
+#ifdef CONFIG_MACH_ASUS
+		if (val == 2000)
+			val = 100000;
+#endif
 
 	temp = val;
 	if (val < 0)
@@ -878,6 +892,10 @@ static int usb_psy_get_prop(struct power_supply *psy,
 	pval->intval = pst->prop[prop_id];
 	if (prop == POWER_SUPPLY_PROP_TEMP)
 		pval->intval = DIV_ROUND_CLOSEST((int)pval->intval, 10);
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	else if (prop == POWER_SUPPLY_PROP_ONLINE)
+		asus_monitor_start(pval->intval);
+#endif
 
 	return 0;
 }
@@ -896,6 +914,9 @@ static int usb_psy_set_prop(struct power_supply *psy,
 
 	switch (prop) {
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT:
+#ifdef CONFIG_MACH_ASUS
+		printk(KERN_ERR "[BAT][CHG] INPUT_CURRENT_LIMIT. val : %d uA\n", pval->intval);//ASUS_BSP
+#endif
 		rc = usb_psy_set_icl(bcdev, prop_id, pval->intval);
 		break;
 	default:
@@ -1050,6 +1071,12 @@ static int battery_psy_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT_MAX:
 		pval->intval = bcdev->num_thermal_levels;
 		break;
+#ifdef CONFIG_MACH_ASUS
+	case POWER_SUPPLY_PROP_STATUS:
+		pval->intval = pst->prop[prop_id];
+		set_qc_stat(pval->intval);
+		break;
+#endif
 	default:
 		pval->intval = pst->prop[prop_id];
 		break;
@@ -1950,6 +1977,12 @@ static int battery_chg_probe(struct platform_device *pdev)
 	battery_chg_add_debugfs(bcdev);
 	battery_chg_notify_enable(bcdev);
 	device_init_wakeup(bcdev->dev, true);
+
+#ifdef CONFIG_MACH_ASUS
+	g_bcdev = bcdev;
+	asuslib_init();
+#endif
+
 	schedule_work(&bcdev->usb_type_work);
 
 	return 0;
@@ -1970,6 +2003,11 @@ static int battery_chg_remove(struct platform_device *pdev)
 	debugfs_remove_recursive(bcdev->debugfs_dir);
 	class_unregister(&bcdev->battery_class);
 	unregister_reboot_notifier(&bcdev->reboot_notifier);
+
+#ifdef CONFIG_MACH_ASUS
+	asuslib_deinit();
+#endif
+
 	rc = pmic_glink_unregister_client(bcdev->client);
 	if (rc < 0) {
 		pr_err("Error unregistering from pmic_glink, rc=%d\n", rc);
@@ -1984,10 +2022,19 @@ static const struct of_device_id battery_chg_match_table[] = {
 	{},
 };
 
+#ifdef CONFIG_MACH_ASUS
+static const struct dev_pm_ops asus_chg_pm_ops = {
+	.resume		= asus_chg_resume,
+};
+#endif
+
 static struct platform_driver battery_chg_driver = {
 	.driver = {
 		.name = "qti_battery_charger",
 		.of_match_table = battery_chg_match_table,
+#ifdef CONFIG_MACH_ASUS
+		.pm	= &asus_chg_pm_ops,
+#endif
 	},
 	.probe = battery_chg_probe,
 	.remove = battery_chg_remove,
