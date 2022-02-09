@@ -22,6 +22,26 @@ dtbo-$(CONFIG_ARCH_LAHAINA) += lahaina-rumi-overlay.dtbo \
 	lahaina-cdp-hsp-pro-overlay.dtbo \
 	lahaina-qrd-hsp-pro-overlay.dtbo
 
+dtbo-$(CONFIG_MACH_ASUS_SAKE) += \
+	SAKE-ER1-overlay.dtbo \
+	SAKE-ER2-overlay.dtbo \
+	SAKE-EVB-overlay.dtbo \
+	SAKE-EVB2-overlay.dtbo \
+	SAKE-MP-overlay.dtbo \
+	SAKE-PR-overlay.dtbo \
+	SAKE-SR1-overlay.dtbo \
+	SAKE-SR2-overlay.dtbo
+
+dtbo-$(CONFIG_MACH_ASUS_VODKA) += \
+	VODKA-ER1-overlay.dtbo \
+	VODKA-ER2-overlay.dtbo \
+	VODKA-EVB-overlay.dtbo \
+	VODKA-EVB2-overlay.dtbo \
+	VODKA-MP-overlay.dtbo \
+	VODKA-PR-overlay.dtbo \
+	VODKA-SR1-overlay.dtbo \
+	VODKA-SR2-overlay.dtbo
+
 lahaina-rumi-overlay.dtbo-base := lahaina.dtb
 lahaina-mtp-hsp-overlay.dtbo-base := lahaina.dtb
 lahaina-mtp-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
@@ -49,6 +69,25 @@ lahaina-cdp-hsp-pro-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb \
 					lahaina-v2.1.dtb
 lahaina-qrd-hsp-pro-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb \
 					lahaina-v2.1.dtb
+
+SAKE-ER1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-ER2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-EVB-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-EVB2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-MP-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-PR-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-SR1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+SAKE-SR2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+
+VODKA-ER1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-ER2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-EVB-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-EVB2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-MP-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-PR-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-SR1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+VODKA-SR2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
+
 else
 dtb-$(CONFIG_ARCH_LAHAINA) += lahaina-rumi.dtb \
 	lahaina-mtp-hsp.dtb \
