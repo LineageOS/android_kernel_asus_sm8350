@@ -9,6 +9,7 @@
 #include "cam_actuator_core.h"
 #include "cam_trace.h"
 #include "camera_main.h"
+#include "asus_actuator.h"
 
 static int cam_actuator_subdev_close_internal(struct v4l2_subdev *sd,
 	struct v4l2_subdev_fh *fh)
@@ -330,6 +331,9 @@ static int cam_actuator_component_bind(struct device *dev,
 
 	platform_set_drvdata(pdev, a_ctrl);
 	a_ctrl->cam_act_state = CAM_ACTUATOR_INIT;
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+	asus_actuator_init(a_ctrl);
+#endif
 	CAM_DBG(CAM_ACTUATOR, "Component bound successfully");
 
 	return rc;
