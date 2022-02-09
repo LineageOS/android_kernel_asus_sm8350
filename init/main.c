@@ -154,6 +154,23 @@ static char *ramdisk_execute_command;
 bool static_key_initialized __read_mostly;
 EXPORT_SYMBOL_GPL(static_key_initialized);
 
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+enum DEVICE_HWID g_ASUS_hwID = HW_REV_INVALID;
+EXPORT_SYMBOL(g_ASUS_hwID);
+static int set_hardware_id(char *str)
+{
+	if (strlen(str) > 1)
+		return 0;
+
+	g_ASUS_hwID = str[0] - '0';
+
+	printk("g_Asus_hwID = %d\n", g_ASUS_hwID);
+
+	return 0;
+}
+__setup("androidboot.id.stage=", set_hardware_id);
+#endif
+
 /*
  * If set, this is an indication to the drivers that reset the underlying
  * device before going ahead with the initialization otherwise driver might
