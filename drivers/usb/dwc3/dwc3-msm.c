@@ -5060,6 +5060,7 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 	}
 
 	if (!mdwc->role_switch && !mdwc->extcon) {
+#ifndef CONFIG_MACH_ASUS
 		switch (dwc->dr_mode) {
 		case USB_DR_MODE_OTG:
 			if (of_property_read_bool(node,
@@ -5089,6 +5090,7 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 		}
 
 		dwc3_ext_event_notify(mdwc);
+#endif
 	}
 
 	device_create_file(&pdev->dev, &dev_attr_orientation);
