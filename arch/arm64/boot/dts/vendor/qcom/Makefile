@@ -7,23 +7,11 @@ SAKE-MP-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 SAKE-PR-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 else ifeq ($(CONFIG_MACH_ASUS_VODKA), y)
 dtbo-$(CONFIG_MACH_ASUS_VODKA) += \
-	VODKA-ER1-overlay.dtbo \
-	VODKA-ER2-overlay.dtbo \
-	VODKA-EVB-overlay.dtbo \
-	VODKA-EVB2-overlay.dtbo \
 	VODKA-MP-overlay.dtbo \
-	VODKA-PR-overlay.dtbo \
-	VODKA-SR1-overlay.dtbo \
-	VODKA-SR2-overlay.dtbo
+	VODKA-PR-overlay.dtbo
 
-VODKA-ER1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-VODKA-ER2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-VODKA-EVB-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-VODKA-EVB2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 VODKA-MP-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 VODKA-PR-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-VODKA-SR1-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
-VODKA-SR2-overlay.dtbo-base := $(lahaina-mtp-overlay.dtbo-base)
 else
 ifneq ($(CONFIG_ARCH_QTI_VM), y)
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
