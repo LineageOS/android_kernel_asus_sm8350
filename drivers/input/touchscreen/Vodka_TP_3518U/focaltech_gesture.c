@@ -33,8 +33,6 @@
 * 1.Included header files
 *****************************************************************************/
 #include "focaltech_core.h"
-// Vodka_BSP Display
-#include <drm/drm_zf8.h>
 
 /******************************************************************************
 * Private constant and macro definitions using #define
@@ -383,8 +381,6 @@ static void fts_gesture_report(struct input_dev *input_dev, int gesture_id)
         break;
     case GESTURE_F:
 	if ((ts_data->fp_enable == 1) && (ts_data->fp_report_type != 0)) {
-		// Vodka BSP Display
-                zf8_drm_notify(ASUS_NOTIFY_FOD_TOUCHED, 1);
 		gesture = KEY_GESTURE_F;
 		FTS_INFO("key F");
 		fts_data->next_resume_isaod = true;

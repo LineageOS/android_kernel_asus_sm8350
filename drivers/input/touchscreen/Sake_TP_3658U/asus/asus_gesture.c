@@ -1,7 +1,5 @@
 #include "focaltech_core.h"
 #include "asus_tp.h"
-/* Sake BSP Display +++ */
-#include <drm/drm_zf8.h>
 
 /**********************************************************
 report key code
@@ -113,8 +111,6 @@ void asus_gesture_report(struct fts_ts_data *ts_data, int gesture_id)
     case GESTURE_F:
 	if ((ts_data->fp_enable == 1) && (ts_data-> fp_report_type!=0)) {
 	  FTS_INFO("key F");
-	  /* ASUS BSP Display +++ */
-	  zf8_drm_notify(ASUS_NOTIFY_FOD_TOUCHED, 1);
 	  ts_data->next_resume_isaod = true;
 	  ts_data->fp_filter = true;
 	  gesture = KEY_GESTURE_F;

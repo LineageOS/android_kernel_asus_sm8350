@@ -53,8 +53,6 @@
 #endif
 #include "focaltech_core.h"
 #include "asus_tp.h"
-/* ASUS BSP Display +++ */
-#include <drm/drm_zf8.h>
 
 /*****************************************************************************
 * Private constant and macro definitions using #define
@@ -565,8 +563,6 @@ static int fts_input_report_b(struct fts_ts_data *data)
                         input_sync(data->input_dev);
                         input_report_key(data->input_dev, KEY_F,0);
                         input_sync(data->input_dev);
-                        /* ASUS BSP Display +++ */
-                        zf8_drm_notify(ASUS_NOTIFY_FOD_TOUCHED, 1);
                         data->fp_x = events[i].x;
                         data->fp_y = events[i].y;
                         fp_press = 2;
