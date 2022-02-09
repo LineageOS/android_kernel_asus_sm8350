@@ -1,0 +1,22 @@
+# Asus configuration options
+
+config MACH_ASUS
+	bool "Asus device"
+	help
+	  Support for Asus products
+
+menu "Asus board selection"
+
+config MACH_ASUS_SAKE
+	bool "SAKE board"
+	select MACH_ASUS
+	help
+	  Support for Sake
+
+config MACH_ASUS_VODKA
+	bool "VODKA board"
+	select MACH_ASUS
+	help
+	  Support for Vodka
+
+endmenu
