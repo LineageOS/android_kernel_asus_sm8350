@@ -1333,4 +1333,8 @@ source "drivers/input/touchscreen/synaptics_dsx/Kconfig"
 
 source "drivers/input/touchscreen/nt36xxx/Kconfig"
 
+source "drivers/input/touchscreen/Sake_TP_3658U/Kconfig"
+
+source "drivers/input/touchscreen/Vodka_TP_3518U/Kconfig"
+
 endif
