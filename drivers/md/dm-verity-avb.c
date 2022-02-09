@@ -103,7 +103,9 @@ static int invalidate_vbmeta(dev_t vbmeta_devt)
 	/* We have a page. Let's make sure it looks right. */
 	if (memcmp("AVB0", page_address(page), 4) == 0) {
 		/* Stamp it. */
+#if !defined ASUS_SAKE_PROJECT && !defined ASUS_VODKA_PROJECT
 		memcpy(page_address(page), "AVE0", 4);
+#endif
 		DMINFO("invalidate_vbmeta: found vbmeta partition");
 	} else {
 		/* Could be this is on a AVB footer, check. Also, since the
@@ -125,7 +127,9 @@ static int invalidate_vbmeta(dev_t vbmeta_devt)
 			goto invalid_header;
 		}
 		/* Stamp it. */
+#if !defined ASUS_SAKE_PROJECT && !defined ASUS_VODKA_PROJECT
 		memcpy(page_address(page) + offset, "AVE0", 4);
+#endif
 		DMINFO("invalidate_vbmeta: found vbmeta footer partition");
 	}
 
