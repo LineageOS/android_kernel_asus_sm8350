@@ -29,7 +29,7 @@
 	pcm_noirq: qcom,msm-pcm-dsp-noirq {
 		compatible = "qcom,msm-pcm-dsp-noirq";
 		qcom,msm-pcm-low-latency;
-		qcom,latency-level = "ultra";
+		qcom,latency-level = "ull-pp";
 	};
 
 	trans_loopback: qcom,msm-transcode-loopback {
