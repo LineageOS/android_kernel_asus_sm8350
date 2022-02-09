@@ -19,6 +19,22 @@
 #include <uapi/linux/kernel.h>
 #include <asm/div64.h>
 
+#if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+enum DEVICE_HWID
+{
+       HW_REV_INVALID 	= -1,
+       HW_REV_EVB    		= 0,
+       HW_REV_EVB2   		= 1,
+       HW_REV_SR     		= 2,
+       HW_REV_SR2     		= 3,
+       HW_REV_ER    		= 4,
+       HW_REV_ER2     		= 5,
+       HW_REV_PR    		= 6,
+       HW_REV_MP     		= 7
+};
+extern enum DEVICE_HWID g_ASUS_hwID;
+#endif
+
 #define STACK_MAGIC	0xdeadbeef
 
 /**
