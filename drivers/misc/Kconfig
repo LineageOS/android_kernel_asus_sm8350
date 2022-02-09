@@ -540,4 +540,5 @@ source "drivers/misc/ocxl/Kconfig"
 source "drivers/misc/cardreader/Kconfig"
 source "drivers/misc/habanalabs/Kconfig"
 source "drivers/misc/aw8697_haptic/Kconfig"
+source "drivers/misc/latch_ak09973/Kconfig"
 endmenu
