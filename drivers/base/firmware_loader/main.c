@@ -475,6 +475,11 @@ fw_get_filesystem_firmware(struct device *device, struct fw_priv *fw_priv,
 	size_t msize = INT_MAX;
 	void *buffer = NULL;
 
+#if defined ASUS_VODKA_PROJECT
+	if (!strncmp(fw_priv->fw_name, "tfa98xx.cnt", 11))
+		return -2;
+#endif
+
 	/* Already populated data member means we're loading into a buffer */
 	if (!decompress && fw_priv->data) {
 		buffer = fw_priv->data;
