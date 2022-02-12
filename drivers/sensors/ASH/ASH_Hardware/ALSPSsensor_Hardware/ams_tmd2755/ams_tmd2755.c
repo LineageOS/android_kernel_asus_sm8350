@@ -76,12 +76,12 @@ MODULE_VERSION("1.10");
 
 #undef dbg
 #ifdef ASH_GPIO_DEBUG
-	#define dbg(fmt, args...) printk(KERN_DEBUG "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
+	#define dbg(fmt, args...) pr_debug(KERN_DEBUG "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
 #else
 	#define dbg(fmt, args...)
 #endif
-#define log(fmt, args...) printk(KERN_INFO "[%s]"fmt,MODULE_NAME,##args)
-#define err(fmt, args...) printk(KERN_ERR "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
+#define log(fmt, args...) pr_debug("[%s]"fmt,MODULE_NAME,##args)
+#define err(fmt, args...) pr_debug("[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
 
 #include <linux/of_gpio.h>
 
@@ -926,7 +926,7 @@ void tmd2755_reg_log(struct tmd2755_chip *chip)
 	buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
 	if (buf) {
 		tmd2755_registers_get(chip, &buf[0], PAGE_SIZE);
-		printk(KERN_ERR "%s", buf);
+		pr_debug("%s", buf);
 		kfree(buf);
 	} else {
 		dev_err(&chip->client->dev, "%*.*s():%*d --> Out of memory\n",

@@ -36,7 +36,7 @@
 	s32 ret_val = val;                        \
 	if ((val < y.min) || (val > y.max)) {     \
 		ret_val = y.def;                  \
-		printk(KERN_WARNING "WARNING: Default parameter value being used: %s (attempted val=%d min=%d max=%d def=%d)\n", y.name, val, y.min, y.max, y.def);  \
+		pr_debug(KERN_WARNING "WARNING: Default parameter value being used: %s (attempted val=%d min=%d max=%d def=%d)\n", y.name, val, y.min, y.max, y.def);  \
 	}                                         \
 	ret_val;                                  \
 })
