@@ -27,12 +27,12 @@
 
 #undef dbg
 #ifdef ASH_I2C_DEBUG
-	#define dbg(fmt, args...) printk(KERN_DEBUG "[%s]"fmt,MODULE_NAME,##args)
+	#define dbg(fmt, args...) pr_debug(KERN_DEBUG "[%s]"fmt,MODULE_NAME,##args)
 #else
 	#define dbg(fmt, args...)
 #endif
-#define log(fmt, args...) printk(KERN_INFO "[%s]"fmt,MODULE_NAME,##args)
-#define err(fmt, args...) printk(KERN_ERR "[%s]"fmt,MODULE_NAME,##args)
+#define log(fmt, args...) pr_debug("[%s]"fmt,MODULE_NAME,##args)
+#define err(fmt, args...) pr_debug("[%s]"fmt,MODULE_NAME,##args)
 
 /****************************/
 /*i2c read/write function*/
