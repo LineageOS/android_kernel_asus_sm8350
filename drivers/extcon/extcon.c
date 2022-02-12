@@ -631,7 +631,7 @@ EXPORT_SYMBOL_GPL(asus_extcon_set_name);
 static bool asus_is_extcon_changed(struct extcon_dev *edev, int new_state)
 {
 	int state = edev->state;
-	printk("[BAT]state=%d",state);
+	pr_debug("[BAT]state=%d",state);
 	return (state != new_state);
 }
 
@@ -719,13 +719,13 @@ int asus_extcon_set_state_sync(struct extcon_dev *edev, int cable_state)
 
 	/* Check whether the external connector's state is changed. */
 	spin_lock_irqsave(&edev->lock, flags);
-	printk("[BAT]asus_is_extcon_changed");
+	pr_debug("[BAT]asus_is_extcon_changed");
 	ret = asus_is_extcon_changed(edev, cable_state);
-	printk("[BAT]%d",ret);
+	pr_debug("[BAT]%d",ret);
 	spin_unlock_irqrestore(&edev->lock, flags);
 	if (!ret)
 		return 0;
-	printk("[BAT]asus_extcon_set_state");
+	pr_debug("[BAT]asus_extcon_set_state");
 	ret = asus_extcon_set_state(edev, cable_state);
 	if (ret < 0)
 		return ret;
@@ -740,16 +740,16 @@ int asus_extcon_set_Capstate_sync(struct extcon_dev *edev, int cable_state)
 {
 	int ret;
 	unsigned long flags;
-	printk("[CAP] %s", edev->name);
+	pr_debug("[CAP] %s", edev->name);
 	/* Check whether the external connector's state is changed. */
 	spin_lock_irqsave(&edev->lock, flags);
 	ret = asus_is_extcon_changed(edev, cable_state);
-	printk("[CAP] CAP_extcon_changed ret = %d", ret);
+	pr_debug("[CAP] CAP_extcon_changed ret = %d", ret);
 	spin_unlock_irqrestore(&edev->lock, flags);
 	if (!ret)
 		return 0;
 	ret = asus_extcon_set_state(edev, cable_state);
-	printk("[CAP] CAP_extcon_changed set state = %d", ret);
+	pr_debug("[CAP] CAP_extcon_changed set state = %d", ret);
 	if (ret < 0)
 		return ret;
 
