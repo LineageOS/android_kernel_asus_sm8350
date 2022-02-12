@@ -707,6 +707,10 @@ int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
 			return rc;
 
 		panel->fod_hbm_enabled = false;
+
+		rc = dsi_panel_update_aod_mode(panel, panel->power_mode);
+		if (rc)
+			return rc;
 	}
 
 	sysfs_notify(&panel->parent->kobj, NULL, "fod_ui");
