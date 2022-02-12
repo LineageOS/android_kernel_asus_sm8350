@@ -60,11 +60,11 @@ extern tmd2755_status_param g_tmd2755_status_param;
 
 #if defined(AMS_MUTEX_DEBUG)
 #define AMS_MUTEX_LOCK(m) { \
-        printk(KERN_INFO "%s:%s() --> Mutex Lock\n", __FILE__, __func__); \
+        pr_debug("%s:%s() --> Mutex Lock\n", __FILE__, __func__); \
         mutex_lock(m); \
     }
 #define AMS_MUTEX_UNLOCK(m) { \
-        printk(KERN_INFO "%s:%s() --> Mutex Unlock\n", __FILE__, __func__); \
+        pr_debug("%s:%s() --> Mutex Unlock\n", __FILE__, __func__); \
         mutex_unlock(m); \
     }
 #else
