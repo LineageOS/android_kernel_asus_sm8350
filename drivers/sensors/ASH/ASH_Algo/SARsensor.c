@@ -32,13 +32,13 @@
 #define SENSOR_TYPE_NAME	"SAR"
 #undef dbg
 #ifdef ASH_ALGO_DEBUG
-	#define dbg(fmt, args...) printk(KERN_DEBUG "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
+	#define dbg(fmt, args...) pr_debug(KERN_DEBUG "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
 #else
 	#define dbg(fmt, args...)
 #endif
-#define log(fmt, args...) printk(KERN_INFO "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
+#define log(fmt, args...) pr_debug("[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args)
 #define err(fmt, args...) do{	\
-		printk(KERN_ERR "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args);	\
+		pr_debug("[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args);	\
 		sprintf(g_error_mesg, "[%s][%s]"fmt,MODULE_NAME,SENSOR_TYPE_NAME,##args);	\
 	}while(0)
 
