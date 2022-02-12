@@ -663,6 +663,26 @@ static u32 dsi_panel_get_fod_dim_alpha(struct dsi_panel *panel)
 			   panel->fod_dim_lut[i].alpha);
 }
 
+int dsi_panel_update_aod_mode(struct dsi_panel *panel, int power_mode)
+{
+	u32 bl_lvl = panel->bl_config.real_bl_level;
+	enum dsi_cmd_set_type cmd;
+
+	if (power_mode != SDE_MODE_DPMS_LP1 && power_mode != SDE_MODE_DPMS_LP2)
+		return 0;
+
+	if (bl_lvl == 0)
+		cmd = DSI_CMD_SET_AOD_OFF;
+	if (bl_lvl == 64)
+		cmd = DSI_CMD_SET_AOD_HIGH;
+	else if (bl_lvl == 4)
+		cmd = DSI_CMD_SET_AOD_LOW;
+	else
+		cmd = DSI_CMD_SET_AOD_OTHER;
+
+	return dsi_panel_tx_cmd_set(panel, cmd);
+}
+
 int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
 {
 	int rc;
@@ -717,11 +737,14 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 		rc = -ENOTSUPP;
 	}
 
+	if (rc)
+		return rc;
+
 	bl->real_bl_level = bl_lvl;
 
 	panel->fod_dim_alpha = dsi_panel_get_fod_dim_alpha(panel);
 
-	return rc;
+	return dsi_panel_update_aod_mode(panel, panel->power_mode);
 }
 
 static u32 dsi_panel_get_brightness(struct dsi_backlight_config *bl)
@@ -4477,9 +4500,14 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		dsi_pwr_panel_regulator_mode_set(&panel->power_info,
 			"ibb", REGULATOR_MODE_IDLE);
 	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LP1);
-	if (rc)
+	if (rc) {
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_LP1 cmd, rc=%d\n",
 		       panel->name, rc);
+		goto exit;
+	}
+
+	rc = dsi_panel_update_aod_mode(panel, SDE_MODE_DPMS_LP1);
+
 exit:
 	mutex_unlock(&panel->panel_lock);
 	return rc;
@@ -4499,9 +4527,14 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 		goto exit;
 
 	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LP2);
-	if (rc)
+	if (rc) {
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_LP2 cmd, rc=%d\n",
 		       panel->name, rc);
+		goto exit;
+	}
+
+	rc = dsi_panel_update_aod_mode(panel, SDE_MODE_DPMS_LP2);
+
 exit:
 	mutex_unlock(&panel->panel_lock);
 	return rc;
