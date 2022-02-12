@@ -671,6 +671,9 @@ int dsi_panel_update_aod_mode(struct dsi_panel *panel, int power_mode)
 	if (power_mode != SDE_MODE_DPMS_LP1 && power_mode != SDE_MODE_DPMS_LP2)
 		return 0;
 
+	if (panel->fod_hbm_enabled)
+		return 0;
+
 	if (bl_lvl == 0)
 		cmd = DSI_CMD_SET_AOD_OFF;
 	if (bl_lvl == 64)
