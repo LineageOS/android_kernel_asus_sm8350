@@ -97,8 +97,8 @@ static int fts_ex_mode_switch(enum _ex_mode mode, u8 value)
 	return ret;
 }
 
-static ssize_t fts_glove_mode_show(
-	struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t fts_glove_mode_show(struct device *dev,
+				   struct device_attribute *attr, char *buf)
 {
 	int count = 0;
 	u8 val = 0;
@@ -108,17 +108,17 @@ static ssize_t fts_glove_mode_show(
 	mutex_lock(&input_dev->mutex);
 	fts_read_reg(FTS_REG_GLOVE_MODE_EN, &val);
 	count = scnprintf(buf + count, PAGE_SIZE, "Glove Mode:%s\n",
-			ts_data->glove_mode ? "On" : "Off");
+			  ts_data->glove_mode ? "On" : "Off");
 	count += scnprintf(buf + count, PAGE_SIZE - count,
-			"Glove Reg(0xC0):%d\n", val);
+			   "Glove Reg(0xC0):%d\n", val);
 	mutex_unlock(&input_dev->mutex);
 
 	return count;
 }
 
-static ssize_t fts_glove_mode_store(
-	struct device *dev,
-	struct device_attribute *attr, const char *buf, size_t count)
+static ssize_t fts_glove_mode_store(struct device *dev,
+				    struct device_attribute *attr,
+				    const char *buf, size_t count)
 {
 	int ret = 0;
 	struct fts_ts_data *ts_data = fts_data;
@@ -145,9 +145,8 @@ static ssize_t fts_glove_mode_store(
 	return count;
 }
 
-
-static ssize_t fts_cover_mode_show(
-	struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t fts_cover_mode_show(struct device *dev,
+				   struct device_attribute *attr, char *buf)
 {
 	int count = 0;
 	u8 val = 0;
@@ -157,17 +156,17 @@ static ssize_t fts_cover_mode_show(
 	mutex_lock(&input_dev->mutex);
 	fts_read_reg(FTS_REG_COVER_MODE_EN, &val);
 	count = scnprintf(buf + count, PAGE_SIZE, "Cover Mode:%s\n",
-			ts_data->cover_mode ? "On" : "Off");
+			  ts_data->cover_mode ? "On" : "Off");
 	count += scnprintf(buf + count, PAGE_SIZE - count,
-			"Cover Reg(0xC1):%d\n", val);
+			   "Cover Reg(0xC1):%d\n", val);
 	mutex_unlock(&input_dev->mutex);
 
 	return count;
 }
 
-static ssize_t fts_cover_mode_store(
-	struct device *dev,
-	struct device_attribute *attr, const char *buf, size_t count)
+static ssize_t fts_cover_mode_store(struct device *dev,
+				    struct device_attribute *attr,
+				    const char *buf, size_t count)
 {
 	int ret = 0;
 	struct fts_ts_data *ts_data = fts_data;
@@ -194,8 +193,8 @@ static ssize_t fts_cover_mode_store(
 	return count;
 }
 
-static ssize_t fts_charger_mode_show(
-	struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t fts_charger_mode_show(struct device *dev,
+				     struct device_attribute *attr, char *buf)
 {
 	int count = 0;
 	u8 val = 0;
@@ -205,17 +204,17 @@ static ssize_t fts_charger_mode_show(
 	mutex_lock(&input_dev->mutex);
 	fts_read_reg(FTS_REG_CHARGER_MODE_EN, &val);
 	count = scnprintf(buf + count, PAGE_SIZE, "Charger Mode:%s\n",
-			ts_data->charger_mode ? "On" : "Off");
+			  ts_data->charger_mode ? "On" : "Off");
 	count += scnprintf(buf + count, PAGE_SIZE - count,
-			"Charger Reg(0x8B):%d\n", val);
+			   "Charger Reg(0x8B):%d\n", val);
 	mutex_unlock(&input_dev->mutex);
 
 	return count;
 }
 
-static ssize_t fts_charger_mode_store(
-	struct device *dev,
-	struct device_attribute *attr, const char *buf, size_t count)
+static ssize_t fts_charger_mode_store(struct device *dev,
+				      struct device_attribute *attr,
+				      const char *buf, size_t count)
 {
 	int ret = 0;
 	struct fts_ts_data *ts_data = fts_data;
@@ -242,8 +241,8 @@ static ssize_t fts_charger_mode_store(
 	return count;
 }
 
-static ssize_t fts_report_rate_show(
-	struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t fts_report_rate_show(struct device *dev,
+				    struct device_attribute *attr, char *buf)
 {
 	int count = 0;
 	u8 val = 0;
@@ -252,18 +251,18 @@ static ssize_t fts_report_rate_show(
 
 	mutex_lock(&input_dev->mutex);
 	fts_read_reg(FTS_REG_REPORT_RATE, &val);
-	count = scnprintf(buf + count, PAGE_SIZE,
-			"Report Rate:%d\n", ts_data->report_rate);
+	count = scnprintf(buf + count, PAGE_SIZE, "Report Rate:%d\n",
+			  ts_data->report_rate);
 	count += scnprintf(buf + count, PAGE_SIZE - count,
-			"Report Rate Reg(0x88):%d\n", val);
+			   "Report Rate Reg(0x88):%d\n", val);
 	mutex_unlock(&input_dev->mutex);
 
 	return count;
 }
 
-static ssize_t fts_report_rate_store(
-	struct device *dev,
-	struct device_attribute *attr, const char *buf, size_t count)
+static ssize_t fts_report_rate_store(struct device *dev,
+				     struct device_attribute *attr,
+				     const char *buf, size_t count)
 {
 	int ret = 0;
 	struct fts_ts_data *ts_data = fts_data;
@@ -283,19 +282,18 @@ static ssize_t fts_report_rate_store(
 	return count;
 }
 
-
 /* read and write charger mode
  * read example: cat fts_glove_mode        ---read  glove mode
  * write example:echo 1 > fts_glove_mode   ---write glove mode to 01
  */
-static DEVICE_ATTR(fts_glove_mode, S_IRUGO | S_IWUSR,
-			fts_glove_mode_show, fts_glove_mode_store);
+static DEVICE_ATTR(fts_glove_mode, S_IRUGO | S_IWUSR, fts_glove_mode_show,
+		   fts_glove_mode_store);
 
-static DEVICE_ATTR(fts_cover_mode, S_IRUGO | S_IWUSR,
-			fts_cover_mode_show, fts_cover_mode_store);
+static DEVICE_ATTR(fts_cover_mode, S_IRUGO | S_IWUSR, fts_cover_mode_show,
+		   fts_cover_mode_store);
 
-static DEVICE_ATTR(fts_charger_mode, S_IRUGO | S_IWUSR,
-			fts_charger_mode_show, fts_charger_mode_store);
+static DEVICE_ATTR(fts_charger_mode, S_IRUGO | S_IWUSR, fts_charger_mode_show,
+		   fts_charger_mode_store);
 
 static DEVICE_ATTR_RW(fts_report_rate);
 

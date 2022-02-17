@@ -40,8 +40,8 @@
 /*****************************************************************************
 * Private constant and macro definitions using #define
 *****************************************************************************/
-#define I2C_RETRY_NUMBER                    3
-#define I2C_BUF_LENGTH                      256
+#define I2C_RETRY_NUMBER 3
+#define I2C_BUF_LENGTH 256
 
 /*****************************************************************************
 * Private enumerations, structures and unions using typedef
@@ -72,9 +72,10 @@ static int fts_i2c_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 	int msg_num = 0;
 
 	/* must have data when read */
-	if (!ts_data || !ts_data->client || !data || !datalen
-		|| (datalen >= I2C_BUF_LENGTH) || (cmdlen >= I2C_BUF_LENGTH)) {
-		FTS_ERROR("fts_data/client/cmdlen(%d)/data/datalen(%d) is invalid",
+	if (!ts_data || !ts_data->client || !data || !datalen ||
+	    (datalen >= I2C_BUF_LENGTH) || (cmdlen >= I2C_BUF_LENGTH)) {
+		FTS_ERROR(
+			"fts_data/client/cmdlen(%d)/data/datalen(%d) is invalid",
 			cmdlen, datalen);
 		return -EINVAL;
 	}
@@ -105,7 +106,7 @@ static int fts_i2c_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 #ifdef CONFIG_FTS_TRUSTED_TOUCH
 #ifdef CONFIG_ARCH_QTI_VM
 			if (atomic_read(&ts_data->trusted_touch_enabled) &&
-					ret == -ECONNRESET) {
+			    ret == -ECONNRESET) {
 				pr_err("failed i2c read reacquiring session\n");
 				pm_runtime_put_sync(
 					ts_data->client->adapter->dev.parent);
@@ -140,9 +141,10 @@ static int fts_i2c_write(u8 *writebuf, u32 writelen)
 	int i = 0;
 	struct i2c_msg msgs;
 
-	if (!ts_data || !ts_data->client || !writebuf || !writelen
-		|| (writelen >= I2C_BUF_LENGTH)) {
-		FTS_ERROR("fts_data/client/data/datalen(%d) is invalid", writelen);
+	if (!ts_data || !ts_data->client || !writebuf || !writelen ||
+	    (writelen >= I2C_BUF_LENGTH)) {
+		FTS_ERROR("fts_data/client/data/datalen(%d) is invalid",
+			  writelen);
 		return -EINVAL;
 	}
 
@@ -159,7 +161,7 @@ static int fts_i2c_write(u8 *writebuf, u32 writelen)
 #ifdef CONFIG_FTS_TRUSTED_TOUCH
 #ifdef CONFIG_ARCH_QTI_VM
 			if (atomic_read(&ts_data->trusted_touch_enabled) &&
-				ret == -ECONNRESET){
+			    ret == -ECONNRESET) {
 				pr_err("failed i2c write reacquiring session\n");
 				pm_runtime_put_sync(
 					ts_data->client->adapter->dev.parent);
@@ -223,16 +225,16 @@ static int fts_i2c_exit(struct fts_ts_data *ts_data)
 /*****************************************************************************
  * Private constant and macro definitions using #define
  ****************************************************************************/
-#define SPI_RETRY_NUMBER            3
-#define CS_HIGH_DELAY               150 /* unit: us */
-#define SPI_BUF_LENGTH              256
+#define SPI_RETRY_NUMBER 3
+#define CS_HIGH_DELAY 150 /* unit: us */
+#define SPI_BUF_LENGTH 256
 
-#define DATA_CRC_EN                 0x20
-#define WRITE_CMD                   0x00
-#define READ_CMD                    (0x80 | DATA_CRC_EN)
+#define DATA_CRC_EN 0x20
+#define WRITE_CMD 0x00
+#define READ_CMD (0x80 | DATA_CRC_EN)
 
-#define SPI_DUMMY_BYTE              3
-#define SPI_HEADER_LENGTH           6   /*CRC*/
+#define SPI_DUMMY_BYTE 3
+#define SPI_HEADER_LENGTH 6 /*CRC*/
 
 /*****************************************************************************
  * functions body
@@ -246,7 +248,7 @@ static int fts_spi_transfer(u8 *tx_buf, u8 *rx_buf, u32 len)
 	struct spi_transfer xfer = {
 		.tx_buf = tx_buf,
 		.rx_buf = rx_buf,
-		.len    = len,
+		.len = len,
 	};
 
 	spi_message_init(&msg);
@@ -347,14 +349,14 @@ static int fts_spi_write(u8 *writebuf, u32 writelen)
 			break;
 
 		FTS_DEBUG("data write(addr:%x),status:%x,retry:%d,ret:%d",
-				writebuf[0], rxbuf[3], i, ret);
+			  writebuf[0], rxbuf[3], i, ret);
 		ret = -EIO;
 		udelay(CS_HIGH_DELAY);
 	}
 
 	if (ret < 0) {
 		FTS_ERROR("data write(addr:%x) fail,status:%x,ret:%d",
-				writebuf[0], rxbuf[3], ret);
+			  writebuf[0], rxbuf[3], ret);
 	}
 
 err_write:
@@ -423,8 +425,9 @@ static int fts_spi_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 			if (ctrl & DATA_CRC_EN) {
 				ret = rdata_check(&rxbuf[dp], txlen - dp);
 				if (ret < 0) {
-					FTS_DEBUG("data read(addr:%x) crc abnormal,retry:%d",
-							cmd[0], i);
+					FTS_DEBUG(
+						"data read(addr:%x) crc abnormal,retry:%d",
+						cmd[0], i);
 					udelay(CS_HIGH_DELAY);
 					continue;
 				}
@@ -433,15 +436,15 @@ static int fts_spi_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 		}
 
 		FTS_DEBUG("data read(addr:%x) status:%x,retry:%d,ret:%d",
-				cmd[0], rxbuf[3], i, ret);
+			  cmd[0], rxbuf[3], i, ret);
 		ret = -EIO;
 		udelay(CS_HIGH_DELAY);
 	}
 
 	if (ret < 0) {
 		FTS_ERROR("data read(addr:%x) %s,status:%x,ret:%d", cmd[0],
-				(i >= SPI_RETRY_NUMBER) ? "crc abnormal" : "fail",
-				rxbuf[3], ret);
+			  (i >= SPI_RETRY_NUMBER) ? "crc abnormal" : "fail",
+			  rxbuf[3], ret);
 	}
 
 err_read:

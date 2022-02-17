@@ -67,41 +67,41 @@
 /*****************************************************************************
 * Private constant and macro definitions using #define
 *****************************************************************************/
-#define FTS_MAX_POINTS_SUPPORT              10 /* constant value, can't be changed */
-#define FTS_MAX_KEYS                        4
-#define FTS_KEY_DIM                         10
-#define FTS_ONE_TCH_LEN                     6
-#define FTS_TOUCH_DATA_LEN  (FTS_MAX_POINTS_SUPPORT * FTS_ONE_TCH_LEN + 3)
+#define FTS_MAX_POINTS_SUPPORT 10 /* constant value, can't be changed */
+#define FTS_MAX_KEYS 4
+#define FTS_KEY_DIM 10
+#define FTS_ONE_TCH_LEN 6
+#define FTS_TOUCH_DATA_LEN (FTS_MAX_POINTS_SUPPORT * FTS_ONE_TCH_LEN + 3)
 
-#define FTS_GESTURE_POINTS_MAX              6
-#define FTS_GESTURE_DATA_LEN               (FTS_GESTURE_POINTS_MAX * 4 + 4)
+#define FTS_GESTURE_POINTS_MAX 6
+#define FTS_GESTURE_DATA_LEN (FTS_GESTURE_POINTS_MAX * 4 + 4)
 
-#define FTS_MAX_ID                          0x0A
-#define FTS_TOUCH_X_H_POS                   3
-#define FTS_TOUCH_X_L_POS                   4
-#define FTS_TOUCH_Y_H_POS                   5
-#define FTS_TOUCH_Y_L_POS                   6
-#define FTS_TOUCH_PRE_POS                   7
-#define FTS_TOUCH_AREA_POS                  8
-#define FTS_TOUCH_POINT_NUM                 2
-#define FTS_TOUCH_EVENT_POS                 3
-#define FTS_TOUCH_ID_POS                    5
-#define FTS_COORDS_ARR_SIZE                 4
-#define FTS_X_MIN_DISPLAY_DEFAULT           0
-#define FTS_Y_MIN_DISPLAY_DEFAULT           0
-#define FTS_X_MAX_DISPLAY_DEFAULT           720
-#define FTS_Y_MAX_DISPLAY_DEFAULT           1280
+#define FTS_MAX_ID 0x0A
+#define FTS_TOUCH_X_H_POS 3
+#define FTS_TOUCH_X_L_POS 4
+#define FTS_TOUCH_Y_H_POS 5
+#define FTS_TOUCH_Y_L_POS 6
+#define FTS_TOUCH_PRE_POS 7
+#define FTS_TOUCH_AREA_POS 8
+#define FTS_TOUCH_POINT_NUM 2
+#define FTS_TOUCH_EVENT_POS 3
+#define FTS_TOUCH_ID_POS 5
+#define FTS_COORDS_ARR_SIZE 4
+#define FTS_X_MIN_DISPLAY_DEFAULT 0
+#define FTS_Y_MIN_DISPLAY_DEFAULT 0
+#define FTS_X_MAX_DISPLAY_DEFAULT 720
+#define FTS_Y_MAX_DISPLAY_DEFAULT 1280
 
-#define FTS_TOUCH_DOWN                      0
-#define FTS_TOUCH_UP                        1
-#define FTS_TOUCH_CONTACT                   2
-#define EVENT_DOWN(flag)                    ((FTS_TOUCH_DOWN == flag) || (FTS_TOUCH_CONTACT == flag))
-#define EVENT_UP(flag)                      (FTS_TOUCH_UP == flag)
-#define EVENT_NO_DOWN(data)                 (!data->point_num)
+#define FTS_TOUCH_DOWN 0
+#define FTS_TOUCH_UP 1
+#define FTS_TOUCH_CONTACT 2
+#define EVENT_DOWN(flag)                                                       \
+	((FTS_TOUCH_DOWN == flag) || (FTS_TOUCH_CONTACT == flag))
+#define EVENT_UP(flag) (FTS_TOUCH_UP == flag)
+#define EVENT_NO_DOWN(data) (!data->point_num)
 
-#define FTX_MAX_COMPATIBLE_TYPE             4
-#define FTX_MAX_COMMMAND_LENGTH             16
-
+#define FTX_MAX_COMPATIBLE_TYPE 4
+#define FTX_MAX_COMMMAND_LENGTH 16
 
 /*****************************************************************************
 *  Alternative mode (When something goes wrong, the modules may be able to solve the problem.)
@@ -109,9 +109,8 @@
 /*
  * For commnication error in PM(deep sleep) state
  */
-#define FTS_PATCH_COMERR_PM                     0
-#define FTS_TIMEOUT_COMERR_PM                   700
-
+#define FTS_PATCH_COMERR_PM 0
+#define FTS_TIMEOUT_COMERR_PM 700
 
 /*****************************************************************************
 * Private enumerations, structures and unions using typedef
@@ -143,11 +142,11 @@ struct fts_ts_platform_data {
 };
 
 struct ts_event {
-	int x;      /*x coordinate */
-	int y;      /*y coordinate */
-	int p;      /* pressure */
-	int flag;   /* touch event flag: 0 -- down; 1-- up; 2 -- contact */
-	int id;     /*touch ID */
+	int x; /*x coordinate */
+	int y; /*y coordinate */
+	int p; /* pressure */
+	int flag; /* touch event flag: 0 -- down; 1-- up; 2 -- contact */
+	int id; /*touch ID */
 	int area;
 };
 
@@ -203,11 +202,11 @@ enum trusted_touch_tvm_states {
 #define TRUSTED_TOUCH_EVENT_LEND_FAILURE -1
 #define TRUSTED_TOUCH_EVENT_LEND_NOTIFICATION_FAILURE -2
 #define TRUSTED_TOUCH_EVENT_ACCEPT_FAILURE -3
-#define	TRUSTED_TOUCH_EVENT_FUNCTIONAL_FAILURE -4
-#define	TRUSTED_TOUCH_EVENT_RELEASE_FAILURE -5
-#define	TRUSTED_TOUCH_EVENT_RECLAIM_FAILURE -6
-#define	TRUSTED_TOUCH_EVENT_I2C_FAILURE -7
-#define	TRUSTED_TOUCH_EVENT_NOTIFICATIONS_PENDING 5
+#define TRUSTED_TOUCH_EVENT_FUNCTIONAL_FAILURE -4
+#define TRUSTED_TOUCH_EVENT_RELEASE_FAILURE -5
+#define TRUSTED_TOUCH_EVENT_RECLAIM_FAILURE -6
+#define TRUSTED_TOUCH_EVENT_I2C_FAILURE -7
+#define TRUSTED_TOUCH_EVENT_NOTIFICATIONS_PENDING 5
 
 struct trusted_touch_vm_info {
 	enum hh_irq_label irq_label;
@@ -247,7 +246,7 @@ struct fts_ts_data {
 	struct mutex bus_lock;
 	int irq;
 	int log_level;
-	int fw_is_running;      /* confirm fw is running when using spi:default 0 */
+	int fw_is_running; /* confirm fw is running when using spi:default 0 */
 	int dummy_byte;
 #if defined(CONFIG_PM) && FTS_PATCH_COMERR_PM
 	struct completion pm_completion;
@@ -260,7 +259,7 @@ struct fts_ts_data {
 	bool glove_mode;
 	bool cover_mode;
 	bool charger_mode;
-	bool gesture_mode;      /* gesture enable or disable, default: disable */
+	bool gesture_mode; /* gesture enable or disable, default: disable */
 	int report_rate;
 	/* multi-touch */
 	struct ts_event *events;
