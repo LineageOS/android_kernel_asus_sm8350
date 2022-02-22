@@ -112,7 +112,7 @@ static int signal_handler(pn8xt_access_st_t state, long nfc_pid)
         pr_err("%s: invalid nfc service pid %ld\n", __func__, nfc_pid);
         return 0;
     }
-    memset(&sinfo, 0, sizeof(struct siginfo));
+    memset(&sinfo, 0, sizeof(sinfo));
     sinfo.si_signo = SIG_NFC;
     sinfo.si_code = SI_QUEUE;
     sinfo.si_int = state;
