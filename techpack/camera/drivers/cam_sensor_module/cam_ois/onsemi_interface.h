@@ -272,40 +272,14 @@ typedef union ULLNVAL	UnllnVal;
 //==============================================================================
 UINT_8	ZF7_FlashDownload128( struct cam_ois_ctrl_t *ctrl, UINT_8 , UINT_8  );
 
-UINT_8	ZF7_SetAngleCorrection( struct cam_ois_ctrl_t *ctrl, float , UINT_8 , UINT_8  );
 UINT_8	ZF7_UnlockCodeSet( struct cam_ois_ctrl_t *ctrl );
 UINT_8	ZF7_UnlockCodeClear(struct cam_ois_ctrl_t *ctrl);
 UINT_32	ZF7_MeasGyAcOffset(  struct cam_ois_ctrl_t *ctrl  );
 
 UINT_8	ZF7_RdStatus( struct cam_ois_ctrl_t *ctrl, UINT_8 UcStBitChk );
-void	ZF7_OisEna( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_OisDis( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_OisEna_S( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_OisEna_SV( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_SetPanTiltMode( struct cam_ois_ctrl_t *ctrl, UINT_8 UcPnTmod );
-void	ZF7_SscEna( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_SscDis( struct cam_ois_ctrl_t *ctrl );
 
-UINT_8	ZF7_RunHea( struct cam_ois_ctrl_t *ctrl );
-UINT_8	ZF7_RunGea( struct cam_ois_ctrl_t *ctrl );
-
-//UINT_32	ZF7_FW_info[][3];
-
-void	ZF7_VcmStandby( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_VcmActive( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_SrvOn( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_SrvOff( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_SetStandbyMode( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_SetActiveMode( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_Standby128to150( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_Active128to150( struct cam_ois_ctrl_t *ctrl );
-void	ZF7_DeviceReset128to150( struct cam_ois_ctrl_t *ctrl );
-UINT_8	ZF7_VcmRemap( struct cam_ois_ctrl_t *ctrl );
-UINT_8	ZF7_SetPD128to150( struct cam_ois_ctrl_t *ctrl );
 UINT_8	ZF7_WrGyroOffReCalData( struct cam_ois_ctrl_t *ctrl , UINT_8);
 
-//OLD Prototype
-#if 1
 int onsemi_is_ois_on(struct cam_ois_ctrl_t * ctrl);
 int onsemi_ois_go_on(struct cam_ois_ctrl_t * ctrl);
 int onsemi_ois_go_off(struct cam_ois_ctrl_t * ctrl);
@@ -346,5 +320,4 @@ int32_t onsemi_get_10cm_lens_shift(uint32_t* shift_value);
 int32_t onsemi_lens_shift_to_distance(uint32_t shift_value, uint32_t* distance_cm);
 int32_t onsemi_config_ssc_gain(struct cam_ois_ctrl_t * ctrl, uint32_t distance_cm);
 int32_t onsemi_OV08A_poweroff_setting(struct cam_ois_ctrl_t * ctrl);
-#endif
 #endif
