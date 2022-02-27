@@ -1333,12 +1333,10 @@ static void aw8697_haptic_upload_lra(struct aw8697 *aw8697, unsigned int flag)
 {
 	switch (flag) {
 	case 1:
-		printk("%s f0_cali_lra=%d\n", __func__, aw8697->f0_calib_data);
 		aw8697_i2c_write(aw8697, AW8697_REG_TRIM_LRA,
 				 (char)aw8697->f0_calib_data);
 		break;
 	case 2:
-		printk("%s rtp_cali_lra=%d\n", __func__, aw8697->lra_calib_data);
 		aw8697_i2c_write(aw8697, AW8697_REG_TRIM_LRA,
 				 (char)aw8697->lra_calib_data);
 		break;
