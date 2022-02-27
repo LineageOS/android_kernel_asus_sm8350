@@ -19,6 +19,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/interrupt.h>
+#include <linux/irq.h>
 #include <linux/gpio.h>
 #include <linux/input/ASH.h>
 
@@ -75,6 +76,8 @@ static int init_irq (void)
 	}else {
 		log("gpio_to_irq IRQ %d successed on GPIO:%d\n", irq, ALSPS_SENSOR_GPIO);
 	}
+
+	irq_set_status_flags(irq, IRQ_NOAUTOEN);
 
 	/*Request IRQ*/	
 	ret = request_threaded_irq(irq, NULL, ALSPSsensor_irq_handler,
