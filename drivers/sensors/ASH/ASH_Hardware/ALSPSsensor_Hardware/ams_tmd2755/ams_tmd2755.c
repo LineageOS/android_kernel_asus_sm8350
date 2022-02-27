@@ -1136,6 +1136,7 @@ int tmd2755_gpio_register(struct i2c_client *client)
 	log("client_irq=%d, IRQ=%d", client->irq, ALSPS_SENSOR_IRQ);
 	ALSPS_SENSOR_IRQ = client->irq;
 	default_irq_trigger = irqd_get_trigger_type(irq_get_irq_data(client->irq)); 	// default_irq_trigger = low level trigger
+	irq_set_status_flags(ALSPS_SENSOR_IRQ, IRQ_NOAUTOEN);
 	ret = devm_request_threaded_irq(&client->dev, client->irq, NULL, &tmd2755_irq, default_irq_trigger | IRQF_SHARED | IRQF_ONESHOT,
 					dev_name(&client->dev), g_tmd2755_chip);
 
