@@ -7,6 +7,7 @@
 #include <linux/list.h>
 #include <linux/of.h>
 #include <linux/of_gpio.h>
+#include <linux/proc_fs.h>
 #include <linux/err.h>
 
 #include "msm_drv.h"
@@ -5574,6 +5575,23 @@ static int dsi_display_pre_acquire(void *data)
 	return 0;
 }
 
+
+#if defined ASUS_SAKE_PROJECT
+#define LCD_UNIQUE_ID	"lcd_unique_id"
+
+extern char g_lcd_unique_id[10];
+static ssize_t lcd_unique_id_read(struct file *file, char __user *buf,
+				  size_t count, loff_t *ppos)
+{
+	return simple_read_from_buffer(buf, count, ppos, g_lcd_unique_id,
+				       sizeof(g_lcd_unique_id));
+}
+
+static struct file_operations lcd_unique_id_ops = {
+	.read = lcd_unique_id_read,
+};
+#endif
+
 /**
  * dsi_display_bind - bind dsi device with controlling device
  * @dev:        Pointer to base of platform device
@@ -5782,6 +5800,11 @@ static int dsi_display_bind(struct device *dev,
 	dsi_display_register_te_irq(display);
 
 	msm_register_vm_event(master, dev, &vm_event_ops, (void *)display);
+
+
+#if defined ASUS_SAKE_PROJECT
+	proc_create(LCD_UNIQUE_ID, 0444, NULL, &lcd_unique_id_ops);
+#endif
 
 	goto error;
 
