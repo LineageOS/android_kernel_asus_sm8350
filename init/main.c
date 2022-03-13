@@ -167,6 +167,19 @@ __setup("androidboot.mode=", set_charger_mode);
 EXPORT_SYMBOL(g_Charger_mode);
 
 #if defined ASUS_SAKE_PROJECT || defined ASUS_VODKA_PROJECT
+char g_lcd_unique_id[10];
+
+static int set_lcd_unique_id(char *str)
+{
+	scnprintf(g_lcd_unique_id, sizeof(g_lcd_unique_id), "%s\n", str);
+
+	printk("g_lcd_unique_id = %s\n",  g_lcd_unique_id);
+
+	return 0;
+}
+__setup("LCD=", set_lcd_unique_id);
+EXPORT_SYMBOL(g_lcd_unique_id);
+
 enum DEVICE_HWID g_ASUS_hwID = HW_REV_INVALID;
 EXPORT_SYMBOL(g_ASUS_hwID);
 static int set_hardware_id(char *str)
