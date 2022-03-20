@@ -51,25 +51,28 @@ static ssize_t ese_dev_read(struct file *filp, char __user *ubuf,
 {
     ssize_t ret = -EFAULT;
     struct ese_dev *ese_dev = filp->private_data;
-    char rx_buf[MAX_BUFFER_SIZE];
+    char *rx_buf;
     mutex_lock(&ese_dev->mutex);
     if (len > MAX_BUFFER_SIZE) {
         len = MAX_BUFFER_SIZE;
     }
     pr_debug("%s: start reading of %zu bytes\n", __func__, len);
-    memset(rx_buf, 0, sizeof(rx_buf));
+    rx_buf = kmalloc(MAX_BUFFER_SIZE, GFP_DMA);
     ret = spi_read(ese_dev->spi, rx_buf, len);
     if (0 > ret) {
         pr_err("%s failed to read from SPI\n", __func__);
+        kfree(rx_buf);
         mutex_unlock(&ese_dev->mutex);
         return -EIO;
     }
     if (copy_to_user(ubuf, rx_buf, len)) {
         pr_err("%s failed to copy from user\n", __func__);
         mutex_unlock(&ese_dev->mutex);
+        kfree(rx_buf);
         return -EFAULT;
     }
     mutex_unlock(&ese_dev->mutex);
+    kfree(rx_buf);
     pr_debug("%s: Success in reading %zu bytes\n", __func__, len);
     return ret;
 }
@@ -79,25 +82,28 @@ static ssize_t ese_dev_write(struct file *filp, const char __user *ubuf,
 {
     ssize_t ret = -EFAULT;
     struct ese_dev *ese_dev = filp->private_data;
-    char tx_buf[MAX_BUFFER_SIZE];
+    char *tx_buf;
     mutex_lock(&ese_dev->write_mutex);
     if (len > MAX_BUFFER_SIZE)
         len = MAX_BUFFER_SIZE;
     pr_debug("%s: start writing of %zu bytes\n", __func__, len);
-    memset(tx_buf, 0, sizeof(tx_buf));
+    tx_buf = kmalloc(MAX_BUFFER_SIZE, GFP_DMA);
     if (copy_from_user(tx_buf, ubuf, len)) {
         pr_err("%s: failed to copy from user\n", __func__);
         mutex_unlock(&ese_dev->write_mutex);
+        kfree(tx_buf);
         return -EFAULT;
     }
     ret = spi_write(ese_dev->spi, tx_buf, len);
     if (ret < 0) {
         pr_err("%s: failed to write to SPI\n", __func__);
         mutex_unlock(&ese_dev->write_mutex);
+        kfree(tx_buf);
         return -EIO;
     }
     pr_debug("%s: Success in writing %zu bytes\n", __func__, len);
     mutex_unlock(&ese_dev->write_mutex);
+    kfree(tx_buf);
     return len;
 }
 
@@ -117,6 +123,8 @@ static int ese_dev_open(struct inode *inode, struct file *filp)
     struct ese_dev *ese_dev = container_of(filp->private_data,
                 struct ese_dev, device);
     mutex_lock(&ese_dev->mutex);
+#ifndef ASUS_SAKE_PROJECT
+#ifndef ASUS_VODKA_PROJECT
     /* Find the NFC parent device if it exists. */
     if (ese_dev->nfcc_data == NULL) {
         struct device *nfc_dev = bus_find_device_by_name(
@@ -140,6 +148,8 @@ static int ese_dev_open(struct inode *inode, struct file *filp)
         pr_info("%s: NFC controller found\n", __func__);
         ese_dev->nfcc_device = nfc_dev;
     }
+#endif // ASUS_VODKA_PROJECT
+#endif // ASUS_SAKE_PROJECT
     mutex_unlock(&ese_dev->mutex);
     func(NFC_PLATFORM, _ese_dev_open)(ese_dev);
     filp->private_data = ese_dev;
@@ -225,6 +235,8 @@ static int ese_probe(struct spi_device *spi)
         pr_info("%s: rst gpio not provided\n", __func__);
     }
 
+#ifndef ASUS_SAKE_PROJECT
+#ifndef ASUS_VODKA_PROJECT
     ret = of_property_read_string(np, "nxp,nfcc", &ese_dev->nfcc_name);
     if (ret < 0) {
         pr_err("%s: nxp,nfcc invalid or missing in device tree (%d)\n",
@@ -233,6 +245,8 @@ static int ese_probe(struct spi_device *spi)
     }
     pr_info("%s: device tree set '%s' as eSE power controller\n",
         __func__, ese_dev->nfcc_name);
+#endif // ASUS_VODKA_PROJECT
+#endif // ASUS_SAKE_PROJECT
 
     ret = misc_register(&ese_dev->device);
     if (ret) {
