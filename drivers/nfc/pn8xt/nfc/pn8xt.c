@@ -105,7 +105,7 @@ static int signal_handler(pn8xt_access_st_t state, long nfc_pid)
 {
     int sigret = 0;
     pid_t pid;
-    struct siginfo sinfo;
+    struct kernel_siginfo sinfo;
     struct task_struct *task;
 
     if(nfc_pid <= 0) {
@@ -121,7 +121,7 @@ static int signal_handler(pn8xt_access_st_t state, long nfc_pid)
     task = pid_task(find_vpid(pid), PIDTYPE_PID);
     if(task) {
         pr_info("%s: %s\n", __func__, task->comm);
-        sigret = force_sig_info(SIG_NFC, &sinfo, task);
+        sigret = force_sig_info_to_task(&sinfo, task);
         if(sigret < 0) {
             pr_err("%s: send_sig_info failed, sigret %d\n", __func__, sigret);
             return -1;
@@ -441,7 +441,10 @@ static long pn8xt_ese_pwr(struct nfc_dev *nfc_dev, unsigned int cmd, unsigned lo
                     trigger_onoff(pn8xt_dev, ST_SPI_SVDD_SY_END);
                     msleep(10);
                     if(!gpio_get_value(nfc_dev->ese_pwr_gpio))
+                    {
                         gpio_set_value(nfc_dev->ese_pwr_gpio, 1);
+                        pn8xt_update_state(pn8xt_dev, ST_SPI, true);
+                    }
                     msleep(10);
                 }
             } else {
@@ -509,7 +512,7 @@ static long set_jcop_download_state(struct pn8xt_dev *pn8xt_dev, unsigned long a
         case JCP_DN_INIT:
             if(pn8xt_dev->service_pid) {
                 pr_err("%s:nfc service pid %ld", __func__, pn8xt_dev->service_pid);
-                signal_handler(JCP_DN_INIT, pn8xt_dev->service_pid);
+                signal_handler((pn8xt_access_st_t)JCP_DN_INIT, pn8xt_dev->service_pid);
             } else {
                 if (*cur_state & ST_JCP_DN) {
                     ret = -EINVAL;
@@ -526,7 +529,7 @@ static long set_jcop_download_state(struct pn8xt_dev *pn8xt_dev, unsigned long a
             }
             break;
         case JCP_SPI_DN_COMP:
-            signal_handler(JCP_DWP_DN_COMP, pn8xt_dev->service_pid);
+            signal_handler((pn8xt_access_st_t)JCP_DWP_DN_COMP, pn8xt_dev->service_pid);
             pn8xt_update_state(pn8xt_dev, ST_JCP_DN, false);
             break;
         case JCP_DWP_DN_COMP:
