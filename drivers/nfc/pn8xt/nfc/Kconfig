@@ -5,6 +5,7 @@
 #
 
 config NXP_NFC_SN1XX
+	default n
 	depends on !NFC_QTI_I2C
 	bool "Nxp NFC sn1xx Controller"
 	---help---
@@ -14,6 +15,7 @@ config NXP_NFC_SN1XX
 	  You can say N here if you don't have any sn1xx I2C connected to your computer.
 
 config NXP_NFC_PN8XT
+	default n
 	depends on !NFC_QTI_I2C
 	bool "Nxp NFC pn8xt Controller"
 	---help---
