@@ -1,0 +1,11 @@
+#
+# Copyright (C) 2019 NXP
+#
+# SPDX-License-Identifier: GPL-2.0
+#
+
+config NXP_NFC_ESE_DEVICE
+	tristate "NXP NFC ESE Driver Controller"
+
+source "drivers/nfc/pn8xt/ese/Kconfig"
+source "drivers/nfc/pn8xt/nfc/Kconfig"
