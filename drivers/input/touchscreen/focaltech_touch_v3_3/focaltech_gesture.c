@@ -279,22 +279,6 @@ static ssize_t fts_gestures_store(struct device *dev,
 	return count;
 }
 
-static ssize_t fts_fod_mode_show(struct device *dev,
-				 struct device_attribute *attr, char *buf)
-{
-	return snprintf(buf, PAGE_SIZE, "%u\n",
-			fts_data->enabled_gestures[GESTURE_TYPE_FOD]);
-}
-
-static ssize_t fts_fod_mode_store(struct device *dev,
-				  struct device_attribute *attr,
-				  const char *buf, size_t count)
-{
-	fts_gesture_set(fts_data, GESTURE_TYPE_FOD, buf[0] != '0');
-
-	return count;
-}
-
 static ssize_t fts_fod_pressed_show(struct device *dev,
 				    struct device_attribute *attr, char *buf)
 {
@@ -303,8 +287,6 @@ static ssize_t fts_fod_pressed_show(struct device *dev,
 
 static DEVICE_ATTR(fts_gestures, S_IRUGO | S_IWUSR, fts_gestures_show,
 		   fts_gestures_store);
-static DEVICE_ATTR(fts_fod_mode, S_IRUGO | S_IWUSR, fts_fod_mode_show,
-		   fts_fod_mode_store);
 static DEVICE_ATTR(fts_fod_pressed, S_IRUGO, fts_fod_pressed_show, NULL);
 #else
 static ssize_t fts_gesture_show(struct device *dev,
@@ -396,7 +378,6 @@ static DEVICE_ATTR(fts_gesture_buf, S_IRUGO | S_IWUSR, fts_gesture_buf_show,
 static struct attribute *fts_gesture_mode_attrs[] = {
 #if defined ASUS_SAKE_PROJECT
 	&dev_attr_fts_gestures.attr,
-	&dev_attr_fts_fod_mode.attr,
 	&dev_attr_fts_fod_pressed.attr,
 #else
 	&dev_attr_fts_gesture_mode.attr,
