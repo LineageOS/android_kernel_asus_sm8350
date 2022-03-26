@@ -914,9 +914,6 @@ static int usb_psy_set_prop(struct power_supply *psy,
 
 	switch (prop) {
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT:
-#ifdef CONFIG_MACH_ASUS
-		printk(KERN_ERR "[BAT][CHG] INPUT_CURRENT_LIMIT. val : %d uA\n", pval->intval);//ASUS_BSP
-#endif
 		rc = usb_psy_set_icl(bcdev, prop_id, pval->intval);
 		break;
 	default:
@@ -1071,12 +1068,6 @@ static int battery_psy_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT_MAX:
 		pval->intval = bcdev->num_thermal_levels;
 		break;
-#ifdef CONFIG_MACH_ASUS
-	case POWER_SUPPLY_PROP_STATUS:
-		pval->intval = pst->prop[prop_id];
-		set_qc_stat(pval->intval);
-		break;
-#endif
 	default:
 		pval->intval = pst->prop[prop_id];
 		break;
@@ -2022,19 +2013,10 @@ static const struct of_device_id battery_chg_match_table[] = {
 	{},
 };
 
-#ifdef CONFIG_MACH_ASUS
-static const struct dev_pm_ops asus_chg_pm_ops = {
-	.resume		= asus_chg_resume,
-};
-#endif
-
 static struct platform_driver battery_chg_driver = {
 	.driver = {
 		.name = "qti_battery_charger",
 		.of_match_table = battery_chg_match_table,
-#ifdef CONFIG_MACH_ASUS
-		.pm	= &asus_chg_pm_ops,
-#endif
 	},
 	.probe = battery_chg_probe,
 	.remove = battery_chg_remove,
