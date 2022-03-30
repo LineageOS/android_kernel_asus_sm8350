@@ -6,12 +6,20 @@
 #define MSG_TYPE_REQ_RESP		1
 #define MSG_TYPE_NOTIFY			2
 
+#define OEM_THERMAL_ALERT_SET		17
+#define THERMAL_ALERT_NONE		0
+#define THERMAL_ALERT_NO_AC		1
+#define THERMAL_ALERT_WITH_AC		2
+
 #define OEM_OPCODE_WRITE_BUFFER		0x10001
 
 #define OEM_PROPERTY_MAX_DATA_SIZE	16
 
 #define OEM_SET_OTG_WA			0x2107
 #define OEM_USB_PRESENT			0x2108
+
+#define dwork_to_abc(work, member) \
+	container_of(to_delayed_work(work), struct asus_battery_chg, member)
 
 struct oem_write_buffer_req_msg {
 	struct pmic_glink_hdr hdr;
@@ -45,6 +53,43 @@ static int write_property_id_oem(struct asus_battery_chg *abc, u32 prop_id,
 	memcpy(req_msg.data_buffer, buf, sizeof(u32) * count);
 
 	return battery_chg_write(abc->bcdev, &req_msg, sizeof(req_msg));
+}
+
+#define TEMP_TRIGGER			70000
+#define TEMP_RELEASE			60000
+#define USB_THERMAL_WORK_MSECS		60000
+
+static void usb_thermal_worker(struct work_struct *work)
+{
+	struct asus_battery_chg *abc = dwork_to_abc(work, usb_thermal_work);
+	struct device *dev = battery_chg_device(abc->bcdev);
+	int temp;
+	u32 tmp;
+	int rc;
+
+	rc = iio_read_channel_processed(abc->temp_chan, &temp);
+	if (rc < 0) {
+		dev_err(dev, "Failed to read temperature, rc=%d\n", rc);
+		goto out;
+	}
+
+	if (abc->usb_present && temp > TEMP_TRIGGER)
+		tmp = THERMAL_ALERT_WITH_AC;
+	else if (temp > TEMP_TRIGGER)
+		tmp = THERMAL_ALERT_NO_AC;
+	else if (temp < TEMP_RELEASE)
+		tmp = THERMAL_ALERT_NONE;
+	else
+		goto out;
+
+	rc = write_property_id_oem(abc, OEM_THERMAL_ALERT_SET, &tmp, 1);
+	if (rc)
+		dev_err(dev, "Failed to write thermal alert %u, rc=%d\n",
+			tmp, rc);
+
+out:
+	schedule_delayed_work(&abc->usb_thermal_work,
+			      msecs_to_jiffies(USB_THERMAL_WORK_MSECS));
 }
 
 #define CHECK_SET_DATA(msg)						\
@@ -94,6 +139,9 @@ static void handle_message(struct asus_battery_chg *abc, void *data,
 		resp_msg = data;
 
 		switch (resp_msg->oem_property_id) {
+		case OEM_THERMAL_ALERT_SET:
+			ack_set = true;
+			break;
 		default:
 			ack_set = true;
 			dev_err(dev, "Unknown property_id: %u\n",
@@ -151,6 +199,13 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 		return rc;
 	}
 
+	abc->temp_chan = devm_iio_channel_get(dev, "pm8350b_amux_thm4");
+	if (IS_ERR(abc->temp_chan)) {
+		rc = PTR_ERR(abc->temp_chan);
+		dev_err(dev, "Failed to get temp channel, rc=%d\n", rc);
+		return rc;
+	}
+
 	client_data.id = MSG_OWNER_OEM;
 	client_data.name = "asus_BC";
 	client_data.priv = abc;
@@ -171,6 +226,9 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	if (rc)
 		return rc;
 
+	INIT_DELAYED_WORK(&abc->usb_thermal_work, usb_thermal_worker);
+	schedule_delayed_work(&abc->usb_thermal_work, 0);
+
 	abc->initialized = true;
 
 	return 0;
@@ -178,5 +236,7 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 
 int asus_battery_charger_deinit(struct asus_battery_chg *abc)
 {
+	cancel_delayed_work_sync(&abc->usb_thermal_work);
+
 	return 0;
 }

@@ -4,8 +4,10 @@
 #define _ASUS_BATTERY_CHARGER_H
 
 #include <linux/gpio/consumer.h>
+#include <linux/iio/consumer.h>
 #include <linux/soc/qcom/battery_charger.h>
 #include <linux/soc/qcom/pmic_glink.h>
+#include <linux/workqueue.h>
 
 struct asus_battery_chg {
 	bool				initialized;
@@ -13,6 +15,8 @@ struct asus_battery_chg {
 	struct pmic_glink_client	*client;
 	struct gpio_desc		*otg_switch;
 	bool				usb_present;
+	struct iio_channel		*temp_chan;
+	struct delayed_work		usb_thermal_work;
 };
 
 int asus_battery_charger_init(struct asus_battery_chg *abc);
