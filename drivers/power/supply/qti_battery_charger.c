@@ -861,6 +861,11 @@ static int usb_psy_set_icl(struct battery_chg_dev *bcdev, u32 prop_id, int val)
 	 * suspend or unsuspend the input for its use case.
 	 */
 
+#ifdef CONFIG_MACH_ASUS
+	if (val == 2000)
+		val = 100000;
+#endif
+
 	temp = val;
 	if (val < 0)
 		temp = UINT_MAX;
