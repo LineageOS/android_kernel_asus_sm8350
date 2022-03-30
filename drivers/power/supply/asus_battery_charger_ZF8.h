@@ -2,6 +2,12 @@
  * Copyright (c) 2019-2020, The ASUS Company. All rights reserved.
  */
 
+struct extcon_dev *bat_id_extcon;
+struct extcon_dev *bat_extcon;
+struct extcon_dev *quickchg_extcon;
+struct extcon_dev *thermal_extcon;
+struct extcon_dev *adaptervid_extcon;
+
 #define MSG_OWNER_BC 32778
 
 struct battery_charger_req_msg {
@@ -9,6 +15,11 @@ struct battery_charger_req_msg {
 	u32 battery_id;
 	u32 property_id;
 	u32 value;
+};
+
+struct battery_charger_ship_mode_req_msg {
+	struct pmic_glink_hdr hdr;
+	u32 ship_mode_type;
 };
 
 #define PMIC_GLINK_MSG_OWNER_OEM 32782
@@ -23,15 +34,38 @@ struct battery_charger_req_msg {
 #define OEM_PD_EVTLOG_IND 0x1003
 #define OEM_SET_OTG_WA 0x2107
 #define OEM_USB_PRESENT 0x2108
+#define OEM_SET_CHARGER_TYPE_CHANGE 0x2109
 #define OEM_ASUS_WORK_EVENT_REQ 0x2110
+#define OEM_ASUS_AdapterVID_REQ 0x2111
 #define OEM_JEITA_CC_STATE_REQ 0x2112
 
 #define MAX_OEM_PROPERTY_DATA_SIZE 16
 
 struct ADSP_ChargerPD_Info {
+	int PlatformID;
+	int BATT_ID;
+	bool chg_limit_en;
+	u32 chg_limit_cap;
+	bool usbin_suspend_en;
+	bool charging_suspend_en;
+	char ChgPD_FW[64];
+	int firmware_version;
+	int batt_temp;
+	u32 pm8350b_icl;
+	u32 smb1396_icl;
+	u32 batt_fcc;
+	unsigned long AdapterVID;
+	bool otg_enable;
 	bool usb_present;
+	u32 slow_chglimit;
+	u32 ultra_bat_life;
+	u32 demo_app_status;
+	u32 chg_disable_jeita;
+	bool panel_status;
 	int jeita_cc_state;
 	int thermel_threshold;
+	int boot_completed;
+	bool in_call;
 };
 
 struct battman_oem_read_buffer_req_msg {
@@ -44,7 +78,7 @@ struct battman_oem_read_buffer_resp_msg {
 	struct pmic_glink_hdr hdr;
 	u32 oem_property_id;
 	u32 data_buffer[MAX_OEM_PROPERTY_DATA_SIZE];
-	u32 data_size; //size = 0 if failed, otherwise should be data_size.
+	u32 data_size;
 };
 
 struct battman_oem_write_buffer_req_msg {
@@ -71,11 +105,21 @@ struct oem_enable_change_msg {
 	u32 enable;
 };
 
+struct oem_set_Charger_Type_resp {
+	struct pmic_glink_hdr hdr;
+	u32 charger_type;
+};
+
 struct asus_notify_work_event_msg {
 	struct pmic_glink_hdr header;
 	u32 work;
 	u32 data_buffer[MAX_OEM_PROPERTY_DATA_SIZE];
 	u32 data_size;
+};
+
+struct oem_asus_adaptervid_msg {
+	struct pmic_glink_hdr header;
+	u32 VID;
 };
 
 struct oem_jeita_cc_state_msg {
@@ -145,19 +189,51 @@ enum JETA_CURR {
 #define CHG_DBG(...) printk(KERN_INFO CHARGER_TAG __VA_ARGS__)
 #define CHG_DBG_E(...) printk(KERN_ERR CHARGER_TAG ERROR_TAG __VA_ARGS__)
 
+#define ASUS_CHARGER_TYPE_LEVEL0 0 // For disconnection, reset to default
+#define ASUS_CHARGER_TYPE_LEVEL1 1 // This is for normal 18W QC3 or PD
+#define ASUS_CHARGER_TYPE_LEVEL2 2 // This is for ASUS 30W adapter
+#define ASUS_CHARGER_TYPE_LEVEL3 3 // This is for ASUS 65W adapter
+
+#define SWITCH_LEVEL4_NOT_QUICK_CHARGING 8 //Now, this is used for 65W
+#define SWITCH_LEVEL4_QUICK_CHARGING 7 //Now, this is used for 65W
+#define SWITCH_LEVEL3_NOT_QUICK_CHARGING                                       \
+	6 //EQual to SWITCH_NXP_NOT_QUICK_CHARGING(ASUS 30W)
+#define SWITCH_LEVEL3_QUICK_CHARGING                                           \
+	5 //EQual to SWITCH_NXP_QUICK_CHARGING(ASUS 30W)
+#define SWITCH_LEVEL1_NOT_QUICK_CHARGING                                       \
+	4 //EQual to SWITCH_QC_NOT_QUICK_CHARGING(DCP 10W)
+#define SWITCH_LEVEL1_QUICK_CHARGING                                           \
+	3 //EQual to SWITCH_QC_QUICK_CHARGING (DCP 10W)
+#define SWITCH_LEVEL2_NOT_QUICK_CHARGING                                       \
+	2 //EQual to SWITCH_QC_NOT_QUICK_CHARGING_PLUS (QC 18W)
+#define SWITCH_LEVEL2_QUICK_CHARGING                                           \
+	1 //EQual to SWITCH_QC_QUICK_CHARGING_PLUS (QC 18W)
+#define SWITCH_LEVEL0_DEFAULT 0 //EQual to SWITCH_QC_OTHER
+int g_SWITCH_LEVEL = SWITCH_LEVEL0_DEFAULT;
+
+//work
+struct delayed_work asus_set_qc_state_work;
 struct delayed_work asus_jeita_rule_work;
 struct delayed_work asus_jeita_prechg_work;
 struct delayed_work asus_jeita_cc_work;
 struct delayed_work asus_panel_check_work;
+struct delayed_work asus_slow_charging_work;
 struct delayed_work asus_charger_mode_work;
 struct delayed_work asus_long_full_cap_monitor_work;
 struct delayed_work asus_18W_workaround_work;
 struct delayed_work asus_thermal_policy_work;
 
 extern struct battery_chg_dev *g_bcdev;
+struct power_supply *qti_phy_usb;
 struct power_supply *qti_phy_bat;
+int POGO_OTG_GPIO;
 int OTG_LOAD_SWITCH_GPIO;
 struct ADSP_ChargerPD_Info ChgPD_Info;
+#if defined ASUS_VODKA_PROJECT
+char st_battery_name[64] = "C11P1904.O.03.0001.30.03.32.1";
+#else
+char st_battery_name[64] = "C11P2003.O.01.0001.30.10.46.57";
+#endif
 
 ssize_t oem_prop_read(enum battman_oem_property prop, size_t count);
 ssize_t oem_prop_write(enum battman_oem_property prop, u32 *buf, size_t count);
