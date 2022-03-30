@@ -10,6 +10,8 @@
 
 #define OEM_PROPERTY_MAX_DATA_SIZE	16
 
+#define OEM_SET_OTG_WA			0x2107
+
 struct oem_write_buffer_req_msg {
 	struct pmic_glink_hdr hdr;
 	u32 oem_property_id;
@@ -21,6 +23,11 @@ struct oem_write_buffer_resp_msg {
 	struct pmic_glink_hdr hdr;
 	u32 oem_property_id;
 	u32 return_status;
+};
+
+struct oem_enable_change_msg {
+	struct pmic_glink_hdr hdr;
+	u32 enable;
 };
 
 static int write_property_id_oem(struct asus_battery_chg *abc, u32 prop_id,
@@ -39,20 +46,27 @@ static int write_property_id_oem(struct asus_battery_chg *abc, u32 prop_id,
 	return battery_chg_write(abc->bcdev, &req_msg, sizeof(req_msg));
 }
 
-#define CHECK_LENGTH(msg)						\
+#define CHECK_SET_DATA(msg)						\
 	if (len != sizeof(*msg)) {					\
 		dev_err(dev, "Bad response length %zu for opcode %u\n",	\
 		       len, hdr->opcode);				\
 		break;							\
 	}								\
+	msg = data;
 
 static void handle_notification(struct asus_battery_chg *abc, void *data,
 				size_t len)
 {
 	struct device *dev = battery_chg_device(abc->bcdev);
+	struct oem_enable_change_msg *enable_change_msg;
 	struct pmic_glink_hdr *hdr = data;
 
 	switch (hdr->opcode) {
+	case OEM_SET_OTG_WA:
+		CHECK_SET_DATA(enable_change_msg);
+
+		gpiod_set_value(abc->otg_switch, enable_change_msg->enable);
+		break;
 	default:
 		dev_err(dev, "Unknown opcode: %u\n", hdr->opcode);
 		break;
@@ -123,6 +137,13 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	struct device *dev = battery_chg_device(abc->bcdev);
 	struct pmic_glink_client_data client_data = { };
 	int rc;
+
+	abc->otg_switch = devm_gpiod_get(dev, "otg-load-switch", GPIOD_OUT_LOW);
+	if (IS_ERR(abc->otg_switch)) {
+		rc = PTR_ERR(abc->otg_switch);
+		dev_err(dev, "Failed to get otg switch gpio, rc=%d\n", rc);
+		return rc;
+	}
 
 	client_data.id = MSG_OWNER_OEM;
 	client_data.name = "asus_BC";
