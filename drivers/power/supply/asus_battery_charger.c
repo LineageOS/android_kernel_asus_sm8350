@@ -11,6 +11,7 @@
 #define OEM_PROPERTY_MAX_DATA_SIZE	16
 
 #define OEM_SET_OTG_WA			0x2107
+#define OEM_USB_PRESENT			0x2108
 
 struct oem_write_buffer_req_msg {
 	struct pmic_glink_hdr hdr;
@@ -66,6 +67,11 @@ static void handle_notification(struct asus_battery_chg *abc, void *data,
 		CHECK_SET_DATA(enable_change_msg);
 
 		gpiod_set_value(abc->otg_switch, enable_change_msg->enable);
+		break;
+	case OEM_USB_PRESENT:
+		CHECK_SET_DATA(enable_change_msg);
+
+		abc->usb_present = enable_change_msg->enable;
 		break;
 	default:
 		dev_err(dev, "Unknown opcode: %u\n", hdr->opcode);
