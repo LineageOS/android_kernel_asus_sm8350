@@ -300,6 +300,25 @@ static const char * const qc_power_supply_usb_type_text[] = {
 	"HVDCP", "HVDCP_3", "HVDCP_3P5"
 };
 
+static BLOCKING_NOTIFIER_HEAD(qti_charge_notifier_list);
+
+void qti_charge_register_notify(struct notifier_block *nb)
+{
+	blocking_notifier_chain_register(&qti_charge_notifier_list, nb);
+}
+EXPORT_SYMBOL_GPL(qti_charge_register_notify);
+
+void qti_charge_unregister_notify(struct notifier_block *nb)
+{
+	blocking_notifier_chain_unregister(&qti_charge_notifier_list, nb);
+}
+EXPORT_SYMBOL_GPL(qti_charge_unregister_notify);
+
+static void qti_charge_notify(bool status)
+{
+	blocking_notifier_call_chain(&qti_charge_notifier_list, status, NULL);
+}
+
 static int battery_chg_fw_write(struct battery_chg_dev *bcdev, void *data,
 				int len)
 {
@@ -878,6 +897,8 @@ static int usb_psy_get_prop(struct power_supply *psy,
 	pval->intval = pst->prop[prop_id];
 	if (prop == POWER_SUPPLY_PROP_TEMP)
 		pval->intval = DIV_ROUND_CLOSEST((int)pval->intval, 10);
+	else if (prop == POWER_SUPPLY_PROP_ONLINE)
+		qti_charge_notify(pval->intval);
 
 	return 0;
 }
