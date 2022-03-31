@@ -69,6 +69,8 @@ static int handle_usb_online(struct notifier_block *nb, unsigned long status,
 
 		cancel_delayed_work_sync(&abc->thermal_policy_work);
 		schedule_delayed_work(&abc->thermal_policy_work, 68 * HZ);
+
+		__pm_wakeup_event(abc->slowchg_ws, 60 * 1000);
 	} else {
 		cancel_delayed_work_sync(&abc->panel_check_work);
 		cancel_delayed_work_sync(&abc->workaround_18w_work);
@@ -316,6 +318,12 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 		rc = PTR_ERR(abc->otg_switch);
 		dev_err(dev, "Failed to get otg switch gpio, rc=%d\n", rc);
 		return rc;
+	}
+
+	abc->slowchg_ws = wakeup_source_register(dev, "Slowchg_wakelock");
+	if (!abc->slowchg_ws) {
+		dev_err(dev, "Failed to register wakeup source\n");
+		return -EINVAL;
 	}
 
 	abc->temp_chan = devm_iio_channel_get(dev, "pm8350b_amux_thm4");
