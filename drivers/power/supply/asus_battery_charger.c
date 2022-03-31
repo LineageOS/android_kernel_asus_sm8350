@@ -12,6 +12,8 @@
 #define THERMAL_ALERT_WITH_AC		2
 
 #define OEM_WORK_EVENT			16
+#define WORK_JEITA_PRECHG		1
+#define WORK_JEITA_CC			2
 #define WORK_PANEL_CHECK		3
 #define WORK_18W_WORKAROUND		5
 
@@ -83,6 +85,8 @@ static int handle_usb_online(struct notifier_block *nb, unsigned long status,
 		cancel_delayed_work_sync(&abc->panel_check_work);
 		cancel_delayed_work_sync(&abc->workaround_18w_work);
 		cancel_delayed_work_sync(&abc->thermal_policy_work);
+		cancel_delayed_work_sync(&abc->jeita_prechg_work);
+		cancel_delayed_work_sync(&abc->jeita_cc_work);
 	}
 
 	return 0;
@@ -185,6 +189,24 @@ static void thermal_policy_worker(struct work_struct *work)
 	schedule_delayed_work(&abc->thermal_policy_work, 10 * HZ);
 }
 
+static void jeita_prechg_worker(struct work_struct *work)
+{
+	struct asus_battery_chg *abc = dwork_to_abc(work, jeita_prechg_work);
+
+	write_property_work_event(abc, WORK_JEITA_PRECHG);
+
+	schedule_delayed_work(&abc->jeita_prechg_work, HZ);
+}
+
+static void jeita_cc_worker(struct work_struct *work)
+{
+	struct asus_battery_chg *abc = dwork_to_abc(work, jeita_cc_work);
+
+	write_property_work_event(abc, WORK_JEITA_CC);
+
+	schedule_delayed_work(&abc->jeita_cc_work, 5 * HZ);
+}
+
 #define CHECK_SET_DATA(msg)						\
 	if (len != sizeof(*msg)) {					\
 		dev_err(dev, "Bad response length %zu for opcode %u\n",	\
@@ -214,6 +236,28 @@ static void handle_notification(struct asus_battery_chg *abc, void *data,
 		break;
 	case OEM_WORK_EVENT_REQ:
 		CHECK_SET_DATA(work_event_msg);
+
+		if (work_event_msg->work == WORK_JEITA_PRECHG) {
+			if (work_event_msg->data_buffer[0] == 1) {
+				cancel_delayed_work_sync(
+					&abc->jeita_prechg_work);
+				schedule_delayed_work(
+					&abc->jeita_prechg_work, 0);
+			} else {
+				cancel_delayed_work_sync(
+					&abc->jeita_prechg_work);
+			}
+		} else if (work_event_msg->work == WORK_JEITA_CC) {
+			if (work_event_msg->data_buffer[0] == 1) {
+				cancel_delayed_work_sync(
+					&abc->jeita_cc_work);
+				schedule_delayed_work(
+					&abc->jeita_cc_work, 5 * HZ);
+			} else {
+				cancel_delayed_work_sync(
+					&abc->jeita_cc_work);
+			}
+		}
 		break;
 	default:
 		dev_err(dev, "Unknown opcode: %u\n", hdr->opcode);
@@ -391,6 +435,8 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	INIT_DELAYED_WORK(&abc->panel_check_work, panel_check_worker);
 	INIT_DELAYED_WORK(&abc->workaround_18w_work, workaround_18w_worker);
 	INIT_DELAYED_WORK(&abc->thermal_policy_work, thermal_policy_worker);
+	INIT_DELAYED_WORK(&abc->jeita_prechg_work, jeita_prechg_worker);
+	INIT_DELAYED_WORK(&abc->jeita_cc_work, jeita_cc_worker);
 
 	abc->initialized = true;
 
@@ -403,6 +449,8 @@ int asus_battery_charger_deinit(struct asus_battery_chg *abc)
 	cancel_delayed_work_sync(&abc->panel_check_work);
 	cancel_delayed_work_sync(&abc->workaround_18w_work);
 	cancel_delayed_work_sync(&abc->thermal_policy_work);
+	cancel_delayed_work_sync(&abc->jeita_prechg_work);
+	cancel_delayed_work_sync(&abc->jeita_cc_work);
 
 	return 0;
 }

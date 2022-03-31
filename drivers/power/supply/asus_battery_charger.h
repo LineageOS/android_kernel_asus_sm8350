@@ -26,6 +26,8 @@ struct asus_battery_chg {
 	struct delayed_work		panel_check_work;
 	struct delayed_work		workaround_18w_work;
 	struct delayed_work		thermal_policy_work;
+	struct delayed_work		jeita_prechg_work;
+	struct delayed_work		jeita_cc_work;
 };
 
 int asus_battery_charger_init(struct asus_battery_chg *abc);
