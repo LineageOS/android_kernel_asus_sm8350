@@ -26,6 +26,7 @@
 #define OEM_SET_OTG_WA			0x2107
 #define OEM_USB_PRESENT			0x2108
 #define OEM_WORK_EVENT_REQ		0x2110
+#define OEM_JEITA_CC_STATE_REQ		0x2112
 
 #define dwork_to_abc(work, member) \
 	container_of(to_delayed_work(work), struct asus_battery_chg, member)
@@ -53,6 +54,11 @@ struct oem_notify_work_event_msg {
 	u32 work;
 	u32 data_buffer[OEM_PROPERTY_MAX_DATA_SIZE];
 	u32 data_size;
+};
+
+struct oem_jeita_cc_state_msg {
+	struct pmic_glink_hdr hdr;
+	u32 state;
 };
 
 extern bool g_Charger_mode;
@@ -219,6 +225,7 @@ static void handle_notification(struct asus_battery_chg *abc, void *data,
 				size_t len)
 {
 	struct device *dev = battery_chg_device(abc->bcdev);
+	struct oem_jeita_cc_state_msg *jeita_cc_state_msg;
 	struct oem_notify_work_event_msg *work_event_msg;
 	struct oem_enable_change_msg *enable_change_msg;
 	struct pmic_glink_hdr *hdr = data;
@@ -258,6 +265,11 @@ static void handle_notification(struct asus_battery_chg *abc, void *data,
 					&abc->jeita_cc_work);
 			}
 		}
+		break;
+	case OEM_JEITA_CC_STATE_REQ:
+		CHECK_SET_DATA(jeita_cc_state_msg);
+
+		abc->jeita_cc_state = jeita_cc_state_msg->state;
 		break;
 	default:
 		dev_err(dev, "Unknown opcode: %u\n", hdr->opcode);
