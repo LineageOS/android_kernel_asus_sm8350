@@ -21,6 +21,7 @@ struct asus_battery_chg {
 	struct notifier_block		usb_online_notifier;
 	bool				usb_online;
 	int				thermal_threshold;
+	struct delayed_work		thermal_policy_work;
 };
 
 int asus_battery_charger_init(struct asus_battery_chg *abc);

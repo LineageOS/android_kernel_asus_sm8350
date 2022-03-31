@@ -11,6 +11,8 @@
 #define THERMAL_ALERT_NO_AC		1
 #define THERMAL_ALERT_WITH_AC		2
 
+#define OEM_THERMAL_THRESHOLD		23
+
 #define OEM_OPCODE_WRITE_BUFFER		0x10001
 
 #define OEM_PROPERTY_MAX_DATA_SIZE	16
@@ -51,7 +53,10 @@ static int handle_usb_online(struct notifier_block *nb, unsigned long status,
 	abc->usb_online = status;
 
 	if (status) {
+		cancel_delayed_work_sync(&abc->thermal_policy_work);
+		schedule_delayed_work(&abc->thermal_policy_work, 68 * HZ);
 	} else {
+		cancel_delayed_work_sync(&abc->thermal_policy_work);
 	}
 
 	return 0;
@@ -110,6 +115,21 @@ out:
 			      msecs_to_jiffies(USB_THERMAL_WORK_MSECS));
 }
 
+static void thermal_policy_worker(struct work_struct *work)
+{
+	struct asus_battery_chg *abc = dwork_to_abc(work, thermal_policy_work);
+	struct device *dev = battery_chg_device(abc->bcdev);
+	u32 tmp = abc->thermal_threshold;
+	int rc;
+
+	rc = write_property_id_oem(abc, OEM_THERMAL_THRESHOLD, &tmp, 1);
+	if (rc)
+		dev_err(dev, "Failed to write thermal threshold %u, rc=%d\n",
+			tmp, rc);
+
+	schedule_delayed_work(&abc->thermal_policy_work, 10 * HZ);
+}
+
 #define CHECK_SET_DATA(msg)						\
 	if (len != sizeof(*msg)) {					\
 		dev_err(dev, "Bad response length %zu for opcode %u\n",	\
@@ -158,6 +178,7 @@ static void handle_message(struct asus_battery_chg *abc, void *data,
 
 		switch (resp_msg->oem_property_id) {
 		case OEM_THERMAL_ALERT_SET:
+		case OEM_THERMAL_THRESHOLD:
 			ack_set = true;
 			break;
 		default:
@@ -301,6 +322,8 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	INIT_DELAYED_WORK(&abc->usb_thermal_work, usb_thermal_worker);
 	schedule_delayed_work(&abc->usb_thermal_work, 0);
 
+	INIT_DELAYED_WORK(&abc->thermal_policy_work, thermal_policy_worker);
+
 	abc->initialized = true;
 
 	return 0;
@@ -309,6 +332,7 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 int asus_battery_charger_deinit(struct asus_battery_chg *abc)
 {
 	cancel_delayed_work_sync(&abc->usb_thermal_work);
+	cancel_delayed_work_sync(&abc->thermal_policy_work);
 
 	return 0;
 }
