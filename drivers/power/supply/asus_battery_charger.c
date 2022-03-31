@@ -197,6 +197,11 @@ static int pmic_glink_cb(void *priv, void *data, size_t len)
 	return 0;
 }
 
+static struct attribute *asuslib_class_attrs[] = {
+	NULL,
+};
+ATTRIBUTE_GROUPS(asuslib_class);
+
 void unregister_pmic_glink_client(void *data)
 {
 	struct pmic_glink_client *client = data;
@@ -209,6 +214,13 @@ void unregister_usb_online_notifier(void *data)
 	struct notifier_block *nb = data;
 
 	qti_charge_unregister_notify(nb);
+}
+
+void unregister_asuslib_class(void *data)
+{
+	struct class *class = data;
+
+	class_unregister(class);
 }
 
 int asus_battery_charger_init(struct asus_battery_chg *abc)
@@ -235,6 +247,19 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	qti_charge_register_notify(&abc->usb_online_notifier);
 	rc = devm_add_action_or_reset(dev, unregister_usb_online_notifier,
 				      &abc->usb_online_notifier);
+	if (rc)
+		return rc;
+
+	abc->asuslib_class.name = "asuslib";
+	abc->asuslib_class.class_groups = asuslib_class_groups;
+	rc = class_register(&abc->asuslib_class);
+	if (rc) {
+		dev_err(dev, "Failed to create asuslib_class rc=%d\n", rc);
+		return rc;
+	}
+
+	rc = devm_add_action_or_reset(dev, unregister_asuslib_class,
+				      &abc->asuslib_class);
 	if (rc)
 		return rc;
 
