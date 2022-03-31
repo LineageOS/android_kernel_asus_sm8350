@@ -15,6 +15,7 @@ struct asus_battery_chg {
 	bool				initialized;
 	struct class			asuslib_class;
 	struct battery_chg_dev		*bcdev;
+	struct power_supply		*batt_psy;
 	struct pmic_glink_client	*client;
 	struct wakeup_source		*slowchg_ws;
 	struct gpio_desc		*otg_switch;
