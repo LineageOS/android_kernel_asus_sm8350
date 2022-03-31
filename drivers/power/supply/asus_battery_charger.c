@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <linux/of.h>
+
 #include "asus_battery_charger.h"
 
 #define MSG_OWNER_OEM			32782
@@ -10,6 +12,8 @@
 #define THERMAL_ALERT_NONE		0
 #define THERMAL_ALERT_NO_AC		1
 #define THERMAL_ALERT_WITH_AC		2
+
+#define OEM_PANEL_CHECK			15
 
 #define OEM_WORK_EVENT			16
 #define WORK_JEITA_RULE			0
@@ -261,6 +265,43 @@ static void charger_mode_worker(struct work_struct *work)
 			tmp, rc);
 }
 
+static void panel_state_worker(struct work_struct *work)
+{
+	struct asus_battery_chg *abc = dwork_to_abc(work, panel_state_work);
+	struct device *dev = battery_chg_device(abc->bcdev);
+	u32 tmp = abc->panel_on;
+	int rc;
+
+	rc = write_property_id_oem(abc, OEM_PANEL_CHECK, &tmp, 1);
+	if (rc)
+		dev_err(dev, "Failed to write panel check %u, rc=%d\n",
+			tmp, rc);
+}
+
+static int drm_notifier_callback(struct notifier_block *self,
+				 unsigned long event, void *data)
+{
+	struct asus_battery_chg *abc = container_of(self,
+						    struct asus_battery_chg,
+						    drm_notif);
+	struct drm_panel_notifier *evdata = data;
+	int *blank = evdata->data;
+
+	if (!evdata || event != DRM_PANEL_EVENT_BLANK)
+		return 0;
+
+	if (*blank == DRM_PANEL_BLANK_UNBLANK)
+		abc->panel_on = true;
+	else if (*blank == DRM_PANEL_BLANK_POWERDOWN)
+		abc->panel_on = false;
+	else
+		return 0;
+
+	schedule_delayed_work(&abc->panel_state_work, 0);
+
+	return 0;
+}
+
 #define CHECK_SET_DATA(msg)						\
 	if (len != sizeof(*msg)) {					\
 		dev_err(dev, "Bad response length %zu for opcode %u\n",	\
@@ -344,6 +385,7 @@ static void handle_message(struct asus_battery_chg *abc, void *data,
 		case OEM_THERMAL_THRESHOLD:
 		case OEM_WORK_EVENT:
 		case OEM_CHG_MODE:
+		case OEM_PANEL_CHECK:
 			ack_set = true;
 			break;
 		default:
@@ -428,7 +470,27 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 {
 	struct device *dev = battery_chg_device(abc->bcdev);
 	struct pmic_glink_client_data client_data = { };
+	struct device_node *node = dev->of_node;
+	struct device_node *panel_node;
+	int count;
 	int rc;
+	int i;
+
+	count = of_count_phandle_with_args(node, "panel", NULL);
+	for (i = 0; i < count; i++) {
+		panel_node = of_parse_phandle(node, "panel", i);
+		abc->panel = of_drm_find_panel(panel_node);
+		of_node_put(panel_node);
+		if (!IS_ERR(abc->panel))
+			break;
+
+		abc->panel = NULL;
+	}
+
+	if (!abc->panel) {
+		dev_err(dev, "Failed to get panel\n");
+		return -EINVAL;
+	}
 
 	abc->otg_switch = devm_gpiod_get(dev, "otg-load-switch", GPIOD_OUT_LOW);
 	if (IS_ERR(abc->otg_switch)) {
@@ -489,6 +551,10 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 				      &abc->client);
 	if (rc)
 		return rc;
+
+	abc->drm_notif.notifier_call = drm_notifier_callback;
+	drm_panel_notifier_register(abc->panel, &abc->drm_notif);
+	INIT_DELAYED_WORK(&abc->panel_state_work, panel_state_worker);
 
 	INIT_DELAYED_WORK(&abc->usb_thermal_work, usb_thermal_worker);
 	schedule_delayed_work(&abc->usb_thermal_work, 0);
