@@ -17,6 +17,7 @@ enum battery_charger_prop {
 struct battery_chg_dev;
 
 int battery_chg_write(struct battery_chg_dev *bcdev, void *data, int len);
+void battery_chg_complete_ack(struct battery_chg_dev *bcdev);
 int qti_battery_charger_get_prop(const char *name,
 				enum battery_charger_prop prop_id, int *val);
 void qti_charge_register_notify(struct notifier_block *nb);
