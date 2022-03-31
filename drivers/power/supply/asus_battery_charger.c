@@ -492,6 +492,12 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 		return -EINVAL;
 	}
 
+	abc->batt_psy = power_supply_get_by_name("battery");
+	if (!abc->batt_psy) {
+		dev_err(dev, "Failed to get battery psy\n");
+		return -ENODEV;
+	}
+
 	abc->otg_switch = devm_gpiod_get(dev, "otg-load-switch", GPIOD_OUT_LOW);
 	if (IS_ERR(abc->otg_switch)) {
 		rc = PTR_ERR(abc->otg_switch);
