@@ -197,7 +197,22 @@ static int pmic_glink_cb(void *priv, void *data, size_t len)
 	return 0;
 }
 
+static ssize_t set_virtualthermal_store(struct class *c,
+					struct class_attribute *attr,
+					const char *buf, size_t count)
+{
+	struct asus_battery_chg *abc = container_of(c, struct asus_battery_chg,
+						    asuslib_class);
+
+	if (kstrtoint(buf, 0, &abc->thermal_threshold))
+		return -EINVAL;
+
+	return count;
+}
+static CLASS_ATTR_WO(set_virtualthermal);
+
 static struct attribute *asuslib_class_attrs[] = {
+	&class_attr_set_virtualthermal.attr,
 	NULL,
 };
 ATTRIBUTE_GROUPS(asuslib_class);
