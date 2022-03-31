@@ -623,10 +623,12 @@ static int drm_notifier_callback(struct notifier_block *self,
 						    struct asus_battery_chg,
 						    drm_notif);
 	struct drm_panel_notifier *evdata = data;
-	int *blank = evdata->data;
+	int *blank;
 
 	if (!evdata || event != DRM_PANEL_EVENT_BLANK)
 		return 0;
+
+	blank = evdata->data;
 
 	if (*blank == DRM_PANEL_BLANK_UNBLANK)
 		abc->panel_on = true;
