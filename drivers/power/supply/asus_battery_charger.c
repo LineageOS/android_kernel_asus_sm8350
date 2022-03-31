@@ -11,6 +11,8 @@
 #define THERMAL_ALERT_NO_AC		1
 #define THERMAL_ALERT_WITH_AC		2
 
+#define OEM_WORK_EVENT			16
+
 #define OEM_THERMAL_THRESHOLD		23
 
 #define OEM_OPCODE_WRITE_BUFFER		0x10001
@@ -76,6 +78,19 @@ static int write_property_id_oem(struct asus_battery_chg *abc, u32 prop_id,
 	memcpy(req_msg.data_buffer, buf, sizeof(u32) * count);
 
 	return battery_chg_write(abc->bcdev, &req_msg, sizeof(req_msg));
+}
+
+static int write_property_work_event(struct asus_battery_chg *abc, u32 event)
+{
+	struct device *dev = battery_chg_device(abc->bcdev);
+	int rc;
+
+	rc = write_property_id_oem(abc, OEM_WORK_EVENT, &event, 1);
+	if (rc)
+		dev_err(dev, "Failed to write work event %u, rc=%d\n", event,
+			rc);
+
+	return rc;
 }
 
 #define TEMP_TRIGGER			70000
@@ -179,6 +194,7 @@ static void handle_message(struct asus_battery_chg *abc, void *data,
 		switch (resp_msg->oem_property_id) {
 		case OEM_THERMAL_ALERT_SET:
 		case OEM_THERMAL_THRESHOLD:
+		case OEM_WORK_EVENT:
 			ack_set = true;
 			break;
 		default:
