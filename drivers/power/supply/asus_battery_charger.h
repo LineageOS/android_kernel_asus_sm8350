@@ -7,6 +7,7 @@
 #include <linux/iio/consumer.h>
 #include <linux/soc/qcom/battery_charger.h>
 #include <linux/soc/qcom/pmic_glink.h>
+#include <linux/pm_wakeup.h>
 #include <linux/workqueue.h>
 
 struct asus_battery_chg {
@@ -14,6 +15,7 @@ struct asus_battery_chg {
 	struct class			asuslib_class;
 	struct battery_chg_dev		*bcdev;
 	struct pmic_glink_client	*client;
+	struct wakeup_source		*slowchg_ws;
 	struct gpio_desc		*otg_switch;
 	bool				usb_present;
 	struct iio_channel		*temp_chan;
