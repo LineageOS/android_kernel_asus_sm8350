@@ -24,6 +24,7 @@ struct asus_battery_chg {
 	bool				usb_online;
 	int				thermal_threshold;
 	struct delayed_work		panel_check_work;
+	struct delayed_work		charger_mode_work;
 	struct delayed_work		workaround_18w_work;
 	struct delayed_work		thermal_policy_work;
 	int				jeita_cc_state;

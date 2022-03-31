@@ -19,6 +19,8 @@
 #define WORK_LONG_FULL_CAP		4
 #define WORK_18W_WORKAROUND		5
 
+#define OEM_CHG_MODE			22
+
 #define OEM_THERMAL_THRESHOLD		23
 
 #define JETA_NONE			0
@@ -244,6 +246,21 @@ static void full_cap_monitor_worker(struct work_struct *work)
 	schedule_delayed_work(&abc->full_cap_monitor_work, 30 * HZ);
 }
 
+extern bool g_Charger_mode;
+
+static void charger_mode_worker(struct work_struct *work)
+{
+	struct asus_battery_chg *abc = dwork_to_abc(work, charger_mode_work);
+	struct device *dev = battery_chg_device(abc->bcdev);
+	u32 tmp = g_Charger_mode;
+	int rc;
+
+	rc = write_property_id_oem(abc, OEM_CHG_MODE, &tmp, 1);
+	if (rc)
+		dev_err(dev, "Failed to write thermal threshold %u, rc=%d\n",
+			tmp, rc);
+}
+
 #define CHECK_SET_DATA(msg)						\
 	if (len != sizeof(*msg)) {					\
 		dev_err(dev, "Bad response length %zu for opcode %u\n",	\
@@ -326,6 +343,7 @@ static void handle_message(struct asus_battery_chg *abc, void *data,
 		case OEM_THERMAL_ALERT_SET:
 		case OEM_THERMAL_THRESHOLD:
 		case OEM_WORK_EVENT:
+		case OEM_CHG_MODE:
 			ack_set = true;
 			break;
 		default:
@@ -478,6 +496,9 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	INIT_DELAYED_WORK(&abc->full_cap_monitor_work, full_cap_monitor_worker);
 	schedule_delayed_work(&abc->full_cap_monitor_work, 0);
 
+	INIT_DELAYED_WORK(&abc->charger_mode_work, charger_mode_worker);
+	schedule_delayed_work(&abc->charger_mode_work, 0);
+
 	INIT_DELAYED_WORK(&abc->panel_check_work, panel_check_worker);
 	INIT_DELAYED_WORK(&abc->workaround_18w_work, workaround_18w_worker);
 	INIT_DELAYED_WORK(&abc->thermal_policy_work, thermal_policy_worker);
@@ -494,6 +515,7 @@ int asus_battery_charger_deinit(struct asus_battery_chg *abc)
 {
 	cancel_delayed_work_sync(&abc->usb_thermal_work);
 	cancel_delayed_work_sync(&abc->full_cap_monitor_work);
+	cancel_delayed_work_sync(&abc->charger_mode_work);
 	cancel_delayed_work_sync(&abc->panel_check_work);
 	cancel_delayed_work_sync(&abc->workaround_18w_work);
 	cancel_delayed_work_sync(&abc->thermal_policy_work);
