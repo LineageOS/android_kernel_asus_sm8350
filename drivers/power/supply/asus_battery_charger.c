@@ -39,6 +39,24 @@ struct oem_enable_change_msg {
 	u32 enable;
 };
 
+static int handle_usb_online(struct notifier_block *nb, unsigned long status,
+			     void *unused)
+{
+	struct asus_battery_chg *abc = container_of(nb, struct asus_battery_chg,
+						    usb_online_notifier);
+
+	if (abc->usb_online == status)
+		return 0;
+
+	abc->usb_online = status;
+
+	if (status) {
+	} else {
+	}
+
+	return 0;
+}
+
 static int write_property_id_oem(struct asus_battery_chg *abc, u32 prop_id,
 				 u32 *buf, size_t count)
 {
@@ -186,6 +204,13 @@ void unregister_pmic_glink_client(void *data)
 	pmic_glink_unregister_client(client);
 }
 
+void unregister_usb_online_notifier(void *data)
+{
+	struct notifier_block *nb = data;
+
+	qti_charge_unregister_notify(nb);
+}
+
 int asus_battery_charger_init(struct asus_battery_chg *abc)
 {
 	struct device *dev = battery_chg_device(abc->bcdev);
@@ -205,6 +230,13 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 		dev_err(dev, "Failed to get temp channel, rc=%d\n", rc);
 		return rc;
 	}
+
+	abc->usb_online_notifier.notifier_call = handle_usb_online;
+	qti_charge_register_notify(&abc->usb_online_notifier);
+	rc = devm_add_action_or_reset(dev, unregister_usb_online_notifier,
+				      &abc->usb_online_notifier);
+	if (rc)
+		return rc;
 
 	client_data.id = MSG_OWNER_OEM;
 	client_data.name = "asus_BC";
