@@ -20,6 +20,10 @@
 #include <linux/soc/qcom/pmic_glink.h>
 #include <linux/soc/qcom/battery_charger.h>
 
+#ifdef CONFIG_MACH_ASUS
+#include "asus_battery_charger.h"
+#endif
+
 #define MSG_OWNER_BC			32778
 #define MSG_TYPE_REQ_RESP		1
 #define MSG_TYPE_NOTIFY			2
@@ -243,6 +247,10 @@ struct battery_chg_dev {
 	bool				restrict_chg_en;
 	/* To track the driver initialization status */
 	bool				initialized;
+
+#ifdef CONFIG_MACH_ASUS
+	struct asus_battery_chg		abc;
+#endif
 };
 
 static const int battery_prop_map[BATT_PROP_MAX] = {
@@ -345,7 +353,7 @@ static int battery_chg_fw_write(struct battery_chg_dev *bcdev, void *data,
 	return rc;
 }
 
-static int battery_chg_write(struct battery_chg_dev *bcdev, void *data,
+int battery_chg_write(struct battery_chg_dev *bcdev, void *data,
 				int len)
 {
 	int rc;
@@ -1983,6 +1991,15 @@ static int battery_chg_probe(struct platform_device *pdev)
 		goto error;
 	}
 
+#ifdef CONFIG_MACH_ASUS
+	bcdev->abc.bcdev = bcdev;
+	rc = asus_battery_charger_init(&bcdev->abc);
+	if (rc) {
+		dev_err(dev, "Failed to initialize asus battery, rc=%d\n", rc);
+		goto error;
+	}
+#endif
+
 	battery_chg_add_debugfs(bcdev);
 	battery_chg_notify_enable(bcdev);
 	device_init_wakeup(bcdev->dev, true);
@@ -2011,6 +2028,9 @@ static int battery_chg_remove(struct platform_device *pdev)
 		pr_err("Error unregistering from pmic_glink, rc=%d\n", rc);
 		return rc;
 	}
+#ifdef CONFIG_MACH_ASUS
+	asus_battery_charger_deinit(&bcdev->abc);
+#endif
 
 	return 0;
 }
