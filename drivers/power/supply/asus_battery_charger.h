@@ -3,6 +3,7 @@
 #ifndef _ASUS_BATTERY_CHARGER_H
 #define _ASUS_BATTERY_CHARGER_H
 
+#include <drm/drm_panel.h>
 #include <linux/gpio/consumer.h>
 #include <linux/iio/consumer.h>
 #include <linux/soc/qcom/battery_charger.h>
@@ -17,6 +18,10 @@ struct asus_battery_chg {
 	struct pmic_glink_client	*client;
 	struct wakeup_source		*slowchg_ws;
 	struct gpio_desc		*otg_switch;
+	struct drm_panel		*panel;
+	struct notifier_block		drm_notif;
+	bool				panel_on;
+	struct delayed_work		panel_state_work;
 	bool				usb_present;
 	struct iio_channel		*temp_chan;
 	struct delayed_work		usb_thermal_work;
