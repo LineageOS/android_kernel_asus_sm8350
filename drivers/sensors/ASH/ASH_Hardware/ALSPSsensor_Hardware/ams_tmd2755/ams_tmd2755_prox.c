@@ -338,6 +338,9 @@ int tmd2755_configure_prox_mode(struct tmd2755_chip *chip, u8 state)
 		  tmd2755_offset_calibration(chip);
 		}else{
 			log("use previous offset=%d", chip->params.poffset);
+			if(chip->params.poffset <= 0){
+				chip->params.poffset = TMD2755_PROXIMITY_OFFSET_DEFAULT;
+			}
 			tmd2755_write_poffset(chip);
 		}
 

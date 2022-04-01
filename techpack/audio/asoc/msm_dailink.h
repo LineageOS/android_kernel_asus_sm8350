@@ -963,13 +963,13 @@ SND_SOC_DAILINK_DEFS(pri_mi2s_rx,
 
 #if defined ASUS_VODKA_PROJECT
 SND_SOC_DAILINK_DEFS(pri_mi2s_tx,
-	DAILINK_COMP_ARRAY(COMP_CPU("msm-dai-q6-mi2s.0")),
+	DAILINK_COMP_ARRAY(COMP_CPU("msm-dai-q6-mi2s.1")),
 	DAILINK_COMP_ARRAY(COMP_CODEC("tfa98xx.3-0034", "tfa98xx-aif-3-34"),
 			   COMP_CODEC("tfa98xx.3-0035", "tfa98xx-aif-3-35")),
 	DAILINK_COMP_ARRAY(COMP_PLATFORM("msm-pcm-routing")));
 #elif defined ASUS_SAKE_PROJECT
 SND_SOC_DAILINK_DEFS(pri_mi2s_tx,
-	DAILINK_COMP_ARRAY(COMP_CPU("msm-dai-q6-mi2s.0")),
+	DAILINK_COMP_ARRAY(COMP_CPU("msm-dai-q6-mi2s.1")),
 	DAILINK_COMP_ARRAY(COMP_CODEC("cs35l45.3-0030", "cs35l45"),
 			   COMP_CODEC("cs35l45.3-0031", "cs35l45")),
 	DAILINK_COMP_ARRAY(COMP_PLATFORM("msm-pcm-routing")));

@@ -900,9 +900,17 @@ static int icm_set_power_mode(struct icm_sensor *sensor,
 	s32 ret;
 	u8 val;
 
-	ret = icm_read_byte_data(sensor, sensor->reg.pwr_mgmt_1);
+	int count = 5;
+	u8 i = 0;
+	for (i = 0; i < count; i++) {
+		ret = icm_read_byte_data(sensor, sensor->reg.pwr_mgmt_1);
+		if (ret < 0) {
+			icm_errmsg("Fail to read power mode, ret=%d, retry:%u/%d\n", ret, i, count);
+		} else{
+			break;
+		}
+	}
 	if (ret < 0) {
-		icm_errmsg("Fail to read power mode, ret=%d\n", ret);
 		return ret;
 	}
 
@@ -2244,6 +2252,7 @@ static int icm_check_chip_type(struct icm_sensor *sensor)
 	struct icm_reg_map *reg;
 	s32 ret;
 
+	sensor->chip_type = INV_ICM20690;
 	reg = &sensor->reg;
 	setup_icm_reg(reg);
 	ret = icm_set_power_mode(sensor, false);
@@ -2261,7 +2270,6 @@ static int icm_check_chip_type(struct icm_sensor *sensor)
 		return 0;
 
 	sensor->deviceid = ret;
-	sensor->chip_type = INV_ICM20690;
 	icm_dbgmsg("WHOAMI=0x%x", ret);
 
 	if (sensor->deviceid != ICM20690_ID) {

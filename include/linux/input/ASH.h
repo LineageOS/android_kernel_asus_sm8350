@@ -973,6 +973,7 @@ typedef struct psensor_hw {
 	int (*proximity_hw_get_offset)(void);
 	int (*proximity_hw_set_fac_offset)(int offset);
 	int (*proximity_hw_set_offset_limit)(int en, int thresh);
+	int (*proximity_hw_set_offset)(int offset);
 }psensor_hw;
 
 /**

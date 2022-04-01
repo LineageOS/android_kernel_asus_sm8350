@@ -20,6 +20,7 @@
 			qcom,supply-max-voltage = <1800000>;
 			qcom,supply-enable-load = <60700>;
 			qcom,supply-disable-load = <80>;
+			qcom,supply-ulp-load = <60700>;
 		};
 
 		qcom,panel-supply-entry@1 {
@@ -29,6 +30,7 @@
 			qcom,supply-max-voltage = <3000000>;
 			qcom,supply-enable-load = <10000>;
 			qcom,supply-disable-load = <0>;
+			qcom,supply-ulp-load = <10000>;
 			qcom,supply-post-on-sleep = <0>;
 			qcom,supply-pre-off-sleep = <10>;
 		};
@@ -543,9 +545,12 @@
 	qcom,tlmm-pins = <168>;
 };
 
-&dai_mi2s0 {
-	qcom,msm-mi2s-rx-lines = <2>;
-	qcom,msm-mi2s-tx-lines = <1>;
+&dai_mi2s0_rx {
+	qcom,msm-mi2s-lines = <2>;
+};
+
+&dai_mi2s0_tx {
+	qcom,msm-mi2s-lines = <1>;
 };
 
 &wcd938x_codec {
@@ -589,7 +594,7 @@
 		};
 		cirrus,ldpm-config {
 			ldpm-gp1-boost-sel = <0x1>;
-			ldpm-gp1-amp-sel = <0x1>;
+			ldpm-gp1-amp-sel = <0x0>;
 			ldpm-gp1-delay = <0x3>;
 			ldpm-gp1-pcm-thld = <0x6>;
 			ldpm-gp2-imon-sel = <0x1>;
@@ -629,7 +634,7 @@
 		};
 		cirrus,ldpm-config {
 			ldpm-gp1-boost-sel = <0x1>;
-			ldpm-gp1-amp-sel = <0x1>;
+			ldpm-gp1-amp-sel = <0x0>;
 			ldpm-gp1-delay = <0x3>;
 			ldpm-gp1-pcm-thld = <0x6>;
 			ldpm-gp2-imon-sel = <0x1>;

@@ -180,6 +180,10 @@ struct psensor_data
 	int crosstalk_diff;
 
 	int selection;
+
+	/* ASUS BSP: add psensor recovery status for re-autok issue */
+	int recovery_mode;
+
 	/* ASUS BSP+++ Clay: dynamic proxmity period due to psensor noise effect */
 	int cur_period;
 	/* ASUS BSP--- */
@@ -419,6 +423,8 @@ static void psensor_onoff_recovery(bool bOn){
 			if(g_ps_data->HAL_switch_on == true){
 				log("Close psensor temporary");
 				proximity_turn_onoff(bOn);
+				/* ASUS BSP: add psensor recovery status for re-autok issue */
+				g_ps_data->recovery_mode = true;
 			}
 		}
 	}
@@ -475,7 +481,10 @@ static int proximity_turn_onoff(bool bOn)
 
 		/*check the min for auto calibration*/
 		if(true == g_ps_data->autok){
-			g_ps_data->crosstalk_diff = 0;
+			/* ASUS BSP: add psensor recovery status for re-autok issue */
+			if(g_ps_data->recovery_mode != true){
+				g_ps_data->crosstalk_diff = 0;
+			}
 			/*Stage 1 : check first 6 adc which spend about 50ms~100ms*/
 			ret = proximity_check_minCT();
 			if (ret < 0) {
@@ -1765,6 +1774,9 @@ static int mproximity_store_switch_onoff(bool bOn)
 
 	if ((g_ps_data->Device_switch_on != bOn)){
 		if (bOn == true)	{
+			/* ASUS BSP: add psensor recovery status for re-autok issue */
+			g_ps_data->recovery_mode = false;
+
 			/* Turn on Proxomity */
 			g_ps_data->HAL_switch_on = true;
 			if(g_Psensor_load_cal_status){
@@ -2046,6 +2058,11 @@ static int mproximity_store_load_calibration_data(void)
 	}else{
 		err("Proximity read DEFAULT Offset Calibration : %d\n", g_ps_data->g_ps_calvalue_offset);
 	}
+#ifdef CONFIG_TMD2755_FLAG
+		if(g_ALSPS_hw_client->mpsensor_hw->proximity_hw_set_offset){
+			g_ALSPS_hw_client->mpsensor_hw->proximity_hw_set_offset(g_ps_data->g_ps_calvalue_offset);
+		}
+#endif
 
 	log("Proximity load factory Calibration done!\n");
 	return ret;
@@ -2622,7 +2639,6 @@ bool proximityStatus(void)
 		if(g_ALSPS_hw_client->mpsensor_hw->proximity_hw_chip_cal_en){
 			g_ALSPS_hw_client->mpsensor_hw->proximity_hw_chip_cal_en(false);
 		}
-
 		ret = g_ALSPS_hw_client->mpsensor_hw->proximity_hw_turn_onoff(true);
 		if(ret < 0){
 			err("proximity_hw_turn_onoff(true) ERROR\n");
@@ -2697,34 +2713,39 @@ static int proximity_check_minCT(void)
 
 	log("Proximity INF Calibration : %d\n", g_ps_data->g_ps_calvalue_inf);
 
-	/* ASUS BSP+++ Clay: dynamic proxmity period due to psensor noise effect */
-	if(g_ps_data->cur_period == PROXIMITY_NOISE_PERIOD &&
-			PROXIMITY_NOISE_PERIOD != PROXIMITY_BASIC_PERIOD){
-		count = PROXIMITY_NOISE_AUTOK_COUNT;
-		delay = PROXIMITY_NOISE_AUTOK_DELAY;
+	if(g_ps_data->recovery_mode == true){
+		log("apply previous crosstalk diff when psensor is on recovery mode, crosstalk = %d", g_ps_data->crosstalk_diff);
+		crosstalk_diff = g_ps_data->crosstalk_diff;
 	}else{
-		count = PROXIMITY_AUTOK_COUNT;
-		delay = PROXIMITY_AUTOK_DELAY;
-	}
-	log("count=%d, delay=%d, period=%d\n", count, delay, g_ps_data->cur_period);
-	/* ASUS BSP--- */
-	
-	/*update the min crosstalk value*/
-	for(round=0; round<count; round++){	
-		mdelay(delay);
-		adc_value = g_ALSPS_hw_client->mpsensor_hw->proximity_hw_get_adc();
-		log("proximity auto calibration adc : %d\n", adc_value);
-		if(adc_value < crosstalk_min ){
-			crosstalk_min = adc_value;
-			log("Update the min for crosstalk : %d\n", crosstalk_min);
+		/* ASUS BSP+++ Clay: dynamic proxmity period due to psensor noise effect */
+		if(g_ps_data->cur_period == PROXIMITY_NOISE_PERIOD &&
+				PROXIMITY_NOISE_PERIOD != PROXIMITY_BASIC_PERIOD){
+			count = PROXIMITY_NOISE_AUTOK_COUNT;
+			delay = PROXIMITY_NOISE_AUTOK_DELAY;
+		}else{
+			count = PROXIMITY_AUTOK_COUNT;
+			delay = PROXIMITY_AUTOK_DELAY;
 		}
+		log("count=%d, delay=%d, period=%d\n", count, delay, g_ps_data->cur_period);
+		/* ASUS BSP--- */
+
+		/*update the min crosstalk value*/
+		for(round=0; round<count; round++){	
+			mdelay(delay);
+			adc_value = g_ALSPS_hw_client->mpsensor_hw->proximity_hw_get_adc();
+			log("proximity auto calibration adc : %d\n", adc_value);
+			if(adc_value < crosstalk_min ){
+				crosstalk_min = adc_value;
+				log("Update the min for crosstalk : %d\n", crosstalk_min);
+			}
+		}
+		/*update the diff crosstalk value*/
+		crosstalk_diff = crosstalk_min -g_ps_data->g_ps_calvalue_inf;
 	}
 
-	/*update the diff crosstalk value*/
-	crosstalk_diff = crosstalk_min -g_ps_data->g_ps_calvalue_inf;
 	if(crosstalk_diff>g_ps_data->g_ps_autok_min && crosstalk_diff<g_ps_data->g_ps_autok_max){
 		log("Update the diff for crosstalk : %d\n", crosstalk_diff);
-		
+
 		//ASUS BSP Clay +++: prevent near > (pocket-500) after autok
 		crosstalk_limit = g_pocket_mode_threshold - 500 - g_ps_data->g_ps_factory_cal_hi;
 		if(crosstalk_diff > crosstalk_limit){
@@ -3016,6 +3037,8 @@ static int init_data(void)
 #else
 	g_ps_data->autok =            true;
 #endif
+	/* ASUS BSP: add psensor recovery status for re-autok issue */
+	g_ps_data->recovery_mode = false;
 
 	
 	g_ps_data->g_ps_calvalue_hi = g_ALSPS_hw_client->mpsensor_hw->proximity_hi_threshold_default;

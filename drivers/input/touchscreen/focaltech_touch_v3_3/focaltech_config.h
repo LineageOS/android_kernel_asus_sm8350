@@ -291,7 +291,7 @@
  */
 #if defined ASUS_SAKE_PROJECT
 #define FTS_UPGRADE_FW_FILE                                                    \
-	"include/firmware/FT3658G_SAKE_V84_D01_20211103_app.i"
+	"include/firmware/FT3658G_SAKE_V85_D01_20211221_app.i"
 #else
 #define FTS_UPGRADE_FW_FILE "include/firmware/fw_sample.i"
 #endif

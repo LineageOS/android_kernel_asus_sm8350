@@ -2591,7 +2591,7 @@ retry:
 			cnss_pr_dbg("Value of SW_CTRL GPIO: %d\n",
 				    cnss_gpio_get_value(plat_priv,
 							sw_ctrl_gpio));
-			msleep(POWER_ON_RETRY_DELAY_MS);
+			msleep(POWER_ON_RETRY_DELAY_MS * retry);
 			goto retry;
 		}
 		/* Assert when it reaches maximum retries */
