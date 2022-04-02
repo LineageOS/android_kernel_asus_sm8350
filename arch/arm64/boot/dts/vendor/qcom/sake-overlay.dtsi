@@ -258,7 +258,7 @@
 	io-channels = <&pmk8350_vadc PM8350B_ADC7_AMUX_THM4_100K_PU>;
 	io-channel-names ="pm8350b_amux_thm4";
 
-	OTG_LOAD_SWITCH = <&tlmm 49 0x0>;
+	otg-load-switch-gpios = <&tlmm 49 0x0>;
 
 	panel = <&dsi_samsung_fhd_cmd>;
 };
