@@ -39,6 +39,8 @@
 
 #define OEM_PROPERTY_MAX_DATA_SIZE	16
 
+#define OEM_EVTLOG_IND			0x1002
+#define OEM_PD_EVTLOG_IND		0x1003
 #define OEM_SET_OTG_WA			0x2107
 #define OEM_USB_PRESENT			0x2108
 #define OEM_WORK_EVENT_REQ		0x2110
@@ -102,6 +104,12 @@ struct oem_notify_work_event_msg {
 struct oem_jeita_cc_state_msg {
 	struct pmic_glink_hdr hdr;
 	u32 state;
+};
+
+struct oem_evtlog_msg {
+	struct pmic_glink_hdr hdr;
+	u8 buf[128];
+	u32 reserved;
 };
 
 extern bool g_Charger_mode;
@@ -657,6 +665,7 @@ static void handle_notification(struct asus_battery_chg *abc, void *data,
 	struct oem_jeita_cc_state_msg *jeita_cc_state_msg;
 	struct oem_notify_work_event_msg *work_event_msg;
 	struct oem_enable_change_msg *enable_change_msg;
+	struct oem_evtlog_msg *evtlog_msg;
 	struct pmic_glink_hdr *hdr = data;
 
 	switch (hdr->opcode) {
@@ -699,6 +708,16 @@ static void handle_notification(struct asus_battery_chg *abc, void *data,
 		CHECK_SET_DATA(jeita_cc_state_msg);
 
 		abc->jeita_cc_state = jeita_cc_state_msg->state;
+		break;
+	case OEM_EVTLOG_IND:
+		CHECK_SET_DATA(evtlog_msg);
+
+		dev_err(dev, "ADSP: %s\n", evtlog_msg->buf);
+		break;
+	case OEM_PD_EVTLOG_IND:
+		CHECK_SET_DATA(evtlog_msg);
+
+		dev_err(dev, "PD: %s\n", evtlog_msg->buf);
 		break;
 	default:
 		dev_err(dev, "Unknown opcode: %u\n", hdr->opcode);
