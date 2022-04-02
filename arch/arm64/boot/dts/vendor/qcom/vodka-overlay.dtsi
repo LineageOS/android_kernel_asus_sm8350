@@ -263,7 +263,7 @@
 
 	panel = <&dsi_samsung_fhd_cmd>;
 
-	OTG_LOAD_SWITCH = <&tlmm 49 0x0>;
+	otg-load-switch-gpios = <&tlmm 49 0x0>;
 };
 
 &qupv3_se15_i2c {
