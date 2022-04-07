@@ -545,9 +545,12 @@
 	qcom,tlmm-pins = <168>;
 };
 
-&dai_mi2s0 {
-	qcom,msm-mi2s-rx-lines = <2>;
-	qcom,msm-mi2s-tx-lines = <1>;
+&dai_mi2s0_rx {
+	qcom,msm-mi2s-lines = <2>;
+};
+
+&dai_mi2s0_tx {
+	qcom,msm-mi2s-lines = <1>;
 };
 
 &wcd938x_codec {
