@@ -594,7 +594,7 @@
 		};
 		cirrus,ldpm-config {
 			ldpm-gp1-boost-sel = <0x1>;
-			ldpm-gp1-amp-sel = <0x1>;
+			ldpm-gp1-amp-sel = <0x0>;
 			ldpm-gp1-delay = <0x3>;
 			ldpm-gp1-pcm-thld = <0x6>;
 			ldpm-gp2-imon-sel = <0x1>;
@@ -634,7 +634,7 @@
 		};
 		cirrus,ldpm-config {
 			ldpm-gp1-boost-sel = <0x1>;
-			ldpm-gp1-amp-sel = <0x1>;
+			ldpm-gp1-amp-sel = <0x0>;
 			ldpm-gp1-delay = <0x3>;
 			ldpm-gp1-pcm-thld = <0x6>;
 			ldpm-gp2-imon-sel = <0x1>;
