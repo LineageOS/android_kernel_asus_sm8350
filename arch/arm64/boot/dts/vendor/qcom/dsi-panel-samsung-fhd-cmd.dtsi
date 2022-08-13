@@ -41,10 +41,47 @@
 		qcom,dynamic-mode-switch-enabled;
 		qcom,dynamic-mode-switch-type = "dynamic-resolution-switch-immediate";
 
-
 		qcom,fod-dim-lut = <
 			/* brightness, alpha */
-			
+			4	232
+			8	229
+			12	226
+			16	222
+			20	215
+			24	212
+			28	210
+			32	208
+			36	206
+			40	203
+			44	201
+			48	199
+			52	197
+			56	195
+			60	193
+			64	191
+			68	190
+			72	192
+			76	188
+			80	185
+			84	183
+			88	182
+			92	180
+			96	178
+			100	180
+			140	166
+			208	160
+			276	146
+			345	135
+			413	120
+			481	110
+			545	102
+			613	92
+			682	87
+			750	79
+			818	74
+			886	70
+			954	61
+			1023	55
 		>;
 
 		qcom,mdss-dsi-display-timings {
