@@ -348,7 +348,7 @@
 					39 01 00 00 00 00 03 B0 09 F2
 					39 01 00 00 00 00 03 F2 26 F8
 					39 01 00 00 00 00 03 F0 A5 A5
-                                        //5.5 Porch clock Set
+					//5.5 Porch clock Set
 					39 01 00 00 00 00 03 F0 5A 5A
 					39 01 00 00 00 00 03 B0 2E F2
 					15 01 00 00 00 00 02 F2 55
@@ -359,12 +359,12 @@
 					39 01 00 00 00 00 03 B0 91 63
 					15 01 00 00 00 00 02 63 14
 					15 01 00 00 00 00 02 53 20
-                                        39 01 00 00 00 00 03 51 00 00
+					39 01 00 00 00 00 03 51 00 00
 					39 01 00 00 00 00 03 F0 A5 A5
 					//8.3 HBM Off Setting
 					15 01 00 00 00 00 02 53 28
 					//8.4 ACL Mode Off
-                                        15 01 00 00 00 00 02 55 00
+					15 01 00 00 00 00 02 55 00
 					05 01 00 00 00 00 02 29 00
 					//5.4 Frequency Change  120-60Hz
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -391,21 +391,6 @@
 					39 01 00 00 00 00 03 60 00 00
 					15 01 00 00 00 00 02 F7 0F
 					39 01 00 00 00 00 03 F0 A5 A5
-				];
-
-				qcom,mdss-dsi-hbm-on-command = [
-					15 01 00 00 00 00 02 53 E8
-					39 01 00 00 00 00 03 51 07 1C
-				];
-
-				qcom,mdss-dsi-cam-hbm-on-command = [
-					15 01 00 00 00 00 02 53 E8
-					39 01 00 00 00 00 03 51 06 28
-				];
-
-				qcom,mdss-dsi-hbm-off-command = [
-					15 01 00 00 00 00 02 53 28
-					39 01 00 00 00 00 03 51 03 FF
 				];
 
 				qcom,mdss-dsi-fod-hbm-on-command = [
@@ -452,22 +437,6 @@
 					39 01 00 00 00 00 03 F0 A5 A5
 				];
 
-				qcom,mdss-dsi-nolp-fod-command = [
-					//4.2 AOD Mode OFF Setting
-					39 01 00 00 00 00 03 F0 5A 5A
-					15 01 00 00 00 00 02 53 20
-					15 01 00 00 00 00 02 91 02
-					39 01 00 00 00 00 03 F0 A5 A5
-					15 01 00 00 00 00 02 53 E0
-					39 01 00 00 00 00 03 51 07 1C
-					05 01 00 00 00 00 02 29 00
-					//5.4 Frequency Change  120-60Hz
-					39 01 00 00 00 00 03 F0 5A 5A
-					39 01 00 00 00 00 03 60 00 00
-					15 01 00 00 00 00 02 F7 0F
-					39 01 00 00 00 00 03 F0 A5 A5
-				];
-
 				qcom,mdss-dsi-aod-high-command = [
 					// 24 for 40 nit
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -490,18 +459,6 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
-				qcom,mdss-dsi-dimming-speed-1frame-command = [
-					15 01 00 00 00 00 02 53 20
-				];
-
-				qcom,mdss-dsi-dimming-speed-20frame-command = [
-					15 01 00 00 00 00 02 53 28
-				];
-
-				qcom,mdss-dsi-dimming-smooth-command = [
-					15 01 00 00 00 00 02 53 28
-				];
-
 				qcom,mdss-dsi-aod-off-command = [
 					05 01 00 00 10 00 02 28 00
 				];
@@ -509,20 +466,13 @@
 				qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-timing-switch-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-cam-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-nolp-fod-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-high-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-low-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-other-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-speed-1frame-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-speed-20frame-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-smooth-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-off-command-state = "dsi_hs_mode";
 
 
@@ -581,7 +531,7 @@
 					39 01 00 00 00 00 03 B0 09 F2
 					39 01 00 00 00 00 03 F2 26 F8
 					39 01 00 00 00 00 03 F0 A5 A5
-                                        //5.5 Porch clock Set
+					//5.5 Porch clock Set
 					39 01 00 00 00 00 03 F0 5A 5A
 					39 01 00 00 00 00 03 B0 2E F2
 					15 01 00 00 00 00 02 F2 55
@@ -592,12 +542,12 @@
 					39 01 00 00 00 00 03 B0 91 63
 					15 01 00 00 00 00 02 63 14
 					15 01 00 00 00 00 02 53 20
-                                        39 01 00 00 00 00 03 51 00 00
+					39 01 00 00 00 00 03 51 00 00
 					39 01 00 00 00 00 03 F0 A5 A5
 					//8.3 HBM Off Setting
 					15 01 00 00 00 00 02 53 28
 					//8.4 ACL Mode Off
-                                        15 01 00 00 00 00 02 55 00
+					15 01 00 00 00 00 02 55 00
 					05 01 00 00 00 00 02 29 00
 					//5.4 Frequency Change  120-90Hz
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -620,21 +570,6 @@
 					39 01 00 00 00 00 03 B0 09 F2
 					39 01 00 00 00 00 03 F2 33 A8
 					39 01 00 00 00 00 03 F0 A5 A5
-				];
-
-				qcom,mdss-dsi-hbm-on-command = [
-					15 01 00 00 00 00 02 53 E8
-					39 01 00 00 00 00 03 51 07 1C
-				];
-
-				qcom,mdss-dsi-cam-hbm-on-command = [
-					15 01 00 00 00 00 02 53 E8
-					39 01 00 00 00 00 03 51 06 28
-				];
-
-				qcom,mdss-dsi-hbm-off-command = [
-					15 01 00 00 00 00 02 53 28
-					39 01 00 00 00 00 03 51 03 FF
 				];
 
 				qcom,mdss-dsi-fod-hbm-on-command = [
@@ -681,22 +616,6 @@
 					39 01 00 00 00 00 03 F0 A5 A5
 				];
 
-				qcom,mdss-dsi-nolp-fod-command = [
-					//4.2 AOD Mode OFF Setting
-					39 01 00 00 00 00 03 F0 5A 5A
-					15 01 00 00 00 00 02 53 20
-					15 01 00 00 00 00 02 91 02
-					39 01 00 00 00 00 03 F0 A5 A5
-					15 01 00 00 00 00 02 53 E0
-					39 01 00 00 00 00 03 51 07 1C
-					05 01 00 00 00 00 02 29 00
-					//5.4 Frequency Change  120-90Hz
-					39 01 00 00 00 00 03 F0 5A 5A
-					39 01 00 00 00 00 03 B0 09 F2
-					39 01 00 00 00 00 03 F2 33 A8
-					39 01 00 00 00 00 03 F0 A5 A5
-				];
-
 				qcom,mdss-dsi-aod-high-command = [
 					// 24 for 40 nit
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -719,18 +638,6 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
-				qcom,mdss-dsi-dimming-speed-1frame-command = [
-					15 01 00 00 00 00 02 53 20
-				];
-
-				qcom,mdss-dsi-dimming-speed-20frame-command = [
-					15 01 00 00 00 00 02 53 28
-				];
-
-				qcom,mdss-dsi-dimming-smooth-command = [
-					15 01 00 00 00 00 02 53 28
-				];
-
 				qcom,mdss-dsi-aod-off-command = [
 					05 01 00 00 10 00 02 28 00
 				];
@@ -738,20 +645,13 @@
 				qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-timing-switch-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-cam-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-nolp-fod-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-high-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-low-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-other-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-speed-1frame-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-speed-20frame-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-smooth-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-off-command-state = "dsi_hs_mode";
 
 				/* DSC */
@@ -809,7 +709,7 @@
 					39 01 00 00 00 00 03 B0 09 F2
 					39 01 00 00 00 00 03 F2 26 F8
 					39 01 00 00 00 00 03 F0 A5 A5
-                                        //5.5 Porch clock Set
+					//5.5 Porch clock Set
 					39 01 00 00 00 00 03 F0 5A 5A
 					39 01 00 00 00 00 03 B0 2E F2
 					15 01 00 00 00 00 02 F2 55
@@ -820,12 +720,12 @@
 					39 01 00 00 00 00 03 B0 91 63
 					15 01 00 00 00 00 02 63 14
 					15 01 00 00 00 00 02 53 20
-                                        39 01 00 00 00 00 03 51 00 00
+					39 01 00 00 00 00 03 51 00 00
 					39 01 00 00 00 00 03 F0 A5 A5
 					//8.3 HBM Off Setting
 					15 01 00 00 00 00 02 53 28
 					//8.4 ACL Mode Off
-                                        15 01 00 00 00 00 02 55 00
+					15 01 00 00 00 00 02 55 00
 					05 01 00 00 00 00 02 29 00
 				];
 
@@ -847,21 +747,6 @@
 					39 01 00 00 00 00 03 60 08 00
 					15 01 00 00 00 00 02 F7 0F
 					39 01 00 00 00 00 03 F0 A5 A5
-				];
-
-				qcom,mdss-dsi-hbm-on-command = [
-					15 01 00 00 00 00 02 53 E8
-					39 01 00 00 00 00 03 51 07 1C
-				];
-
-				qcom,mdss-dsi-cam-hbm-on-command = [
-					15 01 00 00 00 00 02 53 E8
-					39 01 00 00 00 00 03 51 06 28
-				];
-
-				qcom,mdss-dsi-hbm-off-command = [
-					15 01 00 00 00 00 02 53 28
-					39 01 00 00 00 00 03 51 03 FF
 				];
 
 				qcom,mdss-dsi-fod-hbm-on-command = [
@@ -898,17 +783,6 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
-				qcom,mdss-dsi-nolp-fod-command = [
-					//4.2 AOD Mode OFF Setting
-					39 01 00 00 00 00 03 F0 5A 5A
-					15 01 00 00 00 00 02 53 20
-					15 01 00 00 00 00 02 91 02
-					39 01 00 00 00 00 03 F0 A5 A5
-					15 01 00 00 00 00 02 53 E0
-					39 01 00 00 00 00 03 51 07 1C
-					05 01 00 00 00 00 02 29 00
-				];
-
 				qcom,mdss-dsi-aod-high-command = [
 					// 24 for 40 nit
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -926,22 +800,10 @@
 					39 01 00 00 00 00 03 F0 A5 A5
 					05 01 00 00 00 00 02 29 00
 				];
+
 				qcom,mdss-dsi-aod-other-command = [
 					05 01 00 00 00 00 02 29 00
 				];
-
-				qcom,mdss-dsi-dimming-speed-1frame-command = [
-					15 01 00 00 00 00 02 53 20
-				];
-
-				qcom,mdss-dsi-dimming-speed-20frame-command = [
-					15 01 00 00 00 00 02 53 28
-				];
-
-				qcom,mdss-dsi-dimming-smooth-command = [
-					15 01 00 00 00 00 02 53 28
-				];
-
 
 				qcom,mdss-dsi-aod-off-command = [
 					05 01 00 00 10 00 02 28 00
@@ -950,20 +812,13 @@
 				qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-timing-switch-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-cam-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-nolp-fod-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-high-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-low-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-other-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-speed-1frame-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-speed-20frame-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-dimming-smooth-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-aod-off-command-state = "dsi_hs_mode";
 
 				/* DSC */
