@@ -395,7 +395,7 @@
 
 				qcom,mdss-dsi-fod-hbm-on-command = [
 					// ELVSS DIM OFF & DLY OFF
-					39 01 00 00 00 00 03 F0 5A 5A
+					39 01 00 00 1C 00 03 F0 5A 5A
 					39 01 00 00 00 00 03 B0 91 63
 					15 01 00 00 00 00 02 63 50
 					39 01 00 00 00 00 03 F0 A5 A5
