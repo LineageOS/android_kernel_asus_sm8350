@@ -1,5 +1,26 @@
 ifneq ($(CONFIG_ARCH_QTI_VM), y)
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
+ifeq ($(CONFIG_MACH_ASUS),y)
+
+ifeq ($(CONFIG_MACH_ASUS_SAKE),y)
+dtbo-$(CONFIG_ARCH_LAHAINA) += \
+	sake-mp-overlay.dtbo \
+	sake-pr-overlay.dtbo
+
+sake-mp-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
+sake-pr-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
+
+else ifeq ($(CONFIG_MACH_ASUS_VODKA),y)
+
+dtbo-$(CONFIG_ARCH_LAHAINA) += \
+	vodka-mp-overlay.dtbo \
+	vodka-pr-overlay.dtbo
+
+vodka-mp-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
+vodka-pr-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
+endif
+
+else
 dtbo-$(CONFIG_ARCH_LAHAINA) += lahaina-rumi-overlay.dtbo \
 	lahaina-mtp-overlay.dtbo \
 	lahaina-mtp-hsp-overlay.dtbo \
@@ -49,6 +70,7 @@ lahaina-cdp-hsp-pro-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb \
 					lahaina-v2.1.dtb
 lahaina-qrd-hsp-pro-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb \
 					lahaina-v2.1.dtb
+endif
 else
 dtb-$(CONFIG_ARCH_LAHAINA) += lahaina-rumi.dtb \
 	lahaina-mtp-hsp.dtb \
