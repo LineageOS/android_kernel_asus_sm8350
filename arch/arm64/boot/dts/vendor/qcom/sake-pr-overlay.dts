@@ -1,6 +1,8 @@
 /dts-v1/;
 /plugin/;
 
+#include "asus/sake-overlay.dtsi"
+
 / {
 	model = "Qualcomm Technologies, Inc. SAKE PR";
 	compatible = "qcom,lahaina-mtp", "qcom,lahaina", "qcom,mtp";

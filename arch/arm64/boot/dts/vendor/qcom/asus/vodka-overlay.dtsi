@@ -1,12 +1,12 @@
 /dts-v1/;
 /plugin/;
 
-#include "lahaina-mtp.dtsi"
-#include "dsi-panel-samsung-fhd-cmd.dtsi"
 #include <dt-bindings/regulator/qcom,rpmh-regulator-levels.h>
-#include "vodka-goodix-fp.dtsi"
 
-#include "camera/zs672ks-camera-sensor-mtp.dtsi"
+#include "../lahaina-mtp.dtsi"
+#include "dsi-panel-samsung-fhd-cmd.dtsi"
+#include "vodka-goodix-fp.dtsi"
+#include "zs672ks-camera-sensor-mtp.dtsi"
 
 / {
 	model = "Qualcomm Technologies, Inc. VODKA EVB";
