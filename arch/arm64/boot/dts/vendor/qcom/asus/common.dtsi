@@ -4,3 +4,27 @@
 
 #include "common-memory.dtsi"
 #include "common-pinctrl.dtsi"
+
+&i2c_freq_100Khz_cci0 {
+	hw-scl-stretch-en = <1>;
+};
+
+&i2c_freq_400Khz_cci0 {
+	hw-scl-stretch-en = <1>;
+};
+
+&i2c_freq_1Mhz_cci0 {
+	hw-scl-stretch-en = <1>;
+};
+
+&i2c_freq_100Khz_cci1 {
+	hw-scl-stretch-en = <1>;
+};
+
+&i2c_freq_400Khz_cci1 {
+	hw-scl-stretch-en = <1>;
+};
+
+&i2c_freq_1Mhz_cci1 {
+	hw-scl-stretch-en = <1>;
+};
