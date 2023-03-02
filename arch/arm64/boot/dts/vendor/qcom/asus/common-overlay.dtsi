@@ -4,3 +4,9 @@
 
 #include "common-regulators.dtsi"
 #include "common-thermal.dtsi"
+
+&display_panel_avdd {
+	/delete-property/ gpio;
+	/delete-property/ pinctrl-names;
+	/delete-property/ pinctrl-0;
+};
