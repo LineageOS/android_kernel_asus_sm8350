@@ -85,3 +85,10 @@
 	qcom,init-voltage = <976000>;
 	qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
 };
+
+&qupv3_se13_i2c {
+	nq@64 {
+		/delete-property/ vdd-supply;
+		/delete-property/ rtc6226,vdd-supply-voltage;
+	};
+};
