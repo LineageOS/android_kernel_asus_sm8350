@@ -92,3 +92,7 @@
 		/delete-property/ rtc6226,vdd-supply-voltage;
 	};
 };
+
+&pcm_noirq {
+	qcom,latency-level = "ull-pp";
+};
