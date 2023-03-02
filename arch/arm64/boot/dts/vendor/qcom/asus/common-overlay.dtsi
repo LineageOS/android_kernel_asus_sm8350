@@ -1,0 +1,6 @@
+/*
+ * Common dtsi overlay changes for Asus lahaina platform
+ */
+
+#include "common-regulators.dtsi"
+#include "common-thermal.dtsi"
