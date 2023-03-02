@@ -8,3 +8,55 @@
 		reg = <0x0 0x9b800000 0x0 0x00400000>;
 	};
 };
+
+&soc {
+	qcom,svm_neuron_block {
+		channel@0 {
+			/delete-property/ shared-buffer;
+		};
+
+		channel@1 {
+			/delete-property/ shared-buffer;
+		};
+	};
+
+	qrtr-haven {
+		/delete-property/ shared-buffer;
+	};
+
+	qcom,rmtfs_sharedmem@0 {
+		reg = <0x0 0x300000>;
+	};
+
+	qcom,trustedvm@d0800000 {
+		/delete-property/ memory-region;
+	};
+};
+
+&pil_trustedvm_mem {
+	/delete-property/ reg;
+};
+
+&qrtr_shbuf {
+	/delete-property/ reg;
+};
+
+&chan0_shbuf {
+	/delete-property/ reg;
+};
+
+&chan1_shbuf {
+	/delete-property/ reg;
+};
+
+&removed_mem {
+	reg = <0x0 0xd8800000 0x0 0xa800000>;
+};
+
+&splash_memory {
+	reg = <0x0 0xe5000000 0x0 0x02300000>;
+};
+
+&dfps_data_memory {
+	reg = <0x0 0xe7300000 0x0 0x0100000>;
+};
