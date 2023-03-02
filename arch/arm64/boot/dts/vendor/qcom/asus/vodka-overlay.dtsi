@@ -8,6 +8,8 @@
 #include "vodka-goodix-fp.dtsi"
 #include "zs672ks-camera-sensor-mtp.dtsi"
 
+#include "common-overlay.dtsi"
+
 / {
 	model = "Qualcomm Technologies, Inc. VODKA EVB";
 	compatible = "qcom,lahaina-mtp", "qcom,lahaina", "qcom,mtp";

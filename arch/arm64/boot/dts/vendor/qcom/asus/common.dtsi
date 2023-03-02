@@ -1,0 +1,6 @@
+/*
+ * Common dtsi changes for Asus lahaina platform
+ */
+
+#include "common-memory.dtsi"
+#include "common-pinctrl.dtsi"
