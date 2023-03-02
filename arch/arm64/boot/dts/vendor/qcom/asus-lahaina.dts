@@ -1,6 +1,7 @@
 /dts-v1/;
 
 #include "lahaina-v2.1.dtsi"
+#include "asus/common.dtsi"
 
 / {
 	model = "Qualcomm Technologies, Inc. Lahaina V2.1 SoC";
