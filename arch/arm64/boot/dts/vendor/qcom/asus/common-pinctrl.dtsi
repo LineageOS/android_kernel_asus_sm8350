@@ -50,3 +50,15 @@
 		};
 	};
 };
+
+&qupv3_se13_i2c_active {
+	config {
+		input-enable;
+	};
+};
+
+&qupv3_se13_i2c_sleep {
+	config {
+		input-enable;
+	};
+};
