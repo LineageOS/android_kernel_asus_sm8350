@@ -10,3 +10,8 @@
 	/delete-property/ pinctrl-names;
 	/delete-property/ pinctrl-0;
 };
+
+&pm8350c_pwm_1 {
+	qcom,lut-patterns = <10 10 10 10 0 0 0 0 0 0 0
+					0 0 0 0 0 0 0 0 0 0>;
+};
