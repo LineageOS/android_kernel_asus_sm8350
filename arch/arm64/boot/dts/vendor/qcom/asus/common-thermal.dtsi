@@ -107,3 +107,15 @@
 		};
 	};
 };
+
+&socd_trip {
+	temperature = <95>;
+};
+
+&ibat_lvl0 {
+	temperature = <9000>;
+};
+
+&ibat_lvl1 {
+	temperature = <9500>;
+};
