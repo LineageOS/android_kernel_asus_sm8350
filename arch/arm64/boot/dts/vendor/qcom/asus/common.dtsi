@@ -46,4 +46,8 @@
 		qcom,wrapper-core = <&qupv3_2>;
 		status = "disabled";
 	};
+
+	usb0: ssusb@a600000 {
+		/delete-property/ extcon;
+	};
 };
