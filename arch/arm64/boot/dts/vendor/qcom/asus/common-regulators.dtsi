@@ -2,3 +2,84 @@
  * Common dtsi regulator changes for Asus lahaina platform
  */
 
+&qupv3_se13_i2c {
+	pm8008i@9 {
+		qcom,pm8008i-regulator {
+			vdd_l5-supply = <&BOB>;
+			vdd_l6-supply = <&S1C>;
+		};
+	};
+
+	pm8008j@d {
+		qcom,pm8008j-regulator {
+			vdd_l3_l4-supply = <&BOB>;
+			vdd_l5-supply = <&S1C>;
+		};
+	};
+};
+
+&pm8008i_l4 {
+	qcom,min-dropout-voltage = <0>;
+};
+
+&pm8008i_l5 {
+	regulator-min-microvolt = <2696000>;
+	regulator-max-microvolt = <2904000>;
+	qcom,min-dropout-voltage = <0>;
+};
+
+&pm8008i_l6 {
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1952000>;
+	qcom,min-dropout-voltage = <70000>;
+};
+
+&pm8008j_l1 {
+	regulator-max-microvolt = <1352000>;
+};
+
+&pm8008j_l3 {
+	regulator-min-microvolt = <2696000>;
+	regulator-max-microvolt = <3100000>;
+	qcom,min-dropout-voltage = <0>;
+};
+
+&pm8008j_l4 {
+	regulator-min-microvolt = <2696000>;
+	regulator-max-microvolt = <3100000>;
+	qcom,min-dropout-voltage = <0>;
+};
+
+&pm8008j_l5 {
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1952000>;
+	qcom,min-dropout-voltage = <70000>;
+};
+
+&pm8008j_l6 {
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <3400000>;
+	qcom,min-dropout-voltage = <0>;
+};
+
+&pm8350c_l11 {
+	regulator-min-microvolt = <3300000>;
+	regulator-max-microvolt = <3300000>;
+	qcom,init-voltage = <3300000>;
+};
+
+&apps_rsc {
+	rpmh-regulator-smpe2 {
+		qcom,regulator-type = "pmic5-hfsmps";
+		qcom,supported-modes = <RPMH_REGULATOR_MODE_HPM>;
+		qcom,mode-threshold-currents = <0>;
+		qcom,send-defaults;
+	};
+};
+
+&pmr735a_s2 {
+	regulator-min-microvolt = <976000>;
+	regulator-max-microvolt = <976000>;
+	qcom,init-voltage = <976000>;
+	qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
+};
