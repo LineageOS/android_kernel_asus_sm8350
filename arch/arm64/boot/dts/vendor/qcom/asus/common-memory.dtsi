@@ -1,3 +1,10 @@
 /*
  * Common dtsi memory changes for Asus lahaina platform
  */
+
+&reserved_memory {
+	asus_debug_mem: asus_debug_resion@9b800000 {
+		no-map;
+		reg = <0x0 0x9b800000 0x0 0x00400000>;
+	};
+};
