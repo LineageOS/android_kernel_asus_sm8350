@@ -83,3 +83,17 @@
 	qcom,init-voltage = <976000>;
 	qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
 };
+
+&wlan {
+	qcom,vdd-wlan-aon-config = <976000 976000 0 0 1>;
+	qcom,vdd-wlan-dig-config = <950000 952000 0 0 1>;
+	qcom,vdd-wlan-rfa1-config = <1880000 1880000 0 0 1>;
+	qcom,vdd-wlan-rfa2-config = <1350000 1350000 0 0 1>;
+};
+
+&bluetooth {
+	qcom,bt-vdd-aon-config = <950000 950000 0 1>;
+	qcom,bt-vdd-dig-config = <950000 950000 0 1>;
+	qcom,bt-vdd-rfa1-config = <1880000 1880000 0 1>;
+	qcom,bt-vdd-rfa2-config = <1350000 1350000 0 1>;
+};
