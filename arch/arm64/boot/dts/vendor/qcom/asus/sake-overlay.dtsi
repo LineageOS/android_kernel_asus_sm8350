@@ -8,6 +8,8 @@
 #include "sake-goodix-fp.dtsi"
 #include "zs590ks-camera-sensor-mtp.dtsi"
 
+#include "common-overlay.dtsi"
+
 &soc {
 	dsi_panel_pwr_supply_vci_no_labibb: dsi_panel_pwr_supply_vci_no_labibb {
 		#address-cells = <1>;
