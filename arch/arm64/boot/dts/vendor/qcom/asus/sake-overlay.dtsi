@@ -3,10 +3,10 @@
 
 #include <dt-bindings/regulator/qcom,rpmh-regulator-levels.h>
 
-#include "lahaina-mtp.dtsi"
+#include "../lahaina-mtp.dtsi"
 #include "dsi-panel-sake-samsung-fhd-cmd.dtsi"
 #include "sake-goodix-fp.dtsi"
-#include "camera/zs590ks-camera-sensor-mtp.dtsi"
+#include "zs590ks-camera-sensor-mtp.dtsi"
 
 &soc {
 	dsi_panel_pwr_supply_vci_no_labibb: dsi_panel_pwr_supply_vci_no_labibb {
