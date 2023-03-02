@@ -51,3 +51,37 @@
 		/delete-property/ extcon;
 	};
 };
+
+&qupv3_se13_i2c_active {
+	config {
+		input-enable;
+	};
+};
+
+&qupv3_se13_i2c_sleep {
+	config {
+		input-enable;
+	};
+};
+
+&pm8350c_l11 {
+	regulator-min-microvolt = <3300000>;
+	regulator-max-microvolt = <3300000>;
+	qcom,init-voltage = <3300000>;
+};
+
+&apps_rsc {
+	rpmh-regulator-smpe2 {
+		qcom,regulator-type = "pmic5-hfsmps";
+		qcom,supported-modes = <RPMH_REGULATOR_MODE_HPM>;
+		qcom,mode-threshold-currents = <0>;
+		qcom,send-defaults;
+	};
+};
+
+&pmr735a_s2 {
+	regulator-min-microvolt = <976000>;
+	regulator-max-microvolt = <976000>;
+	qcom,init-voltage = <976000>;
+	qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
+};
