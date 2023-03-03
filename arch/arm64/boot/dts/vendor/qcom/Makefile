@@ -7,8 +7,8 @@ dtbo-$(CONFIG_ARCH_LAHAINA) += \
 	sake-mp-overlay.dtbo \
 	sake-pr-overlay.dtbo
 
-sake-mp-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
-sake-pr-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
+sake-mp-overlay.dtbo-base := asus-lahaina.dtb
+sake-pr-overlay.dtbo-base := asus-lahaina.dtb
 
 else ifeq ($(CONFIG_MACH_ASUS_VODKA),y)
 
@@ -16,8 +16,8 @@ dtbo-$(CONFIG_ARCH_LAHAINA) += \
 	vodka-mp-overlay.dtbo \
 	vodka-pr-overlay.dtbo
 
-vodka-mp-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
-vodka-pr-overlay.dtbo-base := lahaina.dtb lahaina-v2.dtb lahaina-v2.1.dtb
+vodka-mp-overlay.dtbo-base := asus-lahaina.dtb
+vodka-pr-overlay.dtbo-base := asus-lahaina.dtb
 endif
 
 else
