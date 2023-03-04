@@ -1,3 +1,109 @@
 /*
  * Common dtsi thermal changes for Asus lahaina platform
  */
+
+&thermal_zones {
+	socd {
+		cooling-maps {
+			socd_cpu4 {
+				cooling-device = <&CPU4 THERMAL_NO_LIMIT
+								(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			socd_cpu5 {
+				cooling-device = <&CPU5 THERMAL_NO_LIMIT
+								(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			socd_cpu6 {
+				cooling-device = <&CPU6 THERMAL_NO_LIMIT
+								(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			socd_cpu7 {
+				cooling-device = <&CPU7 THERMAL_NO_LIMIT
+								(THERMAL_MAX_LIMIT-7)>;
+			};
+		};
+	};
+
+	pm8350b-bcl-lvl0 {
+		cooling-maps {
+			vbat_cpu4 {
+				cooling-device = <&CPU4 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			vbat_cpu5 {
+				cooling-device =<&CPU5 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+		};
+	};
+
+	pm8350b-bcl-lvl1 {
+		cooling-maps {
+			vbat_cpu6 {
+				cooling-device = <&CPU6 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			vbat_cpu7 {
+				cooling-device = <&CPU7 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+		};
+	};
+
+	pm8350c-bcl-lvl0 {
+		cooling-maps {
+			vph_cpu4 {
+				cooling-device = <&CPU4 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			vph_cpu5 {
+				cooling-device = <&CPU5 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+		};
+	};
+
+	pm8350c-bcl-lvl1 {
+		cooling-maps {
+			vph_cpu6 {
+				cooling-device = <&CPU6 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			vph_cpu7 {
+				cooling-device = <&CPU7 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+		};
+	};
+
+	pm8350_tz {
+		cooling-maps {
+			pm8350_cpu4 {
+				cooling-device = <&CPU4 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			pm8350_cpu5 {
+				cooling-device =<&CPU5 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			pm8350_cpu6 {
+				cooling-device = <&CPU6 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+
+			pm8350_cpu7 {
+				cooling-device = <&CPU7 THERMAL_NO_LIMIT
+						(THERMAL_MAX_LIMIT-7)>;
+			};
+		};
+	};
+};
