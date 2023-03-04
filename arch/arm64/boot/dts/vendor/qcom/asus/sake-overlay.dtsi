@@ -5,7 +5,6 @@
 
 #include "../lahaina-mtp.dtsi"
 #include "dsi-panel-sake-samsung-fhd-cmd.dtsi"
-#include "sake-goodix-fp.dtsi"
 #include "zs590ks-camera-sensor-mtp.dtsi"
 
 #include "common-overlay.dtsi"
@@ -36,6 +35,10 @@
 			qcom,supply-post-on-sleep = <0>;
 			qcom,supply-pre-off-sleep = <10>;
 		};
+	};
+
+	goodix_gf9608@0 {
+		goodix,gpio_ldo = <&tlmm 131 0x00>;
 	};
 };
 

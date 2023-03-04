@@ -4,6 +4,7 @@
 
 #include "common-regulators.dtsi"
 #include "common-thermal.dtsi"
+#include "common-goodix-fp.dtsi"
 
 &display_panel_avdd {
 	/delete-property/ gpio;
