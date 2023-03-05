@@ -11,6 +11,8 @@
 #define MSG_TYPE_REQ_RESP		1
 #define MSG_TYPE_NOTIFY			2
 
+#define OEM_CHARGING_SUSPEND		5
+
 #define OEM_THERMAL_ALERT_SET		17
 #define THERMAL_ALERT_NONE		0
 #define THERMAL_ALERT_NO_AC		1
@@ -533,6 +535,35 @@ static void calculate_high_temp_time(struct asus_battery_chg *abc)
 	abc->last_high_temp_time = now.tv_sec;
 }
 
+static ssize_t charging_suspend_store(struct class *c,
+			struct class_attribute *attr,
+			const char *buf, size_t count)
+{
+	struct asus_battery_chg *abc = container_of(c, struct asus_battery_chg, asuslib_class);
+	int rc;
+	u32 tmp;
+	tmp = simple_strtol(buf, NULL, 10);
+
+	rc = write_property_id_oem(abc, OEM_CHARGING_SUSPEND, &tmp, 1);
+	if (rc < 0) {
+		pr_err("Failed to set CHARGING_SUSPEND_EN rc=%d\n", rc);
+		return rc;
+	}
+
+	abc->charging_suspend = tmp;
+
+	return count;
+}
+
+static ssize_t charging_suspend_show(struct class *c,
+			struct class_attribute *attr, char *buf)
+{
+	struct asus_battery_chg *abc = container_of(c, struct asus_battery_chg, asuslib_class);
+
+	return scnprintf(buf, PAGE_SIZE, "%d\n", abc->charging_suspend);
+}
+static CLASS_ATTR_RW(charging_suspend);
+
 static void update_safety_data(struct asus_battery_chg *abc)
 {
 	struct device *dev = battery_chg_device(abc->bcdev);
@@ -728,6 +759,7 @@ static void handle_message(struct asus_battery_chg *abc, void *data,
 		resp_msg = data;
 
 		switch (resp_msg->oem_property_id) {
+		case OEM_CHARGING_SUSPEND:
 		case OEM_THERMAL_ALERT_SET:
 		case OEM_THERMAL_THRESHOLD:
 		case OEM_WORK_EVENT:
@@ -787,6 +819,7 @@ static ssize_t set_virtualthermal_store(struct class *c,
 static CLASS_ATTR_WO(set_virtualthermal);
 
 static struct attribute *asuslib_class_attrs[] = {
+	&class_attr_charging_suspend.attr,
 	&class_attr_set_virtualthermal.attr,
 	NULL,
 };
@@ -906,6 +939,8 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 				      &abc->client);
 	if (rc)
 		return rc;
+
+	abc->charging_suspend = 0;
 
 	abc->drm_notif.notifier_call = drm_notifier_callback;
 	drm_panel_notifier_register(abc->panel, &abc->drm_notif);
