@@ -16,6 +16,7 @@
 #define WORK_JEITA_PRECHG		1
 #define WORK_JEITA_CC			2
 #define WORK_PANEL_CHECK		3
+#define WORK_LONG_FULL_CAP		4
 
 #define OEM_THERMAL_THRESHOLD		23
 
@@ -220,6 +221,15 @@ static void jeita_cc_worker(struct work_struct *work)
 	write_property_work_event(abc, WORK_JEITA_CC);
 
 	schedule_delayed_work(&abc->jeita_cc_work, 5 * HZ);
+}
+
+static void full_cap_monitor_worker(struct work_struct *work)
+{
+	struct asus_battery_chg *abc = dwork_to_abc(work, full_cap_monitor_work);
+
+	write_property_work_event(abc, WORK_LONG_FULL_CAP);
+
+	schedule_delayed_work(&abc->full_cap_monitor_work, 30 * HZ);
 }
 
 #define CHECK_SET_DATA(msg)						\
@@ -453,6 +463,9 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	INIT_DELAYED_WORK(&abc->usb_thermal_work, usb_thermal_worker);
 	schedule_delayed_work(&abc->usb_thermal_work, 0);
 
+	INIT_DELAYED_WORK(&abc->full_cap_monitor_work, full_cap_monitor_worker);
+	schedule_delayed_work(&abc->full_cap_monitor_work, 0);
+
 	INIT_DELAYED_WORK(&abc->panel_check_work, panel_check_worker);
 	INIT_DELAYED_WORK(&abc->thermal_policy_work, thermal_policy_worker);
 	INIT_DELAYED_WORK(&abc->jeita_rule_work, jeita_rule_worker);
@@ -467,6 +480,7 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 int asus_battery_charger_deinit(struct asus_battery_chg *abc)
 {
 	cancel_delayed_work_sync(&abc->usb_thermal_work);
+	cancel_delayed_work_sync(&abc->full_cap_monitor_work);
 	cancel_delayed_work_sync(&abc->panel_check_work);
 	cancel_delayed_work_sync(&abc->thermal_policy_work);
 	cancel_delayed_work_sync(&abc->jeita_rule_work);
