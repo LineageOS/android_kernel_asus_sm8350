@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "119188f1_ce74236a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6360
+      },
+      "writtenOn": "2023-05-21T17:24:35Z",
+      "side": 1,
+      "message": "can be removed altogether\nhttps://github.com/crdroidandroid/android_kernel_oneplus_sm8350/commit/2c35e87d01d6beee2480e171b206c64133291ab5",
+      "revId": "95d05443a2125c8ce656104dc1c29bae91617427",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
