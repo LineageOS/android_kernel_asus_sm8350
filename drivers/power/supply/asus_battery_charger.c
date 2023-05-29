@@ -653,7 +653,8 @@ static int drm_notifier_callback(struct notifier_block *self,
 	else
 		return 0;
 
-	schedule_delayed_work(&abc->panel_state_work, 0);
+	if (abc->usb_online)
+		schedule_delayed_work(&abc->panel_state_work, 0);
 
 	return 0;
 }
