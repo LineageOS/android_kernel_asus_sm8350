@@ -130,18 +130,12 @@ static int handle_usb_online(struct notifier_block *nb, unsigned long status,
 		cancel_delayed_work_sync(&abc->jeita_rule_work);
 		schedule_delayed_work(&abc->jeita_rule_work, 0);
 
-		if (!g_Charger_mode) {
-			cancel_delayed_work_sync(&abc->panel_check_work);
-			schedule_delayed_work(&abc->panel_check_work, 62 * HZ);
-		}
-
 		cancel_delayed_work_sync(&abc->thermal_policy_work);
 		schedule_delayed_work(&abc->thermal_policy_work, 68 * HZ);
 
 		__pm_wakeup_event(abc->slowchg_ws, 60 * 1000);
 	} else {
 		cancel_delayed_work_sync(&abc->jeita_rule_work);
-		cancel_delayed_work_sync(&abc->panel_check_work);
 		cancel_delayed_work_sync(&abc->thermal_policy_work);
 		cancel_delayed_work_sync(&abc->jeita_prechg_work);
 		cancel_delayed_work_sync(&abc->jeita_cc_work);
@@ -214,15 +208,6 @@ static void usb_thermal_worker(struct work_struct *work)
 out:
 	schedule_delayed_work(&abc->usb_thermal_work,
 			      msecs_to_jiffies(USB_THERMAL_WORK_MSECS));
-}
-
-static void panel_check_worker(struct work_struct *work)
-{
-	struct asus_battery_chg *abc = dwork_to_abc(work, panel_check_work);
-
-	write_property_work_event(abc, WORK_PANEL_CHECK);
-
-	schedule_delayed_work(&abc->panel_check_work, 10 * HZ);
 }
 
 static void thermal_policy_worker(struct work_struct *work)
@@ -306,6 +291,10 @@ static void panel_state_worker(struct work_struct *work)
 	if (rc)
 		dev_err(dev, "Failed to write panel check %u, rc=%d\n",
 			tmp, rc);
+
+	rc = write_property_work_event(abc, WORK_PANEL_CHECK);
+	if (rc)
+		dev_err(dev, "Failed to write panel work check, rc=%d\n", rc);
 }
 
 static int file_op(const char *filename, loff_t offset, char *buf, int length,
@@ -955,7 +944,6 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 	INIT_DELAYED_WORK(&abc->charger_mode_work, charger_mode_worker);
 	schedule_delayed_work(&abc->charger_mode_work, 0);
 
-	INIT_DELAYED_WORK(&abc->panel_check_work, panel_check_worker);
 	INIT_DELAYED_WORK(&abc->thermal_policy_work, thermal_policy_worker);
 	INIT_DELAYED_WORK(&abc->jeita_rule_work, jeita_rule_worker);
 	INIT_DELAYED_WORK(&abc->jeita_prechg_work, jeita_prechg_worker);
@@ -976,7 +964,6 @@ int asus_battery_charger_deinit(struct asus_battery_chg *abc)
 	cancel_delayed_work_sync(&abc->usb_thermal_work);
 	cancel_delayed_work_sync(&abc->full_cap_monitor_work);
 	cancel_delayed_work_sync(&abc->charger_mode_work);
-	cancel_delayed_work_sync(&abc->panel_check_work);
 	cancel_delayed_work_sync(&abc->thermal_policy_work);
 	cancel_delayed_work_sync(&abc->jeita_rule_work);
 	cancel_delayed_work_sync(&abc->jeita_prechg_work);
