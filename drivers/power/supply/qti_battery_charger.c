@@ -521,6 +521,12 @@ int qti_battery_charger_get_prop(const char *name,
 		if (!rc)
 			*val = pst->prop[BATT_RESISTANCE];
 		break;
+	case USB_TYPE_PROP:
+		pst = &bcdev->psy_list[PSY_TYPE_USB];
+		rc = read_property_id(bcdev, pst, USB_REAL_TYPE);
+		if (!rc)
+			*val = pst->prop[USB_REAL_TYPE];
+		break;
 	default:
 		break;
 	}
