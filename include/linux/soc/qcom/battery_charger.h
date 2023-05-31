@@ -11,6 +11,7 @@
 
 enum battery_charger_prop {
 	BATTERY_RESISTANCE,
+	USB_TYPE_PROP,
 	BATTERY_CHARGER_PROP_MAX,
 };
 
