@@ -137,6 +137,8 @@ static int handle_usb_online(struct notifier_block *nb, unsigned long status,
 		cancel_delayed_work_sync(&abc->thermal_policy_work);
 		schedule_delayed_work(&abc->thermal_policy_work, 68 * HZ);
 
+		schedule_delayed_work(&abc->panel_state_work, 2000);
+
 		if (abc->slow_charging_enabled)
 			schedule_delayed_work(&abc->slow_charge_work, 2000);
 
