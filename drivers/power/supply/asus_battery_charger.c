@@ -22,6 +22,7 @@
 
 #define OEM_SLOW_CHG			19
 #define SLOW_CHG_MAX			10
+#define USB_TYPE_PD			6
 
 #define OEM_WORK_EVENT			16
 #define WORK_JEITA_RULE			0
@@ -145,6 +146,7 @@ static int handle_usb_online(struct notifier_block *nb, unsigned long status,
 		cancel_delayed_work_sync(&abc->thermal_policy_work);
 		cancel_delayed_work_sync(&abc->jeita_prechg_work);
 		cancel_delayed_work_sync(&abc->jeita_cc_work);
+		cancel_delayed_work_sync(&abc->slow_charge_work);
 	}
 
 	return 0;
@@ -293,31 +295,51 @@ static void panel_state_worker(struct work_struct *work)
 	u32 tmp = abc->panel_on;
 	int rc;
 
-	rc = write_property_id_oem(abc, OEM_PANEL_CHECK, &tmp, 1);
-	if (rc)
-		dev_err(dev, "Failed to write panel check %u, rc=%d\n",
-			tmp, rc);
+	if (!abc->slow_charging_enabled) {
+		rc = write_property_id_oem(abc, OEM_PANEL_CHECK, &tmp, 1);
+		if (rc)
+			dev_err(dev, "Failed to write panel check %u, rc=%d\n",
+				tmp, rc);
 
-	rc = write_property_work_event(abc, WORK_PANEL_CHECK);
-	if (rc)
-		dev_err(dev, "Failed to write panel work check, rc=%d\n", rc);
+		rc = write_property_work_event(abc, WORK_PANEL_CHECK);
+		if (rc)
+			dev_err(dev, "Failed to write panel work check, rc=%d\n", rc);
+	}
 }
 
 static void slow_charge_worker(struct work_struct *work)
 {
 	struct asus_battery_chg *abc = dwork_to_abc(work, slow_charge_work);
-	int rc;
+	int rc, usb_type;
 	u32 tmp = 0;
 
-	if (abc->slow_charging_enabled)
-		tmp = SLOW_CHG_MAX;
-	else
-		tmp = 0;
+	rc = qti_battery_charger_get_prop("usb", USB_TYPE_PROP, &usb_type);
+	if (rc < 0)
+		pr_err("Failed to get usb type, rc=%d\n", rc);
 
-	rc = write_property_id_oem(abc, OEM_SLOW_CHG, &tmp, 1);
-	if (rc)
-		pr_err("Failed to write slow charge %u, rc=%d\n",
-			SLOW_CHG_MAX, rc);
+	if (usb_type != USB_TYPE_PD) {
+		if (abc->slow_charging_enabled)
+			tmp = SLOW_CHG_MAX;
+		else {
+			tmp = 0;
+			schedule_delayed_work(&abc->panel_state_work, 0);
+		}
+
+		rc = write_property_id_oem(abc, OEM_SLOW_CHG, &tmp, 1);
+		if (rc)
+			pr_err("Failed to write slow charge %u, rc=%d\n",
+				SLOW_CHG_MAX, rc);
+	} else {
+		tmp = 1;
+		rc = write_property_id_oem(abc, OEM_PANEL_CHECK, &tmp, 1);
+		if (rc)
+			pr_err("Failed to write slow charge %u, rc=%d\n",
+					tmp, rc);
+
+		rc = write_property_work_event(abc, WORK_PANEL_CHECK);
+		if (rc)
+			pr_err("Failed to apply slow charge, rc=%d\n", rc);
+	}
 }
 
 static int file_op(const char *filename, loff_t offset, char *buf, int length,
