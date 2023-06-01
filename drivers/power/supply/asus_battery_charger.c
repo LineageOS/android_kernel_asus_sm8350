@@ -938,6 +938,8 @@ int asus_battery_charger_init(struct asus_battery_chg *abc)
 		return -EINVAL;
 	}
 
+	abc->panel_on = true;
+
 	abc->batt_psy = power_supply_get_by_name("battery");
 	if (!abc->batt_psy) {
 		dev_err(dev, "Failed to get battery psy\n");
