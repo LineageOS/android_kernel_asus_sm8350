@@ -139,8 +139,10 @@ static int handle_usb_online(struct notifier_block *nb, unsigned long status,
 
 		schedule_delayed_work(&abc->panel_state_work, 2000);
 
-		if (abc->slow_charging_enabled)
+		if (abc->slow_charging_enabled) {
+			abc->slow_charge_firstrun = true;
 			schedule_delayed_work(&abc->slow_charge_work, 2000);
+		};
 
 		__pm_wakeup_event(abc->slowchg_ws, 60 * 1000);
 	} else {
@@ -331,7 +333,7 @@ static void slow_charge_worker(struct work_struct *work)
 		if (rc)
 			pr_err("Failed to write slow charge %u, rc=%d\n",
 				SLOW_CHG_MAX, rc);
-	} else if (!abc->panel_on) {
+	} else if (!abc->panel_on || abc->slow_charge_firstrun) {
 		tmp = 1;
 		rc = write_property_id_oem(abc, OEM_PANEL_CHECK, &tmp, 1);
 		if (rc)
@@ -342,6 +344,8 @@ static void slow_charge_worker(struct work_struct *work)
 		if (rc)
 			pr_err("Failed to apply slow charge, rc=%d\n", rc);
 	}
+
+	abc->slow_charge_firstrun = false;
 }
 
 static int file_op(const char *filename, loff_t offset, char *buf, int length,
