@@ -16,6 +16,24 @@
       "message": "Derp, the file is renamed.",
       "revId": "2706241325563201a4fdf3e899a0d09d20b69172",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "434e1e8c_882b67ac",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4550
+      },
+      "writtenOn": "2023-06-27T13:54:00Z",
+      "side": 1,
+      "message": "This commit isn\u0027t needed at all if you are based on qcom_sm8350 kernel",
+      "parentUuid": "92769df7_d6282104",
+      "revId": "2706241325563201a4fdf3e899a0d09d20b69172",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
