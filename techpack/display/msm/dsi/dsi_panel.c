@@ -663,7 +663,7 @@ static u32 dsi_panel_get_fod_dim_alpha(struct dsi_panel *panel)
 			   panel->fod_dim_lut[i].alpha);
 }
 
-int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
+int dsi_panel_set_hbm(struct dsi_panel *panel, bool status)
 {
 	int rc;
 
@@ -672,7 +672,7 @@ int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
 		if (rc)
 			return rc;
 
-		panel->fod_hbm_enabled = true;
+		panel->hbm_enabled = true;
 	} else {
 		rc = dsi_panel_set_backlight(panel,
 					     panel->bl_config.real_bl_level);
@@ -683,7 +683,7 @@ int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
 		if (rc)
 			return rc;
 
-		panel->fod_hbm_enabled = false;
+		panel->hbm_enabled = false;
 	}
 
 	return 0;
