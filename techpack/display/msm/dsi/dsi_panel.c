@@ -686,7 +686,7 @@ int dsi_panel_update_aod_mode(struct dsi_panel *panel, int power_mode)
 	return dsi_panel_tx_cmd_set(panel, cmd);
 }
 
-int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
+int dsi_panel_set_hbm(struct dsi_panel *panel, bool status)
 {
 	int rc;
 
