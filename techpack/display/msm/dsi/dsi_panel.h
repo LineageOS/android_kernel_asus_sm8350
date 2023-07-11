@@ -278,7 +278,7 @@ struct dsi_panel {
 	struct brightness_alpha_pair *fod_dim_lut;
 	unsigned int fod_dim_lut_len;
 	u8 fod_dim_alpha;
-	bool fod_hbm_enabled;
+	bool hbm_enabled;
 	bool fod_ui;
 };
 
@@ -416,7 +416,7 @@ void dsi_panel_destroy_cmd_packets(struct dsi_panel_cmd_set *set);
 
 void dsi_panel_dealloc_cmd_packets(struct dsi_panel_cmd_set *set);
 
-int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status);
+int dsi_panel_set_hbm(struct dsi_panel *panel, bool status);
 bool dsi_panel_get_fod_ui(struct dsi_panel *panel);
 void dsi_panel_set_fod_ui(struct dsi_panel *panel, bool status);
 
