@@ -643,7 +643,7 @@ static u32 dsi_panel_get_fod_dim_alpha(struct dsi_panel *panel)
 	u32 brightness = dsi_panel_get_backlight(panel);
 	int i;
 
-	if (!panel->fod_dim_lut)
+	if (!panel->fod_dim_lut || panel->manual_hbm_enabled)
 		return 0;
 
 	for (i = 0; i < panel->fod_dim_lut_len; i++)
@@ -668,12 +668,19 @@ int dsi_panel_set_hbm(struct dsi_panel *panel, bool status)
 	int rc;
 
 	if (status) {
-		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_ON);
+		panel->hbm_enabled = true;
+
+		rc = dsi_panel_set_backlight(panel,
+					     panel->bl_config.real_bl_level);
 		if (rc)
 			return rc;
 
-		panel->hbm_enabled = true;
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_ON);
+		if (rc)
+			return rc;
 	} else {
+		panel->hbm_enabled = false;
+
 		rc = dsi_panel_set_backlight(panel,
 					     panel->bl_config.real_bl_level);
 		if (rc)
@@ -682,8 +689,6 @@ int dsi_panel_set_hbm(struct dsi_panel *panel, bool status)
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_OFF);
 		if (rc)
 			return rc;
-
-		panel->hbm_enabled = false;
 	}
 
 	return 0;
@@ -696,6 +701,12 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 
 	if (panel->host_config.ext_bridge_mode)
 		return 0;
+
+	if (panel->hbm_enabled && panel->manual_hbm_enabled) {
+		bl->real_bl_level = bl_lvl;
+		panel->fod_dim_alpha = 0;
+		return 0;
+	}
 
 	DSI_DEBUG("backlight type:%d lvl:%d\n", bl->type, bl_lvl);
 	switch (bl->type) {
