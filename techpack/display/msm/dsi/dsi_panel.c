@@ -3621,6 +3621,50 @@ static void dsi_panel_setup_vm_ops(struct dsi_panel *panel, bool trusted_vm_env)
 	}
 }
 
+static ssize_t sysfs_hbm_mode_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct dsi_display *display;
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	return snprintf(buf, PAGE_SIZE, "%d\n", display->panel->manual_hbm_enabled);
+}
+
+static ssize_t sysfs_hbm_mode_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct dsi_display *display;
+	unsigned int input;
+	bool enable;
+
+	display = dev_get_drvdata(dev);
+	if (!display) {
+		pr_err("Invalid display\n");
+		return -EINVAL;
+	}
+
+	if (sscanf(buf, "%u", &input) != 1)
+		return -EINVAL;
+
+	enable = input > 0 ? true : false;
+
+	if (dsi_panel_initialized(display->panel)) {
+		display->panel->manual_hbm_enabled = enable;
+		dsi_panel_set_hbm(display->panel, enable);
+	}
+
+	return count;
+}
+
+static DEVICE_ATTR(hbm, 0664,
+			sysfs_hbm_mode_show,
+			sysfs_hbm_mode_store);
+
 static ssize_t sysfs_fod_ui_read(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
@@ -3638,6 +3682,7 @@ static ssize_t sysfs_fod_ui_read(struct device *dev,
 static DEVICE_ATTR(fod_ui, 0444, sysfs_fod_ui_read, NULL);
 
 static struct attribute *panel_attrs[] = {
+	&dev_attr_hbm.attr,
 	&dev_attr_fod_ui.attr,
 	NULL,
 };
