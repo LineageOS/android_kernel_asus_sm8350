@@ -643,7 +643,7 @@ static u32 dsi_panel_get_fod_dim_alpha(struct dsi_panel *panel)
 	u32 brightness = dsi_panel_get_backlight(panel);
 	int i;
 
-	if (!panel->fod_dim_lut)
+	if (!panel->fod_dim_lut || panel->manual_hbm_enabled)
 		return 0;
 
 	for (i = 0; i < panel->fod_dim_lut_len; i++)
