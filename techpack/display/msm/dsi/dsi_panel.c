@@ -668,7 +668,7 @@ int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
 	int rc;
 
 	if (status) {
-		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_FOD_HBM_ON);
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_ON);
 		if (rc)
 			return rc;
 
@@ -679,7 +679,7 @@ int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status)
 		if (rc)
 			return rc;
 
-		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_FOD_HBM_OFF);
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_OFF);
 		if (rc)
 			return rc;
 
@@ -1843,8 +1843,8 @@ const char *cmd_set_prop_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-post-mode-switch-on-command",
 	"qcom,mdss-dsi-qsync-on-commands",
 	"qcom,mdss-dsi-qsync-off-commands",
-	"qcom,mdss-dsi-fod-hbm-on-command",
-	"qcom,mdss-dsi-fod-hbm-off-command",
+	"qcom,mdss-dsi-hbm-on-command",
+	"qcom,mdss-dsi-hbm-off-command",
 };
 
 const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
@@ -1871,8 +1871,8 @@ const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-post-mode-switch-on-command-state",
 	"qcom,mdss-dsi-qsync-on-commands-state",
 	"qcom,mdss-dsi-qsync-off-commands-state",
-	"qcom,mdss-dsi-fod-hbm-on-command-state",
-	"qcom,mdss-dsi-fod-hbm-off-command-state",
+	"qcom,mdss-dsi-hbm-on-command-state",
+	"qcom,mdss-dsi-hbm-off-command-state",
 };
 
 int dsi_panel_get_cmd_pkt_count(const char *data, u32 length, u32 *cnt)
