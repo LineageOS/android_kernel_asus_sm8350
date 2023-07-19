@@ -3650,6 +3650,7 @@ static ssize_t sysfs_hbm_mode_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t count)
 {
 	struct dsi_display *display;
+	struct dsi_backlight_config *bl;
 	unsigned int input;
 	bool enable;
 
@@ -3659,6 +3660,8 @@ static ssize_t sysfs_hbm_mode_store(struct device *dev,
 		return -EINVAL;
 	}
 
+	bl = &display->panel->bl_config;
+
 	if (sscanf(buf, "%u", &input) != 1)
 		return -EINVAL;
 
@@ -3666,6 +3669,7 @@ static ssize_t sysfs_hbm_mode_store(struct device *dev,
 
 	if (dsi_panel_initialized(display->panel)) {
 		display->panel->manual_hbm_enabled = enable;
+		dsi_panel_set_backlight(display->panel, bl->real_bl_level);
 		dsi_panel_set_hbm(display->panel, enable);
 	}
 
