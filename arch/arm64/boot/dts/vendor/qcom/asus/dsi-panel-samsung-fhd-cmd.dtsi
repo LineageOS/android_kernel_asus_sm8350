@@ -185,7 +185,7 @@
 				];
 
 				qcom,mdss-dsi-lp1-command = [
-					05 01 00 00 00 00 02 28 00
+					05 01 00 00 00 00 02 29 00
 				];
 
 				qcom,mdss-dsi-nolp-command = [
@@ -300,7 +300,7 @@
 				];
 
 				qcom,mdss-dsi-lp1-command = [
-					05 01 00 00 00 00 02 28 00
+					05 01 00 00 00 00 02 29 00
 				];
 
 				qcom,mdss-dsi-nolp-command = [
