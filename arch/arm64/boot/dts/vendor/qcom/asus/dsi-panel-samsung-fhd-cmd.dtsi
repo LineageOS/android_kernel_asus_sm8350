@@ -175,12 +175,12 @@
 					15 01 00 00 00 00 02 60 00
 				];
 
-				qcom,mdss-dsi-fod-hbm-on-command = [
+				qcom,mdss-dsi-hbm-on-command = [
 					39 01 00 00 00 00 03 51 03 FF
 					15 01 00 00 00 00 02 53 E0
 				];
 
-				qcom,mdss-dsi-fod-hbm-off-command = [
+				qcom,mdss-dsi-hbm-off-command = [
 					15 01 00 00 00 00 02 53 20
 				];
 
@@ -201,8 +201,8 @@
 				qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-timing-switch-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-hbm-on-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp2-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
@@ -271,12 +271,12 @@
 					15 01 00 00 00 00 02 60 10
 				];
 
-				qcom,mdss-dsi-fod-hbm-on-command = [
+				qcom,mdss-dsi-hbm-on-command = [
 					39 01 00 00 00 00 03 51 03 FF
 					15 01 00 00 00 00 02 53 E0
 				];
 
-				qcom,mdss-dsi-fod-hbm-off-command = [
+				qcom,mdss-dsi-hbm-off-command = [
 					15 01 00 00 00 00 02 53 20
 				];
 
@@ -297,8 +297,8 @@
 				qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-timing-switch-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
-				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-hbm-on-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp2-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
