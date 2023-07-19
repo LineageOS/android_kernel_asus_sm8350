@@ -720,6 +720,12 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 	if (panel->host_config.ext_bridge_mode)
 		return 0;
 
+	if (panel->manual_hbm_enabled) {
+		bl->real_bl_level = bl_lvl;
+		panel->fod_dim_alpha = 0;
+		return 0;
+	}
+
 	DSI_DEBUG("backlight type:%d lvl:%d\n", bl->type, bl_lvl);
 	switch (bl->type) {
 	case DSI_BACKLIGHT_WLED:
@@ -3673,6 +3679,7 @@ static ssize_t sysfs_hbm_mode_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t count)
 {
 	struct dsi_display *display;
+	struct dsi_backlight_config *bl;
 	unsigned int input;
 	bool enable;
 
@@ -3682,14 +3689,17 @@ static ssize_t sysfs_hbm_mode_store(struct device *dev,
 		return -EINVAL;
 	}
 
+	bl = &display->panel->bl_config;
+
 	if (sscanf(buf, "%u", &input) != 1)
 		return -EINVAL;
 
 	enable = input > 0 ? true : false;
 
 	if (dsi_panel_initialized(display->panel)) {
-		dsi_panel_set_hbm(display->panel, enable);
 		display->panel->manual_hbm_enabled = enable;
+		dsi_panel_set_backlight(display->panel, bl->real_bl_level);
+		dsi_panel_set_hbm(display->panel, enable);
 	}
 
 	return count;
