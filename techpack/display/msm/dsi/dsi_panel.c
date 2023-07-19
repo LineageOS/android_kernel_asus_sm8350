@@ -694,8 +694,6 @@ int dsi_panel_set_hbm(struct dsi_panel *panel, bool status)
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_ON);
 		if (rc)
 			return rc;
-
-		panel->fod_hbm_enabled = true;
 	} else {
 		rc = dsi_panel_set_backlight(panel,
 					     panel->bl_config.real_bl_level);
@@ -705,8 +703,6 @@ int dsi_panel_set_hbm(struct dsi_panel *panel, bool status)
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_OFF);
 		if (rc)
 			return rc;
-
-		panel->fod_hbm_enabled = false;
 
 		rc = dsi_panel_update_aod_mode(panel, panel->power_mode);
 		if (rc)
