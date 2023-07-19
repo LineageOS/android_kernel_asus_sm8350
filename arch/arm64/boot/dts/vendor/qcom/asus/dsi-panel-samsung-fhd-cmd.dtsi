@@ -188,6 +188,10 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
+				qcom,mdss-dsi-lp2-command = [
+					05 01 00 00 00 00 02 29 00
+				];
+
 				qcom,mdss-dsi-nolp-command = [
 					15 01 00 00 00 00 02 60 00
 					15 01 00 00 11 00 02 53 28
@@ -200,6 +204,7 @@
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-lp2-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
 
 				/* DSC */
@@ -279,6 +284,10 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
+				qcom,mdss-dsi-lp2-command = [
+					05 01 00 00 00 00 02 29 00
+				];
+
 				qcom,mdss-dsi-nolp-command = [
 					15 01 00 00 00 00 02 60 10
 					15 01 00 00 11 00 02 53 28
@@ -291,6 +300,7 @@
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-lp2-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
 
 				/* DSC */

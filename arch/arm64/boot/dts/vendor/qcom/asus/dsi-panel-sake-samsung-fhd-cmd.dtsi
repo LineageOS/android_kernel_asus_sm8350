@@ -238,6 +238,10 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
+				qcom,mdss-dsi-lp2-command = [
+					05 01 00 00 00 00 02 29 00
+				];
+
 				qcom,mdss-dsi-nolp-command = [
 					//4.2 AOD Mode OFF Setting
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -253,6 +257,7 @@
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-lp2-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
 
 
@@ -377,6 +382,11 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
+				qcom,mdss-dsi-lp2-command = [
+					05 01 00 00 00 00 02 29 00
+				];
+
+
 				qcom,mdss-dsi-nolp-command = [
 					//4.2 AOD Mode OFF Setting
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -392,6 +402,7 @@
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-lp2-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
 
 				/* DSC */
@@ -514,6 +525,10 @@
 					05 01 00 00 00 00 02 29 00
 				];
 
+				qcom,mdss-dsi-lp2-command = [
+					05 01 00 00 00 00 02 29 00
+				];
+
 				qcom,mdss-dsi-nolp-command = [
 					//4.2 AOD Mode OFF Setting
 					39 01 00 00 00 00 03 F0 5A 5A
@@ -529,6 +544,7 @@
 				qcom,mdss-dsi-fod-hbm-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-fod-hbm-off-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-lp1-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-lp2-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-nolp-command-state = "dsi_hs_mode";
 
 				/* DSC */
