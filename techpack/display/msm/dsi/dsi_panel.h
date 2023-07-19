@@ -280,6 +280,7 @@ struct dsi_panel {
 	u8 fod_dim_alpha;
 	bool hbm_enabled;
 	bool fod_ui;
+	bool manual_hbm_enabled;
 };
 
 static inline bool dsi_panel_ulps_feature_enabled(struct dsi_panel *panel)
