@@ -4537,6 +4537,10 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		panel->power_mode != SDE_MODE_DPMS_LP2)
 		dsi_pwr_panel_regulator_mode_set(&panel->power_info,
 			"ibb", REGULATOR_MODE_IDLE);
+
+	if (panel->hbm_enabled)
+		dsi_panel_set_hbm(panel, false);
+
 	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LP1);
 	if (rc)
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_LP1 cmd, rc=%d\n",
@@ -4558,6 +4562,9 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 	mutex_lock(&panel->panel_lock);
 	if (!panel->panel_initialized)
 		goto exit;
+
+	if (panel->hbm_enabled)
+		dsi_panel_set_hbm(panel, false);
 
 	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LP2);
 	if (rc)
@@ -4597,6 +4604,9 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 	if (rc)
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_NOLP cmd, rc=%d\n",
 		       panel->name, rc);
+
+	if (!panel->hbm_enabled && panel->manual_hbm_enabled)
+		dsi_panel_set_hbm(panel, true);
 exit:
 	mutex_unlock(&panel->panel_lock);
 	return rc;
