@@ -913,7 +913,7 @@ static struct device_attribute proximity_property_attrs[] = {
 
 	/* tmd2755 autok behavior on/off */
 	__ATTR(chip_cal_en, 0220, NULL, ATT_proximity_store_chip_cal_en),
-	__ATTR(pocket_en, 0664, NULL, ATT_proximity_store_pocket_en),
+	__ATTR(pocket_en, 0220, NULL, ATT_proximity_store_pocket_en),
 };
 
 int psensor_ATTR_register(psensor_ATTR *mATTR)
