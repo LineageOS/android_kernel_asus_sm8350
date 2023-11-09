@@ -446,7 +446,7 @@ static void icm_remap_gyro_data(struct axis_data *data, int place)
 }
 /*ASUS BSP: this function check if waiting enough time (80ms) since gyro sensor enabled
 			there is a counter used to prevent data always not ready*/
-static bool icm_is_gyro_data_ready()
+static bool icm_is_gyro_data_ready(void)
 {
 	struct timespec ts;
 	static int l_counter = 0;
@@ -2940,7 +2940,7 @@ static void icm_init_status_function(struct icm_sensor *sensor)
 	sensor->proc_polling = NULL;
 	sensor->proc_debug = NULL;
 }
-static void icm_deinit()
+static void icm_deinit(void)
 {
 	struct icm_init_status *l_init_status;
 	if (g_icm206xx_sensor) {
