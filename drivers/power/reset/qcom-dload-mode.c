@@ -259,7 +259,8 @@ static int qcom_dload_reboot(struct notifier_block *this, unsigned long event,
 						     reboot_nb);
 
 	/* Clean shutdown, disable dump mode to allow normal restart */
-	set_download_mode(QCOM_DOWNLOAD_NODUMP);
+	if (!poweroff->in_panic)
+		set_download_mode(QCOM_DOWNLOAD_NODUMP);
 
 	if (cmd) {
 		if (!strcmp(cmd, "edl")) {
@@ -270,7 +271,7 @@ static int qcom_dload_reboot(struct notifier_block *this, unsigned long event,
 			msm_enable_dump_mode(true);
 	}
 
-	if (poweroff->in_panic)
+	if (current_download_mode != QCOM_DOWNLOAD_NODUMP)
 		reboot_mode = REBOOT_WARM;
 
 	return NOTIFY_OK;
