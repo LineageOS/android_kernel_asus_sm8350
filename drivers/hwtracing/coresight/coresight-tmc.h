@@ -104,7 +104,7 @@
 #define TMC_ETR_BAM_PIPE_INDEX	0
 #define TMC_ETR_BAM_NR_PIPES	2
 
-#define TMC_ETR_PCIE_MEM_SIZE	0x400000
+#define TMC_ETR_PCIE_MEM_SIZE	0x2000000
 
 #define TMC_AUTH_NSID_MASK	GENMASK(1, 0)
 
@@ -412,7 +412,7 @@ ssize_t tmc_sg_table_get_data(struct tmc_sg_table *sg_table,
 static inline unsigned long
 tmc_sg_table_buf_size(struct tmc_sg_table *sg_table)
 {
-	return sg_table->data_pages.nr_pages << PAGE_SHIFT;
+	return (unsigned long)sg_table->data_pages.nr_pages << PAGE_SHIFT;
 }
 
 struct coresight_device *tmc_etr_get_catu_device(struct tmc_drvdata *drvdata);

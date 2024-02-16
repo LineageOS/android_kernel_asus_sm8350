@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2020 The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -205,6 +205,10 @@
 #define WLAN_MAX_HEOP_IE_LEN              16
 #define WLAN_HEOP_OUI_TYPE                "\x24"
 #define WLAN_HEOP_OUI_SIZE                1
+#define WLAN_MIN_HECAP_IE_LEN             22
+#define WLAN_MAX_HECAP_IE_LEN             55
+#define WLAN_HE_MCS_MAP_LEN               2
+#define WLAN_INVALID_RX_MCS_MAP           0xFFFF
 
 #define WLAN_HEOP_FIXED_PARAM_LENGTH       7
 #define WLAN_HEOP_VHTOP_LENGTH             3
@@ -1400,11 +1404,16 @@ struct wlan_ie_vhtop {
 	uint16_t vhtop_basic_mcs_set;
 } qdf_packed;
 
+#define WLAN_HE_PHYCAP_SU_BFER_OFFSET 3
+#define WLAN_HE_PHYCAP_SU_BFER_IDX 7
+#define WLAN_HE_PHYCAP_SU_BFER_BITS 1
+
 #define WLAN_HE_PHYCAP_160_SUPPORT BIT(2)
 #define WLAN_HE_PHYCAP_80_80_SUPPORT BIT(3)
 #define WLAN_HE_MACCAP_LEN 6
 #define WLAN_HE_PHYCAP_LEN 11
 #define WLAN_HE_MAX_MCS_MAPS 3
+
 /**
  * struct wlan_ie_hecaps - HT capabilities
  * @elem_id: HE caps IE

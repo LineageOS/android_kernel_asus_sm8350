@@ -274,7 +274,6 @@ typedef struct sCsrChnPower_ {
 
 typedef struct tagCsr11dinfo {
 	sCsrChannel Channels;
-	uint8_t countryCode[REG_ALPHA2_LEN + 1];
 	/* max power channel list */
 	sCsrChnPower ChnPower[CFG_VALID_CHANNEL_LIST_LEN];
 } tCsr11dinfo;
@@ -1484,6 +1483,15 @@ QDF_STATUS csr_mlme_vdev_disconnect_all_p2p_client_event(uint8_t vdev_id);
  * Return: QDF_STATUS
  */
 QDF_STATUS csr_mlme_vdev_stop_bss(uint8_t vdev_id);
+
+/*
+ * csr_get_basic_rates() - Get basic rate for a band
+ * @b_rates: Basic rate
+ * @chan_freq: frequency for which basic rate is required
+ *
+ * Return: void
+ */
+void csr_get_basic_rates(tSirMacRateSet *b_rates, uint32_t chan_freq);
 
 /*
  * csr_mlme_get_concurrent_operation_freq() - Callback for MLME module to

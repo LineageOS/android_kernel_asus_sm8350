@@ -1469,6 +1469,16 @@ wlan_mlme_cfg_set_vht_max_mpdu_len(struct wlan_objmgr_psoc *psoc,
 				   uint8_t value);
 
 /**
+ * wlan_mlme_cfg_get_ht_smps() - gets HT SM Power Save mode from cfg item
+ * @psoc: psoc context
+ * @value: data to be set
+ *
+ * Return: QDF_STATUS
+ */
+QDF_STATUS wlan_mlme_cfg_get_ht_smps(struct wlan_objmgr_psoc *psoc,
+				     uint8_t *value);
+
+/**
  * wlan_mlme_cfg_get_vht_chan_width() - gets vht supported channel width from
  * cfg item
  * @psoc: psoc context
@@ -2194,6 +2204,29 @@ wlan_mlme_get_sta_miracast_mcc_rest_time(struct wlan_objmgr_psoc *psoc,
 QDF_STATUS
 wlan_mlme_get_sap_mcc_chnl_avoid(struct wlan_objmgr_psoc *psoc,
 				 uint8_t *value);
+
+#ifdef CONFIG_BAND_6GHZ
+/**
+ * wlan_mlme_is_standard_6ghz_conn_policy_enabled() - Get the 6 GHz standard
+ *                                                    connection policy flag
+ * @psoc: psoc context
+ * @value: Enable/Disable value ptr.
+ *
+ * Return: QDF_STATUS
+ */
+QDF_STATUS
+wlan_mlme_is_standard_6ghz_conn_policy_enabled(struct wlan_objmgr_psoc *psoc,
+					       bool *value);
+#else
+static inline QDF_STATUS
+wlan_mlme_is_standard_6ghz_conn_policy_enabled(struct wlan_objmgr_psoc *psoc,
+					       bool *value)
+{
+	*value = false;
+	return QDF_STATUS_SUCCESS;
+}
+#endif
+
 /**
  * wlan_mlme_get_mcc_bcast_prob_resp() - Get broadcast probe rsp in MCC
  *
