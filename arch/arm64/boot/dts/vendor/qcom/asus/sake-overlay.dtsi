@@ -700,13 +700,11 @@
 	qcom,clk-freq-out = <400000>;
 
 	nq@28 {
-		compatible = "nxp,pn544";
+		compatible = "nxp,sn-nci";
 		reg = <0x28>;
-		nxp,pn544-irq = <&tlmm 87 0x00>;
-		nxp,pn544-ven = <&tlmm 66 0x00>;
-		nxp,pn544-fw-dwnld = <&tlmm 86 0x00>;
-		qcom,sn-clkreq = <&tlmm 63 0x00>;
-		nxp,pn544-ese-pwr = <&tlmm 47 0x00>;
+		nxp,sn-irq = <&tlmm 87 0x00>;
+		nxp,sn-ven-rstn = <&tlmm 66 0x00>;
+		nxp,sn-dwl-req = <&tlmm 86 0x00>;
 		interrupt-parent = <&tlmm>;
 		interrupts = <87 0>;
 		interrupt-names = "nfc_irq";
