@@ -1,4 +1,22 @@
 {
-  "comments": [],
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "006e381e_9b45272b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 33194
+      },
+      "writtenOn": "2025-04-19T14:58:25Z",
+      "side": 1,
+      "message": "427791 427792 427793 427794 427795 427899 is superseded by 428034 428035 428036 428037 428038",
+      "revId": "32ccb2bcd8dd25522703cad4b3b314caad574f4c",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ],
   "submitRequirementResults": []
 }
